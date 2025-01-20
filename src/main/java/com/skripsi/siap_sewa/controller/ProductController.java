@@ -1,7 +1,9 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.entity.ProductEntity;
+import com.skripsi.siap_sewa.dto.ProductResponse;
+import com.skripsi.siap_sewa.dto.UserDetail;
+import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductService;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +25,8 @@ public class ProductController {
 
     @GetMapping()
     public ResponseEntity<ApiResponse> getProduct(){
-        List<ProductEntity> listProduct = productService.getProducts();
+        List<ProductResponse> responses = productService.getProducts();
 
-        return utils.setResponse(HttpStatus.OK, "200", "Success", listProduct);
+        return utils.setResponse(ErrorMessageEnum.SUCCESS, responses);
     }
 }
