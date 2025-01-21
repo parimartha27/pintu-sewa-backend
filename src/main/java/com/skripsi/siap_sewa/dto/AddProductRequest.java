@@ -22,16 +22,16 @@ public class AddProductRequest {
     @Max(value = 100, message = "Nama produk tidak boleh lebih dari 100 karakter")
     private String name;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = " harus lebih besar dari 0")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Biaya sewa per hari harus lebih besar dari 0")
     private BigDecimal priceInDay;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Field 'priceInWeek' harus lebih besar dari 0")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Biaya sewa per minggu harus lebih besar dari 0")
     private BigDecimal priceInWeek;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Field 'priceInMonth' harus lebih besar dari 0")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Biaya sewa per bulan harus lebih besar dari 0")
     private BigDecimal priceInMonth;
 
-    @Min(value = 0, message = "Field 'stock' tidak boleh kurang dari 0")
+    @Min(value = 0, message = "Stock tidak boleh kurang dari 0")
     private int stock;
 
     private Boolean isRentToBuy = Boolean.FALSE;

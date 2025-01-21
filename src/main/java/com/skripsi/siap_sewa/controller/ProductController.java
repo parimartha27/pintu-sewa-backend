@@ -1,18 +1,14 @@
 package com.skripsi.siap_sewa.controller;
 
-import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.ProductResponse;
-import com.skripsi.siap_sewa.dto.UserDetail;
+import com.skripsi.siap_sewa.dto.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductService;
 import com.skripsi.siap_sewa.utils.CommonUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,14 +28,14 @@ public class ProductController {
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ApiResponse> getProductDetail(String productId){
-        ProductResponse response = productService.getProductDetail(productId);
-
-        return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    public ResponseEntity<ApiResponse> getProductDetail(@PathVariable String productId){
+        return productService.getProductDetail(productId);
     }
 
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse> insertProduct(ProductRequest request){
+    public ResponseEntity<ApiResponse> insertProduct(@RequestBody @Valid AddProductRequest request){
+        AddProductResponse response = productService.addProduct(request);
 
+        return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 }

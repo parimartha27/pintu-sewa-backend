@@ -7,6 +7,7 @@ import com.skripsi.siap_sewa.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,16 +19,12 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<ApiResponse> signUp(SignUpRequest request){
+    public ResponseEntity<ApiResponse> signUp(@RequestBody SignUpRequest request){
         return authenticationService.signUp(request);
     }
 
     @PostMapping("/validate/otp")
-    public ResponseEntity<ApiResponse> validateOtp(OtpRequest request){
-        return authenticationService.signUp(request);
+    public ResponseEntity<ApiResponse> validateOtp(@RequestBody OtpRequest request){
+        return authenticationService.validateOtp(request);
     }
-
-
-
-
 }

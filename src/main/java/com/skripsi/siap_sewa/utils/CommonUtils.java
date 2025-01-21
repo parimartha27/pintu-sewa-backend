@@ -28,8 +28,8 @@ public class CommonUtils {
         return new ResponseEntity<>(
                 ApiResponse.builder()
                         .errorSchema(ApiResponse.ErrorSchema.builder()
-                                .errorCode("400")
-                                .errorMessage("BAD REQUEST")
+                                .errorCode(Constant.BAD_REQUEST_CODE)
+                                .errorMessage("Request invalid")
                                 .build()
                         )
                         .outputSchema(validationErrors)
