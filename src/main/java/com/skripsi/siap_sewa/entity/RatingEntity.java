@@ -9,26 +9,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "ADDRESS")
+@Table(name = "RATING")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class AddressEntity {
+public class RatingEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String street;
-    private String subDistrict;
-    private String regency;
-    private String province;
-    private String postCode;
-    private String aliasAddress;
-
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private UserEntity user;
 }

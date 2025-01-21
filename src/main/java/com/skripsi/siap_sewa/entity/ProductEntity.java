@@ -38,5 +38,17 @@ public class ProductEntity {
     private String slug;
     private LocalDateTime insertDate;
     private LocalDateTime updatedDate;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private CategoryEntity category;
+
+    @ManyToOne
+    @JoinColumn(name = "store_id", referencedColumnName = "id")
+    private StoreEntity store;
+
+
+
+
 }
 

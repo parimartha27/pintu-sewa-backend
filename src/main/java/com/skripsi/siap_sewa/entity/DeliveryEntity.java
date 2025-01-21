@@ -8,27 +8,33 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 @Entity
-@Table(name = "ADDRESS")
+@Table(name = "DELIVERY")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class AddressEntity {
+public class DeliveryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String street;
-    private String subDistrict;
-    private String regency;
-    private String province;
-    private String postCode;
-    private String aliasAddress;
 
+    private int minDeliveryDuration;
+    private int maxDeliveryDuration;
+    private BigDecimal deliveryCost;
+    private String providerName;
+    private String deliveryType;
+    private Boolean isPartnership = Boolean.TRUE;
+    private LocalDateTime insertDate;
+    private LocalDateTime updatedDate;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private UserEntity user;
+    @JoinColumn(name = "store_id", referencedColumnName = "id")
+    private StoreEntity store;
+
 }

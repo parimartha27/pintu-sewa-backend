@@ -8,27 +8,27 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
-@Table(name = "ADDRESS")
+@Table(name = "CATEGORY")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class AddressEntity {
+public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String street;
-    private String subDistrict;
-    private String regency;
-    private String province;
-    private String postCode;
-    private String aliasAddress;
+    private String category;
+    private String description;
 
+    @OneToMany(mappedBy = "category")
+    private List<ProductEntity> products;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private UserEntity user;
+    private LocalDateTime insertDate;
+    private LocalDateTime updatedDate;
 }
