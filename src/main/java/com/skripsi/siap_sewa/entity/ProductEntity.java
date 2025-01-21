@@ -29,11 +29,13 @@ public class ProductEntity {
     private BigDecimal priceInMonth;
     private int stock;
     private Boolean isRentToBuy;
-    private Boolean isDelete;
+    private Boolean isDelete = Boolean.FALSE;
     private int minimumRentDay;
     private int minimumRentQuantity;
     private int maxQuantityToRent;
     private String image;
+    private String description;
+    private String slug;
     private LocalDateTime insertDate;
     private LocalDateTime updatedDate;
 }

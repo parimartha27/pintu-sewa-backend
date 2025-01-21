@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,5 +29,17 @@ public class ProductController {
         List<ProductResponse> responses = productService.getProducts();
 
         return utils.setResponse(ErrorMessageEnum.SUCCESS, responses);
+    }
+
+    @GetMapping("/{productId}")
+    public ResponseEntity<ApiResponse> getProductDetail(String productId){
+        ProductResponse response = productService.getProductDetail(productId);
+
+        return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<ApiResponse> insertProduct(ProductRequest request){
+
     }
 }
