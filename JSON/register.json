@@ -1,0 +1,30 @@
+endpoint:
+POST "/api/authentication/register"
+
+
+Validasi +628 -> isi phone_number
+kalau dia character -> isi email
+kalau back, inputan user simpan di local storage dan di-hash
+isi checklist? button biru : button disabled 
+
+request
+{
+    "email" : "siap@gmail.com",
+    "phone_number" : "083018313",
+}
+
+BE :
+validasi format phone number email
+validasi email/phone number sudah ada atau belum
+validasi kode +62 dan panjang phone number
+
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": {
+        "otp" : "base 64"
+    }
+}

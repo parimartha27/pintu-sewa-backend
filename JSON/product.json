@@ -1,0 +1,118 @@
+endpoint:
+GET "/api/products"
+
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": {
+        "shops": [
+            {
+                "name": "John's Electronics",
+                "description": "Specializes in high-quality electronic gadgets for rent.",
+                "instagram": "@johns_electronics",
+                "facebook": "facebook.com/johns.electronics",
+                "shop_status": 1,
+                "shop_location": "45 Elm Street, Downtown",
+                "province": "Central Province",
+                "city": "Tech City",
+                "post_code": "12345",
+                "subdistrict": "Central Subdistrict",
+                "products": [
+                    {
+                        "name": "Laptop Dell Inspiron",
+                        "category": "Electronics",
+                        "rent_category": 1,
+                        "is_corenting": 0,
+                        "is_rnb": 0,
+                        "weight": 2.5,
+                        "height": 2.0,
+                        "width": 35.0,
+                        "long": 25.0,
+                        "daily_price": 150000.00,
+                        "weekly_price": 900000.00,
+                        "monthly_price": 3000000.00,
+                        "description": "A powerful Dell Inspiron laptop for work and gaming.",
+                        "condition_description": "Good condition with minor scratches.",
+                        "stock": 5,
+                        "status": 1,
+                        "image": "/uploads/products/dell-laptop.jpg"
+                    },
+                    {
+                        "name": "Canon DSLR Camera",
+                        "category": "Photography",
+                        "rent_category": 1,
+                        "is_corenting": 1,
+                        "is_rnb": 0,
+                        "weight": 1.2,
+                        "height": 10.0,
+                        "width": 15.0,
+                        "long": 20.0,
+                        "daily_price": 200000.00,
+                        "weekly_price": 1200000.00,
+                        "monthly_price": 4000000.00,
+                        "description": "A Canon DSLR camera for professional photography.",
+                        "condition_description": "Excellent condition, almost new.",
+                        "stock": 3,
+                        "status": 1,
+                        "image": "/uploads/products/canon-camera.jpg"
+                    }
+                ]
+            },
+            {
+                "name": "Sarah's Furniture Rentals",
+                "description": "Rent elegant and affordable furniture for events and homes.",
+                "instagram": "@sarahs_furniture",
+                "facebook": "facebook.com/sarahs.furniture",
+                "shop_status": 1,
+                "shop_location": "78 Maple Avenue, Suburbia",
+                "province": "Northern Province",
+                "city": "Furniture City",
+                "post_code": "67890",
+                "subdistrict": "Northern Subdistrict",
+                "products": [
+                    {
+                        "name": "Luxury Sofa Set",
+                        "category": "Furniture",
+                        "rent_category": 2,
+                        "is_corenting": 0,
+                        "is_rnb": 1,
+                        "weight": 50.0,
+                        "height": 90.0,
+                        "width": 200.0,
+                        "long": 100.0,
+                        "daily_price": 300000.00,
+                        "weekly_price": 1800000.00,
+                        "monthly_price": 6000000.00,
+                        "description": "A luxurious sofa set for your living room.",
+                        "condition_description": "New and premium quality.",
+                        "stock": 2,
+                        "status": 1,
+                        "image": "/uploads/products/sofa-set.jpg"
+                    },
+                    {
+                        "name": "Dining Table with Chairs",
+                        "category": "Furniture",
+                        "rent_category": 2,
+                        "is_corenting": 0,
+                        "is_rnb": 1,
+                        "weight": 30.0,
+                        "height": 75.0,
+                        "width": 150.0,
+                        "long": 100.0,
+                        "daily_price": 250000.00,
+                        "weekly_price": 1500000.00,
+                        "monthly_price": 5000000.00,
+                        "description": "A modern dining table set for six people.",
+                        "condition_description": "Excellent condition, brand new.",
+                        "stock": 4,
+                        "status": 1,
+                        "image": "/uploads/products/dining-table.jpg"
+                    }
+                ]
+            }
+        ]
+    }
+}

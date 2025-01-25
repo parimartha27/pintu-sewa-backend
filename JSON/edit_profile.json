@@ -1,0 +1,33 @@
+endpoint: 
+
+PUT "/api/users/edit"
+
+validasi confirm password valid? form bisa disubmit : tidak bisa disubmit
+
+
+request
+{
+    "name": "John Doe",
+    "email": "johndoe@example.com",
+    "address": "123 Example Street, Example City",
+    "password": "hashed_password_value",
+    "password_confirmation": "hashed_password_value",
+    "province": "Example Province",
+    "city": "Example City",
+    "post_code": "12345",
+
+}
+
+BE :
+
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": {
+        "username" : "Steven Matthew",
+        "session" : "ajeifajsdfasld"
+    }
+}

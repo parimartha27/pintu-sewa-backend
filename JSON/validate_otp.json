@@ -1,0 +1,30 @@
+endpoint: 
+POST "/api/authentication/validate-otp"
+
+simpan di local storage FE
+
+request
+{
+    "otp_confirm" : "1234",
+    "valid_otp" : "encode 64 "
+}
+
+BE :
+decode valid_otp
+validasi apakah OTP dari FE == OTP yang di-send ke email
+save user
+
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": null
+}
+
+
+
+
+
+
