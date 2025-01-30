@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "PRODUCT")
+@Table(name = "TBL_PRODUCT")
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,32 +23,31 @@ public class ProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
     private String name;
-    private BigDecimal priceInDay;
-    private BigDecimal priceInWeek;
-    private BigDecimal priceInMonth;
-    private int stock;
-    private Boolean isRentToBuy;
-    private Boolean isDelete = Boolean.FALSE;
-    private int minimumRentDay;
-    private int minimumRentQuantity;
-    private int maxQuantityToRent;
-    private String image;
+    private String category;
+    private int rentCategory;
+    private boolean isCorenting;
+    private boolean isRnb;
+    private BigDecimal weight;
+    private BigDecimal height;
+    private BigDecimal width;
+    private BigDecimal length;
+    private BigDecimal dailyPrice;
+    private BigDecimal weeklyPrice;
+    private BigDecimal monthlyPrice;
     private String description;
-    private String slug;
-    private LocalDateTime insertDate;
-    private LocalDateTime updatedDate;
+    private String conditionDescription;
+    private int stock;
+    private String status;
+    private String image;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastUpdateAt;
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
-    private CategoryEntity category;
-
-    @ManyToOne
-    @JoinColumn(name = "store_id", referencedColumnName = "id")
-    private StoreEntity store;
-
-
-
-
+    @JoinColumn(name = "shop_id", referencedColumnName = "id", nullable = true)
+    private ShopEntity shop;
 }
+
+
 

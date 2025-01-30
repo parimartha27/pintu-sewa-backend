@@ -18,37 +18,53 @@ import java.math.BigDecimal;
 public class AddProductRequest {
 
     @NotBlank(message = "Nama produk tidak boleh kosong")
-    @Min(value = 3, message = "Nama produk wajib terdiri dari 3 karakter")
-    @Max(value = 100, message = "Nama produk tidak boleh lebih dari 100 karakter")
+    @Size(min = 3, max = 100, message = "Nama produk wajib terdiri dari 3 hingga 100 karakter")
     private String name;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Biaya sewa per hari harus lebih besar dari 0")
-    private BigDecimal priceInDay;
+    @NotBlank(message = "Kategori produk tidak boleh kosong")
+    private String category;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Biaya sewa per minggu harus lebih besar dari 0")
-    private BigDecimal priceInWeek;
+    @NotNull(message = "Durasi sewa tidak boleh kosong")
+    @Min(value = 1, message = "Durasi sewa minimal harus 1")
+    private Integer rentCategory;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Biaya sewa per bulan harus lebih besar dari 0")
-    private BigDecimal priceInMonth;
+    private boolean isCorenting = false;
 
-    @Min(value = 0, message = "Stock tidak boleh kurang dari 0")
-    private int stock;
+    private boolean isRnb = false;
 
-    private Boolean isRentToBuy = Boolean.FALSE;
+    @DecimalMin(value = "0.0", inclusive = false, message = "Berat harus lebih dari 0")
+    private BigDecimal weight;
 
-    @Min(value = 1, message = "Minimal durasi sewa adalah 1 hari")
-    private int minimumRentDay;
+    @DecimalMin(value = "0.0", inclusive = false, message = "Tinggi harus lebih dari 0")
+    private BigDecimal height;
 
-    @Min(value = 1, message = "Minimal quantity sewa adalah 1 barang")
-    private int minimumRentQuantity;
+    @DecimalMin(value = "0.0", inclusive = false, message = "Lebar harus lebih dari 0")
+    private BigDecimal width;
 
-    @Min(value = 1, message = "Maximal quantity sewa tidak boleh kosong")
-    private int maxQuantityToRent;
+    @DecimalMin(value = "0.0", inclusive = false, message = "Panjang harus lebih dari 0")
+    private BigDecimal length;
 
-    @NotBlank(message = "Gambar produk tidak boleh kososng")
-    private String image;
+    @DecimalMin(value = "0.0", inclusive = false, message = "Harga harian harus lebih dari 0")
+    private BigDecimal dailyPrice;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "Harga mingguan harus lebih dari 0")
+    private BigDecimal weeklyPrice;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "Harga bulanan harus lebih dari 0")
+    private BigDecimal monthlyPrice;
 
     @NotBlank(message = "Deskripsi produk tidak boleh kosong")
-    @Size(max = 1000, message = "Deskripsi produk tidak boleh lebih dari 1000 karakter")
     private String description;
+    private String conditionDescription;
+
+    @Min(value = 0, message = "Stok tidak boleh negatif")
+    private int stock;
+
+    private String status = "Tersedia";
+
+    private String image;
+
+    @NotBlank(message = "Shop ID tidak boleh kosong")
+    private String shopId;
+
 }

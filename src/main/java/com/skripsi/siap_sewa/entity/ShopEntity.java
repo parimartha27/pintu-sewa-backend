@@ -12,32 +12,36 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "STORE")
+@Table(name = "TBL_SHOP")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class StoreEntity {
+public class ShopEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
     private String name;
     private String description;
-    private String contactEmail;
-    private String contactPhone;
-    private Boolean isActive = Boolean.TRUE;
-    private Boolean isDelete = Boolean.FALSE;
-    private String profileImage;
+    private String instagram;
+    private String facebook;
+    private int shopStatus;
+    private String shopLocation;
+    private String province;
+    private String city;
+    private String postCode;
+    private String subDistrict;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastUpdateAt;
 
     @OneToOne
-    @JoinColumn(name = "address_id", referencedColumnName = "id")
-    private AddressEntity address;
+    @JoinColumn(name = "customer_id", referencedColumnName = "id", nullable = true)
+    private CustomerEntity customer;
 
-    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ProductEntity> products;
-
-    private LocalDateTime insertDate;
-    private LocalDateTime updatedDate;
 }
+
