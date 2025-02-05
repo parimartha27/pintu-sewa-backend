@@ -1,0 +1,38 @@
+endpoint:
+
+GET "/api/reviews/{productId}"
+
+Get all review by productId
+
+BE :
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": {
+        "reviews": [
+            {
+                "customer_id": "CUST123456",
+                "product_id": "PROD789012",
+                "comment": "Produk sangat bagus dan sesuai dengan deskripsi!",
+                "image": "/images/reviews/review123.jpg",
+                "rating": 5,
+                "created_date": "2024-02-05T14:30:00",
+                "last_updated_date": "2024-02-06T10:15:00"
+            },
+            {
+                "customer_id": "CUST123456",
+                "product_id": "PROD789012",
+                "comment": "Produk sangat bagus dan sesuai dengan deskripsi!",
+                "image": "/images/reviews/review123.jpg",
+                "rating": 5,
+                "created_date": "2024-02-05T14:30:00",
+                "last_updated_date": "2024-02-06T10:15:00"
+            }
+        ],
+        "product_rating": 4.8,
+        "shop_rating" : 4.7
+    }
+}

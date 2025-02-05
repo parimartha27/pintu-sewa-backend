@@ -1,0 +1,20 @@
+endpoint: 
+
+POST "/api/shops/create"
+
+request
+{
+    "customer_id" : "3423423423",
+    "username": "Andryan03",
+    "shop_name": "Toko Andryan"
+}
+
+BE :
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": null
+}

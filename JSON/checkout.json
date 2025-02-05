@@ -1,0 +1,39 @@
+endpoint: 
+
+POST "/api/checkout/"
+
+FE
+jika dia langsung checkout dari halaman detail, maka kirim product ID
+Jika dia tambahkan ke keranjang, dan mencentang sejumlah product di keranjang kirim
+chart id
+
+request
+{
+    "customer_id": "CUST123456",
+    "product_id": "PROD789012",
+    "quantity": 2,
+    "total_amount": 500000,
+    "start_rent_date": "2024-02-10",
+    "end_rent_date": "2024-02-15",
+    "shipping_address": "Jl. Merdeka No. 10, Jakarta, Indonesia"
+}
+
+BE :
+response
+{
+    "error_schema": {
+        "error_code": "SIAP-SEWA-00-000",
+        "error_message": "SUCCESS"
+    },
+    "output_schema": {
+        "customer_id": "CUST123456",
+        "product_id": "PROD789012",
+        "qty": 2,
+        "total_amount": 500000,
+        "start_rent_date": "2024-02-10",
+        "end_rent_date": "2024-02-15",
+        "shipping_address": "Jl. Merdeka No. 10, Jakarta, Indonesia",
+        "is_valid": true,
+        "product_price": 2000
+    }
+}

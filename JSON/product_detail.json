@@ -1,0 +1,53 @@
+endpoint:
+
+GET "/api/products/{shopId}/{productId}"
+
+Get product details
+ketambahan deposit
+
+
+BE :
+
+response
+{
+  "error_schema": {
+      "error_code": "SIAP-SEWA-00-000",
+      "error_message": "SUCCESS"
+  },
+  "output_schema": {
+      "shops": {
+          "id" : "1asjfasjdfask",
+          "name": "John's Electronics",
+          "description": "Specializes in high-quality electronic gadgets for rent.",
+          "instagram": "@johns_electronics",
+          "facebook": "facebook.com/johns.electronics",
+          "shop_status": 1,
+          "shop_location": "45 Elm Street, Downtown",
+          "province": "Central Province",
+          "city": "Tech City",
+          "post_code": "12345",
+          "subdistrict": "Central Subdistrict",
+          "products": {
+              "id" : "1asjfasjdfask",
+              "name": "Laptop Dell Inspiron",
+              "category": "Electronics",
+              "rent_category": 1,
+              "is_corenting": 0,
+              "is_rnb": 0,
+              "weight": 2.5,
+              "height": 2.0,
+              "width": 35.0,
+              "long": 25.0,
+              "daily_price": 150000.00,
+              "weekly_price": 900000.00,
+              "monthly_price": 3000000.00,
+              "deposit": 8000.00,
+              "description": "A powerful Dell Inspiron laptop for work and gaming.",
+              "condition_description": "Good condition with minor scratches.",
+              "stock": 5,
+              "status": 1,
+              "image": "/uploads/products/dell-laptop.jpg"
+          }
+      }
+  }
+}
