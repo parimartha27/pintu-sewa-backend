@@ -14,5 +14,6 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OtpRequest {
     private String otpCode;
+    private String username;
     private int attempt;
 }

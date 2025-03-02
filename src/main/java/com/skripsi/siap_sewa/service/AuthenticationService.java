@@ -2,13 +2,12 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.authentication.LoginRequest;
-import com.skripsi.siap_sewa.dto.authentication.LoginResponse;
-import com.skripsi.siap_sewa.dto.authentication.RegisterRequest;
-import com.skripsi.siap_sewa.dto.authentication.RegisterResponse;
+import com.skripsi.siap_sewa.dto.authentication.*;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
+import com.skripsi.siap_sewa.entity.OtpHistoryEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
+import com.skripsi.siap_sewa.repository.OtpHistoryRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.Constant;
 import jakarta.validation.Valid;
@@ -22,19 +21,21 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final JWTService jwtService;
-    private final AuthenticationManager authManager;
-    private final CustomerRepository customerRepository;
     private final CommonUtils commonUtils;
     private final ObjectMapper objectMapper;
+    private final AuthenticationManager authManager;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    private final JWTService jwtService;
     private final EmailService emailService;
+    private final OtpHistoryRepository otpHistoryRepository;
+    private final CustomerRepository customerRepository;
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request){
 
@@ -96,14 +97,31 @@ public class AuthenticationService {
                         .duration(1800)
                         .build();
 
-                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response) ;
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             }
             else {
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Failed to login");
             }
         }
     }
+    public ResponseEntity<ApiResponse> verifyOtp(@Valid OtpRequest request) {
 
+        if (request.getAttempt() > 3) {
+            return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
+        }
+
+        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+        return otpHistoryRepository.findByOtpAndUsernameAndCreatedAtBefore(request.getOtpCode(), request.getUsername(), thirtyMinutesAgo)
+                .map(otpHistory -> {
+                    if (request.getOtpCode().equals(otpHistory.getOtp())) {
+                        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
+                    } else {
+                        return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP");
+                    }
+                })
+                .orElseGet(() -> commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP"));
+    }
+    
     private String generateTemporaryUserName(RegisterRequest request) {
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
             return request.getEmail().split("@")[0];
@@ -136,5 +154,6 @@ public class AuthenticationService {
                 """, otp
         );
     }
+
 
 }

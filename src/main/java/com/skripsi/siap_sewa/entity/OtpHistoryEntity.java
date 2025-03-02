@@ -25,5 +25,4 @@ public class OtpHistoryEntity {
     private String otp;
     private String username;
     private LocalDateTime createdAt;
-    private LocalDateTime lastUpdateAt;
 }
