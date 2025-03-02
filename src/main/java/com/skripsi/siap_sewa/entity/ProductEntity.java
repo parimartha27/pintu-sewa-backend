@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "TBL_PRODUCT")
+@Table(name = "PRODUCT")
 @Data
 @Builder
 @NoArgsConstructor

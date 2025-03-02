@@ -28,9 +28,12 @@ public class AuthenticationController {
         return authenticationService.login(request);
     }
 
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse> verifyOtp(@RequestBody @Valid )
+
     @GetMapping("/email")
     public void email(){
-        emailService.sendEmail();
+        emailService.sendEmailTest();
     }
 
 }

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "TBL_CUSTOMER")
+@Table(name = "CUSTOMER")
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,7 +25,11 @@ public class CustomerEntity {
     private String id;
     private String username;
     private String name;
+
+    @Column(unique = true)
     private String email;
+
+    @Column(unique = true)
     private String phoneNumber;
     private String password;
     private String gender;
