@@ -4,13 +4,11 @@ import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.LoginRequest;
 import com.skripsi.siap_sewa.dto.authentication.RegisterRequest;
 import com.skripsi.siap_sewa.service.AuthenticationService;
+import com.skripsi.siap_sewa.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/authentication")
@@ -18,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final EmailService emailService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@RequestBody @Valid RegisterRequest request){
@@ -28,4 +27,10 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse> login(@RequestBody @Valid LoginRequest request){
         return authenticationService.login(request);
     }
+
+    @GetMapping("/email")
+    public void email(){
+        emailService.sendEmail();
+    }
+
 }

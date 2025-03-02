@@ -32,13 +32,17 @@ public class AuthenticationService {
     private final CustomerRepository customerRepository;
     private final CommonUtils commonUtils;
     private final ObjectMapper objectMapper;
-    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    private final EmailService emailService;
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request){
        List<CustomerEntity> listCustomerWithSameEmailAndPhoneNumber = customerRepository.findByEmailOrPhoneNumber(request.getEmail(), request.getPhoneNumber());
 
        if(listCustomerWithSameEmailAndPhoneNumber.size() > 1) {
-           return commonUtils.setResponse("SIAP-SEWA-01-001", "You have been registered. Please user other email", HttpStatus.OK, null);
+           return commonUtils.setResponse(
+                   "SIAP-SEWA-01-001",
+                   "You have been registered. Please user other email",
+                   HttpStatus.OK, null);
        }
        else{
            CustomerEntity entity = new CustomerEntity();
@@ -77,6 +81,8 @@ public class AuthenticationService {
                         .duration(1800)
                         .build();
 
+                emailService.sendEmail();
+
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response) ;
             }
             else {
@@ -93,6 +99,5 @@ public class AuthenticationService {
             return request.getPhoneNumber();
         }
     }
-
 
 }
