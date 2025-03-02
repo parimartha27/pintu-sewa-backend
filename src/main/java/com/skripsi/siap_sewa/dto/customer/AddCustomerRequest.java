@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto;
+package com.skripsi.siap_sewa.dto.customer;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -15,10 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class EditCustomerRequest {
-
-    @NotBlank(message = "ID tidak boleh kosong")
-    private String id;
+public class AddCustomerRequest {
 
     @NotBlank(message = "Nama tidak boleh kosong")
     @Size(min = 3, max = 100, message = "Nama harus terdiri dari 3 hingga 100 karakter")

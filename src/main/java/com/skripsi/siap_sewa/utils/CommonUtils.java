@@ -36,4 +36,17 @@ public class CommonUtils {
                         .build(),
                 HttpStatus.BAD_REQUEST);
     }
+
+    public ResponseEntity<ApiResponse> setResponse(String errorCode, String errorMessage, HttpStatus httpStatus, Object response){
+        return new ResponseEntity<>(
+                ApiResponse.builder()
+                        .errorSchema(ApiResponse.ErrorSchema.builder()
+                                .errorCode(errorCode)
+                                .errorMessage(errorMessage)
+                                .build()
+                        )
+                        .outputSchema(response)
+                        .build(),
+                httpStatus);
+    }
 }

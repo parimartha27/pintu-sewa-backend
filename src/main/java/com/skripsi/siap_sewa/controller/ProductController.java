@@ -1,12 +1,14 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.*;
+import com.skripsi.siap_sewa.dto.product.AddProductRequest;
+import com.skripsi.siap_sewa.dto.product.AddProductResponse;
+import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductService;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

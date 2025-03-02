@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto;
+package com.skripsi.siap_sewa.dto.authentication;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -12,7 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class AddProductResponse {
+public class LoginResponse {
 
-    private String slug;
+    private String username;
+    private String email;
+    private String phoneNumber;
+    private String token;
+    private int duration;
 }

@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto;
+package com.skripsi.siap_sewa.dto.authentication;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

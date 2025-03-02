@@ -1,9 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
-import com.skripsi.siap_sewa.dto.AddProductRequest;
-import com.skripsi.siap_sewa.dto.AddProductResponse;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.CreateShopRequest;
+import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ShopService;
 import com.skripsi.siap_sewa.utils.CommonUtils;

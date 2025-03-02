@@ -10,9 +10,10 @@ import org.springframework.http.HttpStatus;
 public enum ErrorMessageEnum {
     SUCCESS(Constant.SUCCESS_CODE, Constant.SUCCESS_MESSAGE, Constant.STATUS_OK),
     FAILED(Constant.FAILED_CODE, Constant.FAILED_MESSAGE, Constant.STATUS_OK),
-    BAD_REQUEST(Constant.FAILED_CODE, Constant.FAILED_MESSAGE, Constant.STATUS_OK);
+    BAD_REQUEST(Constant.FAILED_CODE, Constant.FAILED_MESSAGE, Constant.STATUS_OK),
+    DATA_NOT_FOUND(Constant.DATA_NOT_FOUND_CODE, Constant.DATA_NOT_FOUND_MESSAGE, Constant.STATUS_OK);
 
-    private String errorCode;
-    private String errorMessage;
-    private HttpStatus httpStatus;
+    private final String errorCode;
+    private final String errorMessage;
+    private final HttpStatus httpStatus;
 }

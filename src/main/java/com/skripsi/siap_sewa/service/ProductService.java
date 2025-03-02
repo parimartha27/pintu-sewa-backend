@@ -2,10 +2,10 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skripsi.siap_sewa.dto.AddProductRequest;
-import com.skripsi.siap_sewa.dto.AddProductResponse;
+import com.skripsi.siap_sewa.dto.product.AddProductRequest;
+import com.skripsi.siap_sewa.dto.product.AddProductResponse;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.ProductResponse;
+import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;

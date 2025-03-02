@@ -1,6 +1,6 @@
 package com.skripsi.siap_sewa.service;
 
-import com.skripsi.siap_sewa.dto.CreateShopRequest;
+import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.repository.CustomerRepository;

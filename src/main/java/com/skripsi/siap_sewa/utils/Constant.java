@@ -15,4 +15,7 @@ public class Constant {
 
     public static final HttpStatus  STATUS_OK = HttpStatus.OK;
     public static final HttpStatus  STATUS_BAD_REQUEST = HttpStatus.BAD_REQUEST;
+
+    public static final String DATA_NOT_FOUND_CODE = "SIAP-SEWA-00-002";
+    public static final String DATA_NOT_FOUND_MESSAGE = "Data Not Found";
 }
