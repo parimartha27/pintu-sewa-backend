@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
@@ -45,7 +46,8 @@ public class ProductEntity {
     private LocalDateTime lastUpdateAt;
 
     @ManyToOne
-    @JoinColumn(name = "shop_id", referencedColumnName = "id", nullable = true)
+    @JoinColumn(name = "shop_id", referencedColumnName = "id")
+    @JsonBackReference
     private ShopEntity shop;
 }
 

@@ -80,34 +80,4 @@ public class ProductService {
 
         return new AddProductResponse();
     }
-
-//    private String generateSlug(String productName) {
-//        if (productName == null || productName.trim().isEmpty()) {
-//            return null;
-//        }
-//
-//        String normalizedString = Normalizer.normalize(productName, Normalizer.Form.NFD);
-//        String sanitizedString = normalizedString.replaceAll("[^\\p{ASCII}]", "");
-//
-//        String slug = sanitizedString
-//                .toLowerCase(Locale.ROOT)
-//                .replaceAll("[\\s-]+", "-")
-//                .replaceAll("[^a-z0-9-]", "");
-//
-//        return slug + "-" + generateHash(productName);
-//    }
-//
-//    private  String generateHash(String input) {
-//        try {
-//            MessageDigest md = MessageDigest.getInstance("SHA-256");
-//            byte[] hashBytes = md.digest(input.getBytes());
-//            StringBuilder hashString = new StringBuilder();
-//            for (byte b : hashBytes) {
-//                hashString.append(String.format("%02x", b));
-//            }
-//            return hashString.toString().substring(0, 8);
-//        } catch (NoSuchAlgorithmException e) {
-//            throw new RuntimeException("Error generating hash", e);
-//        }
-//    }
 }

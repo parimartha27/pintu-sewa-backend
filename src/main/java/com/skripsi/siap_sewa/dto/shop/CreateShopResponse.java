@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto.authentication;
+package com.skripsi.siap_sewa.dto.shop;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -7,17 +7,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class LoginResponse {
+public class CreateShopResponse {
 
-    private String userId;
-    private String username;
-    private String email;
-    private String phoneNumber;
-    private String token;
-    private int duration;
+    private String name;
+    private int shopStatus;
+    private String image;
+    private String street;
+    private String district;
+    private String regency;
+    private String province;
+    private String postCode;
 }

@@ -23,6 +23,7 @@ public class CustomerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
     private String username;
     private String name;
 
@@ -34,16 +35,21 @@ public class CustomerEntity {
     private String password;
     private String gender;
     private LocalDateTime birthDate;
+    private String image;
+
+//    Address
     private String street;
     private String district;
     private String regency;
     private String province;
     private String postCode;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime lastUpdateAt;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ShopEntity shop;
+
 }
 
 

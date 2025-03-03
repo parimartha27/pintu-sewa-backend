@@ -1,9 +1,11 @@
-package com.skripsi.siap_sewa.entity;
+package com.skripsi.siap_sewa.dto.shop;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.skripsi.siap_sewa.entity.CustomerEntity;
+import com.skripsi.siap_sewa.entity.ProductEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,18 +16,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "SHOP")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ShopEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+public class ShopResponse {
 
     private String name;
     private String description;
@@ -48,6 +44,4 @@ public class ShopEntity {
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProductEntity> products = new ArrayList<>();
-
 }
-

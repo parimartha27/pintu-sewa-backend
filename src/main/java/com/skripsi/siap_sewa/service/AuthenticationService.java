@@ -111,6 +111,7 @@ public class AuthenticationService {
 
             if (authentication.isAuthenticated()) {
                 LoginResponse response = LoginResponse.builder()
+                        .userId(customer.getId())
                         .username(customer.getUsername())
                         .email(customer.getEmail())
                         .phoneNumber(customer.getPhoneNumber())
