@@ -47,7 +47,7 @@ public class CustomerService {
 
             boolean isValidUsername = validateSameUsername(request.getUsername());
 
-            if(!isValidUsername){
+            if(isValidUsername){
                 return commonUtils.setResponse("SIAP-SEWA-02-001", "Username Already Exists", HttpStatus.OK, null);
             }else{
 //                personal information
@@ -55,7 +55,6 @@ public class CustomerService {
                 editedCustomerData.setName(request.getName());
                 editedCustomerData.setEmail(request.getEmail());
                 editedCustomerData.setPhoneNumber(request.getPhoneNumber());
-                editedCustomerData.setPassword(request.getPassword());
                 editedCustomerData.setGender(request.getGender());
                 editedCustomerData.setBirthDate(request.getBirthDate());
 //                Address
@@ -78,7 +77,7 @@ public class CustomerService {
     private boolean validateSameUsername (String username){
         List<CustomerEntity> customerWithSameUsername = customerRepository.findByUsername(username);
 
-       return customerWithSameUsername.size() > 1;
+       return customerWithSameUsername.size() == 1 ? true : false;
     }
 
 
