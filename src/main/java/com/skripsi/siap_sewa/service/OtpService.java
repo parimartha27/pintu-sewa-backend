@@ -50,6 +50,7 @@ public class OtpService {
                     CustomerEntity customer = customerEntityOptional.getFirst();
 
                     OtpResponse response = OtpResponse.builder()
+                            .userId(customer.getId())
                             .username(customer.getUsername())
                             .email(customer.getEmail())
                             .phoneNumber(customer.getPhoneNumber())
