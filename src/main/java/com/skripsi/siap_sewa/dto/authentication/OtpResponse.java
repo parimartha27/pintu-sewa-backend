@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OtpResponse {
-    private String otpCode;
-    private int attempt;
+    private String username;
+    private String email;
+    private String phoneNumber;
+    private String token;
+    private int duration;
 }

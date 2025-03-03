@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -58,13 +59,26 @@ public class AuthenticationService {
             entity.setEmail(request.getEmail());
             entity.setPhoneNumber(request.getPhoneNumber());
             entity.setPassword(encoder.encode(request.getPassword()));
-            entity.setUsername(generateTemporaryUserName(request));
+            entity.setUsername(request.getEmail().isEmpty() ? request.getEmail() : request.getPhoneNumber());
+            entity.setCreatedAt(LocalDateTime.now());
+            entity.setLastUpdateAt(LocalDateTime.now());
 
             customerRepository.save(entity);
 
             RegisterResponse response = objectMapper.convertValue(entity, RegisterResponse.class);
 
-            emailService.sendEmail(Constant.SUBJECT_EMAIL_REGISTER, response.getEmail(), generateOtpMessage());
+            String otp = commonUtils.generateOtp();
+
+            OtpHistoryEntity otpHistory = OtpHistoryEntity.builder()
+                    .otp(otp)
+                    .username(response.getUsername())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            otpHistoryRepository.save(otpHistory);
+
+            response.setOtpId(otpHistory.getId());
+
+            emailService.sendEmail(response.getEmail(),Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(otpHistory.getOtp()));
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }
@@ -103,56 +117,6 @@ public class AuthenticationService {
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Failed to login");
             }
         }
-    }
-    public ResponseEntity<ApiResponse> verifyOtp(@Valid OtpRequest request) {
-
-        if (request.getAttempt() > 3) {
-            return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
-        }
-
-        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
-        return otpHistoryRepository.findByOtpAndUsernameAndCreatedAtBefore(request.getOtpCode(), request.getUsername(), thirtyMinutesAgo)
-                .map(otpHistory -> {
-                    if (request.getOtpCode().equals(otpHistory.getOtp())) {
-                        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
-                    } else {
-                        return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP");
-                    }
-                })
-                .orElseGet(() -> commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP"));
-    }
-    
-    private String generateTemporaryUserName(RegisterRequest request) {
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            return request.getEmail().split("@")[0];
-        }
-        else {
-            return request.getPhoneNumber();
-        }
-    }
-
-    public static String generateOtp() {
-        SecureRandom random = new SecureRandom();
-        int otp = 1000 + random.nextInt(9000);
-        return String.valueOf(otp);
-    }
-
-    public static String generateOtpMessage() {
-        String otp = generateOtp();
-        return String.format(
-                """
-                        Hi, Sobat Sewa.
-                        
-                        Berikut merupakan one-time passcode (OTP) kamu : %s.
-                        
-                        OTP akan expired dalam 30 menit.
-                        
-                        Selamat menggunakan website Pintu Sewa
-                        
-                        Hormat kami,
-                        Tim Pintu Sewa
-                """, otp
-        );
     }
 
 

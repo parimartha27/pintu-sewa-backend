@@ -29,10 +29,7 @@ public class AuthenticationController {
         return authenticationService.login(request);
     }
 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<ApiResponse> verifyOtp(@RequestBody @Valid OtpRequest request){
-        return authenticationService.verifyOtp(request);
-    }
+
 
     @GetMapping("/email")
     public void email(){

@@ -10,8 +10,8 @@ import java.util.Optional;
 @Repository
 public interface OtpHistoryRepository extends JpaRepository<OtpHistoryEntity, String> {
 
-    void deleteByCreatedAtBefore(LocalDateTime time);
+    void deleteByCreatedAtAfter(LocalDateTime time);
 
-    Optional<OtpHistoryEntity> findByOtpAndUsernameAndCreatedAtBefore(String otp, String username, LocalDateTime createdAt);
+    Optional<OtpHistoryEntity> findByOtpAndUsernameAndCreatedAtAfter(String otp, String username, LocalDateTime createdAt);
 
 }

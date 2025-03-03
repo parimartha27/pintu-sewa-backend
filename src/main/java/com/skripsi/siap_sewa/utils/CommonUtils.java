@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 
@@ -48,5 +49,28 @@ public class CommonUtils {
                         .outputSchema(response)
                         .build(),
                 httpStatus);
+    }
+
+    public String generateOtp() {
+        SecureRandom random = new SecureRandom();
+        int otp = 1000 + random.nextInt(9000);
+        return String.valueOf(otp);
+    }
+
+    public String generateOtpMessage(String otp) {
+        return String.format(
+                """
+                        Hi, Sobat Sewa.
+                        
+                        Berikut merupakan one-time passcode (OTP) kamu : %s.
+                        
+                        OTP akan expired dalam 30 menit.
+                        
+                        Selamat menggunakan website Pintu Sewa
+                        
+                        Hormat kami,
+                        Tim Pintu Sewa
+                """, otp
+        );
     }
 }
