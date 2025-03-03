@@ -15,11 +15,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -44,10 +43,10 @@ public class OtpService {
         if (isPresentOtp.isPresent()) {
             OtpHistoryEntity otpHistory = isPresentOtp.get();
             if (request.getOtpCode().equals(otpHistory.getOtp())) {
-                Optional<CustomerEntity> customerEntityOptional = customerRepository.findSingleUserByUsername(request.getUsername());
+                List<CustomerEntity> customerEntityOptional = customerRepository.findByEmailOrPhoneNumber(request.getEmail(), request.getPhoneNumber());
 
-                if (customerEntityOptional.isPresent()) {
-                    CustomerEntity customer = customerEntityOptional.get();
+                if (customerEntityOptional.size() == 1) {
+                    CustomerEntity customer = customerEntityOptional.getFirst();
 
                     OtpResponse response = OtpResponse.builder()
                             .username(customer.getUsername())
@@ -59,7 +58,7 @@ public class OtpService {
                     return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
                 }
                 else {
-                    return commonUtils.setResponse(ErrorMessageEnum.FAILED, "User not found");
+                    return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid Credentials");
                 }
             } else {
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP");
