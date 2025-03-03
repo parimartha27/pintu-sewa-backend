@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -92,4 +93,11 @@ public class OtpService {
         }
         return commonUtils.setResponse(ErrorMessageEnum.FAILED, "OTP expired or invalid");
     }
+
+//    TODO: fix this
+//    @Scheduled(fixedRate = 1800000)
+//    public void deleteExpiredOtpHistory() {
+//        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+//        otpHistoryRepository.deleteByCreatedAtAfter(thirtyMinutesAgo);
+//    }
 }

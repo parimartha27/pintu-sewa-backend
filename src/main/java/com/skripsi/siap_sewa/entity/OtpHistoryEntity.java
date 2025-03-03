@@ -23,6 +23,7 @@ public class OtpHistoryEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private String otp;
-    private String username;
+    private String email;
+    private String phoneNumber;
     private LocalDateTime createdAt;
 }

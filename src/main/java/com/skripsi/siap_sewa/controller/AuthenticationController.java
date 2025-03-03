@@ -2,7 +2,6 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.LoginRequest;
-import com.skripsi.siap_sewa.dto.authentication.OtpRequest;
 import com.skripsi.siap_sewa.dto.authentication.RegisterRequest;
 import com.skripsi.siap_sewa.service.AuthenticationService;
 import com.skripsi.siap_sewa.service.EmailService;
@@ -28,8 +27,6 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse> login(@RequestBody @Valid LoginRequest request){
         return authenticationService.login(request);
     }
-
-
 
     @GetMapping("/email")
     public void email(){

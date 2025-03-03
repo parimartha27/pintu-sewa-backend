@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -59,9 +60,14 @@ public class AuthenticationService {
             entity.setEmail(request.getEmail());
             entity.setPhoneNumber(request.getPhoneNumber());
             entity.setPassword(encoder.encode(request.getPassword()));
-            entity.setUsername(request.getEmail().isEmpty() ? request.getEmail() : request.getPhoneNumber());
             entity.setCreatedAt(LocalDateTime.now());
             entity.setLastUpdateAt(LocalDateTime.now());
+
+            if(!request.getPhoneNumber().isEmpty() && !request.getPhoneNumber().isBlank()){
+                entity.setUsername(request.getPhoneNumber());
+            }else{
+                entity.setUsername(request.getEmail());
+            }
 
             customerRepository.save(entity);
 
@@ -71,7 +77,8 @@ public class AuthenticationService {
 
             OtpHistoryEntity otpHistory = OtpHistoryEntity.builder()
                     .otp(otp)
-                    .username(response.getUsername())
+                    .email(response.getEmail())
+                    .phoneNumber(response.getPhoneNumber())
                     .createdAt(LocalDateTime.now())
                     .build();
             otpHistoryRepository.save(otpHistory);
