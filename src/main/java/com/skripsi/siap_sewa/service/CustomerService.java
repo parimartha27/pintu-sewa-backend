@@ -47,14 +47,18 @@ public class CustomerService {
 
             boolean isValidUsername = validateSameUsername(request.getUsername());
 
-            if(isValidUsername){
+            if(!isValidUsername){
                 return commonUtils.setResponse("SIAP-SEWA-02-001", "Username Already Exists", HttpStatus.OK, null);
             }else{
 //                personal information
                 editedCustomerData.setUsername(request.getUsername());
                 editedCustomerData.setName(request.getName());
-                editedCustomerData.setEmail(request.getEmail());
-                editedCustomerData.setPhoneNumber(request.getPhoneNumber());
+                if(request.getEmail() != null){
+                    editedCustomerData.setEmail(request.getEmail());
+                }
+                if(request.getPhoneNumber() != null){
+                    editedCustomerData.setPhoneNumber(request.getPhoneNumber());
+                }
                 editedCustomerData.setGender(request.getGender());
                 editedCustomerData.setBirthDate(request.getBirthDate());
 //                Address
@@ -68,6 +72,8 @@ public class CustomerService {
                 customerRepository.save(editedCustomerData);
 
                 EditCustomerResponse response = objectMapper.convertValue(editedCustomerData, EditCustomerResponse.class);
+                response.setEmail(editedCustomerData.getEmail());
+                response.setPhoneNumber(editedCustomerData.getPhoneNumber());
 
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             }
