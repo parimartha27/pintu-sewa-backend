@@ -114,7 +114,7 @@ public class AuthenticationService {
                         .username(customer.getUsername())
                         .email(customer.getEmail())
                         .phoneNumber(customer.getPhoneNumber())
-                        .token(jwtService.generateToken(customer.getUsername()))
+                        .token(jwtService.generateToken(new CustomerPrincipal(customer)))
                         .duration(1800)
                         .build();
 

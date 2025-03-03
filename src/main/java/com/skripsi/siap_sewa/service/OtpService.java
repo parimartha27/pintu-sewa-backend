@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import com.skripsi.siap_sewa.dto.authentication.OtpRequest;
 import com.skripsi.siap_sewa.dto.authentication.OtpResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
@@ -54,7 +55,7 @@ public class OtpService {
                             .username(customer.getUsername())
                             .email(customer.getEmail())
                             .phoneNumber(customer.getPhoneNumber())
-                            .token(jwtService.generateToken(customer.getUsername()))
+                            .token(jwtService.generateToken(new CustomerPrincipal(customer)))
                             .duration(1800)
                             .build();
                     return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);

@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.service;
 
+import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -34,18 +35,17 @@ public class JWTService {
         }
     }
 
-    public String generateToken(String username) {
+    public String generateToken(CustomerPrincipal customerPrincipal) {
         Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
                 .claims()
                 .add(claims)
-                .subject(username)
+                .subject(customerPrincipal.getId())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + Duration.ofHours(1).toMillis()))
                 .and()
                 .signWith(getKey())
                 .compact();
-
     }
 
     private SecretKey getKey() {
@@ -54,7 +54,6 @@ public class JWTService {
     }
 
     public String extractUserName(String token) {
-        // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -72,8 +71,15 @@ public class JWTService {
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        if (userDetails instanceof CustomerPrincipal) {
+
+            String userIdFromToken = extractUserId(token);
+
+            String userIdFromUserDetails = ((CustomerPrincipal) userDetails).getId();
+
+            return userIdFromToken.equals(userIdFromUserDetails.toString()) && !isTokenExpired(token);
+        }
+        return false;
     }
 
     private boolean isTokenExpired(String token) {
@@ -84,4 +90,7 @@ public class JWTService {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public String extractUserId(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
 }

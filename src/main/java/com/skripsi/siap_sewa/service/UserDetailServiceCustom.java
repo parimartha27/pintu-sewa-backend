@@ -21,12 +21,16 @@ public class UserDetailServiceCustom implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         List<CustomerEntity> customers = customerRepository.findByUsername(username);
         if (customers.isEmpty()) {
-            System.out.println("User Not Found");
-            throw new UsernameNotFoundException("user not found");
-        }
-        else if(customers.size() > 1) {
+            throw new UsernameNotFoundException("User not found");
+        } else if (customers.size() > 1) {
             throw new SecurityException("User is duplicate");
         }
-        return new CustomerPrincipal(customers.get(0));
+        return new CustomerPrincipal(customers.getFirst());
+    }
+
+    public UserDetails loadUserById(String id) throws UsernameNotFoundException {
+        CustomerEntity customer = customerRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+        return new CustomerPrincipal(customer);
     }
 }

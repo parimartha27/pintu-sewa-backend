@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.dto.authentication;
 
 import com.skripsi.siap_sewa.entity.CustomerEntity;
+import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,12 +9,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+@Builder
 public class CustomerPrincipal implements UserDetails {
 
-    private CustomerEntity customer;
+    private final CustomerEntity customer;
 
     public CustomerPrincipal(CustomerEntity customer) {
         this.customer = customer;
+    }
+
+    public String getId() {
+        return customer.getId();
     }
 
     @Override

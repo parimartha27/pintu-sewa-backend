@@ -23,7 +23,7 @@ public class OtpController {
         return otpService.verifyOtp(request);
     }
 
-    @PostMapping("resend")
+    @PostMapping("/resend")
     public ResponseEntity<ApiResponse> resendOtp(@RequestBody @Valid OtpRequest request){
         return otpService.resendOtp(request);
     }
