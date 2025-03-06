@@ -21,7 +21,7 @@ public class TestController {
     public String hello() {
         return "PINTU SEWA";
     }
-    
+
     @GetMapping("/email")
     public void email(){
         emailService.sendEmailTest();
