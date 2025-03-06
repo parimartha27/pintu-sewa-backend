@@ -26,12 +26,15 @@ public class ShopEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
+//profile
     private String name;
     private String description;
     private String instagram;
     private String facebook;
     private int shopStatus;
+    private String image;
+
+//    Address
     private String street;
     private String district;
     private String regency;

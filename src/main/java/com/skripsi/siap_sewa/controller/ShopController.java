@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.EditShopRequest;
 import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ShopService;
@@ -18,14 +19,17 @@ public class ShopController {
     private final ShopService shopService;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse> createStore(@RequestBody @Valid CreateShopRequest request){
+    public ResponseEntity<ApiResponse> createShop (@RequestBody @Valid CreateShopRequest request){
         return shopService.createShop(request);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> createStore(@PathVariable String id){
-        return shopService.shopDetail(id);
+    public ResponseEntity<ApiResponse> getShopDetail (@PathVariable String shopId){
+        return shopService.shopDetail(shopId);
     }
 
-    @PutMapping
+    @PutMapping("/edit")
+    public ResponseEntity<ApiResponse> editShop(@RequestBody @Valid EditShopRequest request){
+        return shopService.editShop(request);
+    }
 }

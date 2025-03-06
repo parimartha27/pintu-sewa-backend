@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto;
+package com.skripsi.siap_sewa.dto.shop;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -13,37 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class EditShopRequest {
-
-    @NotBlank(message = "ID tidak boleh kosong")
-    private String id;
-
-    @NotBlank(message = "Nama toko tidak boleh kosong")
+public class EditShopResponse {
     private String name;
-
     private String description;
-
-    @NotBlank(message = "Instagram tidak boleh kosong")
     private String instagram;
-
-    @NotBlank(message = "Facebook tidak boleh kosong")
     private String facebook;
-
-    @NotBlank(message = "Gambar toko tidak boleh kosong")
     private String image;
-
-    @NotBlank(message = "Jalan tidak boleh kosong")
     private String street;
-
-    @NotBlank(message = "Kecamatan tidak boleh kosong")
     private String district;
-
-    @NotBlank(message = "Kabupaten tidak boleh kosong")
     private String regency;
-
-    @NotBlank(message = "Provinsi tidak boleh kosong")
     private String province;
-
-    @NotBlank(message = "Kode Pos tidak boleh kosong")
     private String postCode;
 }
