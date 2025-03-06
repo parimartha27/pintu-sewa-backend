@@ -28,7 +28,6 @@ public class ProductEntity {
     private String name;
     private String category;
     private int rentCategory;
-    private boolean isCorenting;
     private boolean isRnb;
     private BigDecimal weight;
     private BigDecimal height;

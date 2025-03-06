@@ -24,9 +24,7 @@ public class ProductController {
 
     @GetMapping()
     public ResponseEntity<ApiResponse> getProduct(){
-        List<ProductResponse> responses = productService.getProducts();
-
-        return utils.setResponse(ErrorMessageEnum.SUCCESS, responses);
+        return productService.getProducts();
     }
 
     @GetMapping("/{productId}")

@@ -28,19 +28,21 @@ public class AddProductRequest {
     @Min(value = 1, message = "Durasi sewa minimal harus 1")
     private Integer rentCategory;
 
-    private boolean isCorenting = false;
-
     private boolean isRnb = false;
 
+    @NotNull(message = "Berat produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Berat harus lebih dari 0")
     private BigDecimal weight;
 
+    @NotNull(message = "Tinggi produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Tinggi harus lebih dari 0")
     private BigDecimal height;
 
+    @NotNull(message = "Lebar produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Lebar harus lebih dari 0")
     private BigDecimal width;
 
+    @NotNull(message = "Panjang produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Panjang harus lebih dari 0")
     private BigDecimal length;
 
@@ -55,16 +57,14 @@ public class AddProductRequest {
 
     @NotBlank(message = "Deskripsi produk tidak boleh kosong")
     private String description;
+    
     private String conditionDescription;
 
-    @Min(value = 0, message = "Stok tidak boleh negatif")
+    @Min(value = 0, message = "Stok tidak boleh harus lebih dari 0")
     private int stock;
 
-    private String status = "Tersedia";
+    private String status;
 
     private String image;
-
-    @NotBlank(message = "Shop ID tidak boleh kosong")
-    private String shopId;
 
 }

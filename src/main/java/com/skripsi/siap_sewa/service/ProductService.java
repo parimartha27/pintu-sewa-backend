@@ -26,27 +26,26 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ShopRepository shopRepository;
-    private final ObjectMapper mapper;
+    private final ObjectMapper objectMapper;
     private final CommonUtils commonUtils;
 
-    public List<ProductResponse> getProducts() {
-        List<ProductEntity> listProduct = productRepository.findAll();
+    public ResponseEntity<ApiResponse> getProducts() {
+        List<ProductEntity> products = productRepository.findAll();
+        ProductResponse response = objectMapper.convertValue(products, ProductResponse.class);
 
-        List<ProductResponse> responses = mapper.convertValue(listProduct, new TypeReference<List<ProductResponse>>() {});
-
-        return responses;
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
     public ResponseEntity<ApiResponse> getProductDetail(String id) {
-       Optional<ProductEntity> entity = productRepository.findById(id);
+       Optional<ProductEntity> productEntity = productRepository.findById(id);
 
-       if(entity.isEmpty()){
-           return commonUtils.setResponse(ErrorMessageEnum.FAILED, null);
+       if(productEntity.isPresent()){
+           ProductEntity productDetail = productEntity.get();
+           ProductResponse response = objectMapper.convertValue(productDetail, ProductResponse.class);
+
+           return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
        }
-
-       ProductResponse response = mapper.convertValue(entity, ProductResponse.class);
-
-       return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
     }
 
     public AddProductResponse insertProduct (AddProductRequest request){
@@ -57,7 +56,6 @@ public class ProductService {
                 .name(request.getName())
                 .category(request.getCategory())
                 .rentCategory(request.getRentCategory())
-                .isCorenting(request.isCorenting())
                 .isRnb(request.isRnb())
                 .weight(request.getWeight())
                 .height(request.getHeight())

@@ -35,13 +35,6 @@ public class ShopResponse {
     private String postCode;
     private LocalDateTime createdAt;
     private LocalDateTime lastUpdateAt;
-
-    @OneToOne
-    @JoinColumn(name = "customer_id", referencedColumnName = "id")
-    @JsonBackReference
     private CustomerEntity customer;
-
-    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<ProductEntity> products = new ArrayList<>();
+    private List<ProductEntity> products;
 }
