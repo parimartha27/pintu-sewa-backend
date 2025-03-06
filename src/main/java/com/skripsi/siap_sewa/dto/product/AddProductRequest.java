@@ -28,7 +28,7 @@ public class AddProductRequest {
     @Min(value = 1, message = "Durasi sewa minimal harus 1")
     private Integer rentCategory;
 
-    private boolean isRnb = false;
+    private boolean isRnb;
 
     @NotNull(message = "Berat produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Berat harus lebih dari 0")

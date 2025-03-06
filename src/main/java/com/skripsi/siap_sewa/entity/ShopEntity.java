@@ -50,7 +50,7 @@ public class ShopEntity {
 
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<ProductEntity> products = new ArrayList<>();
+    private List<ProductEntity> products;
 
 }
 

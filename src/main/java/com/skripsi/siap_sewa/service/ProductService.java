@@ -48,34 +48,34 @@ public class ProductService {
         return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
     }
 
-    public AddProductResponse insertProduct (AddProductRequest request){
-
-        Optional<ShopEntity> shopEntity = shopRepository.findById(request.getShopId());
-
-        ProductEntity entity = ProductEntity.builder()
-                .name(request.getName())
-                .category(request.getCategory())
-                .rentCategory(request.getRentCategory())
-                .isRnb(request.isRnb())
-                .weight(request.getWeight())
-                .height(request.getHeight())
-                .width(request.getWidth())
-                .length(request.getLength())
-                .dailyPrice(request.getDailyPrice())
-                .weeklyPrice(request.getWeeklyPrice())
-                .monthlyPrice(request.getMonthlyPrice())
-                .description(request.getDescription())
-                .conditionDescription(request.getConditionDescription())
-                .stock(request.getStock())
-                .status(request.getStatus())
-                .image(request.getImage())
-                .createdAt(LocalDateTime.now())
-                .lastUpdateAt(LocalDateTime.now())
-                .shop(shopEntity.orElse(null))
-                .build();
-
-        productRepository.save(entity);
-
-        return new AddProductResponse();
-    }
+//    public AddProductResponse insertProduct (AddProductRequest request){
+//
+//        Optional<ShopEntity> shopEntity = shopRepository.findById(request.getShopId());
+//
+//        ProductEntity entity = ProductEntity.builder()
+//                .name(request.getName())
+//                .category(request.getCategory())
+//                .rentCategory(request.getRentCategory())
+//                .isRnb(request.isRnb())
+//                .weight(request.getWeight())
+//                .height(request.getHeight())
+//                .width(request.getWidth())
+//                .length(request.getLength())
+//                .dailyPrice(request.getDailyPrice())
+//                .weeklyPrice(request.getWeeklyPrice())
+//                .monthlyPrice(request.getMonthlyPrice())
+//                .description(request.getDescription())
+//                .conditionDescription(request.getConditionDescription())
+//                .stock(request.getStock())
+//                .status(request.getStatus())
+//                .image(request.getImage())
+//                .createdAt(LocalDateTime.now())
+//                .lastUpdateAt(LocalDateTime.now())
+//                .shop(shopEntity.orElse(null))
+//                .build();
+//
+//        productRepository.save(entity);
+//
+//        return new AddProductResponse();
+//    }
 }

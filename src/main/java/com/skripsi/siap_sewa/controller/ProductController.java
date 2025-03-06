@@ -32,10 +32,10 @@ public class ProductController {
         return productService.getProductDetail(productId);
     }
 
-    @PostMapping("/insert")
-    public ResponseEntity<ApiResponse> insertProduct(@RequestBody @Valid AddProductRequest request){
-        AddProductResponse response = productService.insertProduct(request);
-
-        return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
-    }
+//    @PostMapping("/insert")
+//    public ResponseEntity<ApiResponse> insertProduct(@RequestBody @Valid AddProductRequest request){
+//        AddProductResponse response = productService.insertProduct(request);
+//
+//        return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
+//    }
 }
