@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.exception;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -50,5 +51,10 @@ public class GlobalExceptionHandler{
                 "Phone number has been registered. Please use other phone number",
                 HttpStatus.CONFLICT,
                 null);
+    }
+
+    @ExceptionHandler({DataNotFoundException.class})
+    public ResponseEntity<ApiResponse> dataNotFoundException(){
+        return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
     }
 }

@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.customer.ForgetPasswordRequest;
 import com.skripsi.siap_sewa.dto.authentication.login.LoginRequest;
 import com.skripsi.siap_sewa.dto.authentication.register.RegisterRequest;
 import com.skripsi.siap_sewa.service.AuthenticationService;
@@ -25,7 +26,4 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse> login(@RequestBody @Valid LoginRequest request){
         return authenticationService.login(request);
     }
-
-    @PutMapping("/forget-password")
-    public ResponseEntity<ApiResponse> forgetPassword(@RequestBody @Valid )
 }

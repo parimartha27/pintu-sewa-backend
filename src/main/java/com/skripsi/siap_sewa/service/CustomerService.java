@@ -2,12 +2,16 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.customer.ForgetPasswordRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerResponse;
+import com.skripsi.siap_sewa.dto.customer.ForgetPasswordResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -81,6 +85,21 @@ public class CustomerService {
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             }
         }
+    }
+
+    public ResponseEntity<ApiResponse> forgetPassword(@Valid ForgetPasswordRequest request) {
+        Optional<CustomerEntity> optionalCustomer = customerRepository.findByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+
+        if(optionalCustomer.isEmpty()){
+            throw new DataNotFoundException("Customer with: " + request + " is not available");
+        }
+
+        CustomerEntity updatedPassword = optionalCustomer.get();
+        updatedPassword.setPassword(encoder.encode(request.getPassword()));
+
+        customerRepository.save(updatedPassword);
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
     }
 
     private boolean validateSameUsername (String username){

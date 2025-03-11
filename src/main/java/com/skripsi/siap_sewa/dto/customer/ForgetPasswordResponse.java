@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto.authentication;
+package com.skripsi.siap_sewa.dto.customer;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ForgetPasswordRequest {
-
-    private String customerId;
+public class ForgetPasswordResponse {
+    private String email;
+    private String phoneNumber;
+    private String userId;
 }

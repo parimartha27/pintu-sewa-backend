@@ -9,6 +9,7 @@ import com.skripsi.siap_sewa.dto.authentication.register.RegisterRequest;
 import com.skripsi.siap_sewa.dto.authentication.register.RegisterResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.exception.EmailExistException;
 import com.skripsi.siap_sewa.exception.PhoneNumberExistException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,7 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request){
 
@@ -110,6 +113,4 @@ public class AuthenticationService {
             }
         }
     }
-
-
 }
