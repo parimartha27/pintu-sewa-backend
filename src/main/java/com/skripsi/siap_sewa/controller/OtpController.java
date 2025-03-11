@@ -1,7 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.authentication.OtpRequest;
+import com.skripsi.siap_sewa.dto.authentication.otp.OtpRequest;
 import com.skripsi.siap_sewa.service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

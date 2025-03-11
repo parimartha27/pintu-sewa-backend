@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto.authentication;
+package com.skripsi.siap_sewa.dto.authentication.register;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -12,11 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class OtpResponse {
-    private String userId;
-    private String username;
+public class RegisterResponse {
+
     private String email;
     private String phoneNumber;
-    private String token;
-    private int duration;
+    private String userId;
 }

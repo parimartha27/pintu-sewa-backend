@@ -1,12 +1,9 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
-import com.skripsi.siap_sewa.dto.authentication.LoginRequest;
-import com.skripsi.siap_sewa.dto.authentication.RegisterRequest;
+import com.skripsi.siap_sewa.dto.authentication.login.LoginRequest;
+import com.skripsi.siap_sewa.dto.authentication.register.RegisterRequest;
 import com.skripsi.siap_sewa.service.AuthenticationService;
-import com.skripsi.siap_sewa.service.EmailService;
-import com.skripsi.siap_sewa.service.JWTService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

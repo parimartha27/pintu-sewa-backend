@@ -36,6 +36,7 @@ public class CustomerEntity {
     private String gender;
     private LocalDateTime birthDate;
     private String image;
+    private int status;
 
 //    Address
     private String street;
@@ -44,12 +45,17 @@ public class CustomerEntity {
     private String province;
     private String postCode;
     private String notes;
+
+//    OTP
+    private String otp;
+    private int verifyCount;
+    private int resendOtpCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime lastUpdateAt;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ShopEntity shop;
-
 }
 
 

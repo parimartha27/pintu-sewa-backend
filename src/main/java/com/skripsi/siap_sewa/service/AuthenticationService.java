@@ -3,9 +3,14 @@ package com.skripsi.siap_sewa.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.*;
+import com.skripsi.siap_sewa.dto.authentication.login.LoginRequest;
+import com.skripsi.siap_sewa.dto.authentication.login.LoginResponse;
+import com.skripsi.siap_sewa.dto.authentication.register.RegisterRequest;
+import com.skripsi.siap_sewa.dto.authentication.register.RegisterResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
-import com.skripsi.siap_sewa.entity.OtpHistoryEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.exception.EmailExistException;
+import com.skripsi.siap_sewa.exception.PhoneNumberExistException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.repository.OtpHistoryRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
@@ -20,11 +25,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,56 +38,40 @@ public class AuthenticationService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final JWTService jwtService;
     private final EmailService emailService;
-    private final OtpHistoryRepository otpHistoryRepository;
     private final CustomerRepository customerRepository;
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request){
 
         if(customerRepository.existsByEmail(request.getEmail())){
-            return commonUtils.setResponse(
-                    "SIAP-SEWA-01-003",
-                    "Email has been registered. Please use other email",
-                    HttpStatus.CONFLICT,
-                    null);
+            throw new EmailExistException("Email:" +  request.getEmail() + "already exists");
         }
         else if(customerRepository.existsByPhoneNumber(request.getPhoneNumber())){
-            return commonUtils.setResponse(
-                    "SIAP-SEWA-01-004",
-                    "Phone number has been registered. Please use other phone number",
-                    HttpStatus.CONFLICT,
-                    null);
+           throw new PhoneNumberExistException("PhoneNumber:" +  request.getPhoneNumber() + "already exists");
         }
         else{
-            CustomerEntity entity = new CustomerEntity();
-            entity.setEmail(request.getEmail());
-            entity.setPhoneNumber(request.getPhoneNumber());
-            entity.setPassword(encoder.encode(request.getPassword()));
-            entity.setCreatedAt(LocalDateTime.now());
-            entity.setLastUpdateAt(LocalDateTime.now());
-
-            if(!request.getPhoneNumber().isEmpty() && !request.getPhoneNumber().isBlank()){
-                entity.setUsername(request.getPhoneNumber());
-            }else{
-                entity.setUsername(request.getEmail());
-            }
-
-            customerRepository.save(entity);
-
-            RegisterResponse response = objectMapper.convertValue(entity, RegisterResponse.class);
+            CustomerEntity newCustomer = new CustomerEntity();
 
             String otp = commonUtils.generateOtp();
 
-            OtpHistoryEntity otpHistory = OtpHistoryEntity.builder()
-                    .otp(otp)
-                    .email(response.getEmail())
-                    .phoneNumber(response.getPhoneNumber())
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            otpHistoryRepository.save(otpHistory);
+            if(request.getEmail().isEmpty()){
+                newCustomer.setPhoneNumber(request.getPhoneNumber());
+            }else{
+                newCustomer.setEmail(request.getEmail());
+            }
 
-            response.setOtpId(otpHistory.getId());
+            newCustomer.setOtp(otp);
+            newCustomer.setVerifyCount(0);
+            newCustomer.setResendOtpCount(0);
+            newCustomer.setStatus(99);
+            newCustomer.setCreatedAt(LocalDateTime.now());
+            newCustomer.setLastUpdateAt(LocalDateTime.now());
 
-            emailService.sendEmail(response.getEmail(),Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(otpHistory.getOtp()));
+            RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
+
+            customerRepository.save(newCustomer);
+            response.setUserId(newCustomer.getId());
+
+            emailService.sendEmail(response.getEmail(),Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(otp));
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }

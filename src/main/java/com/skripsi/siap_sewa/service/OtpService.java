@@ -3,8 +3,8 @@ package com.skripsi.siap_sewa.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
-import com.skripsi.siap_sewa.dto.authentication.OtpRequest;
-import com.skripsi.siap_sewa.dto.authentication.OtpResponse;
+import com.skripsi.siap_sewa.dto.authentication.otp.OtpRequest;
+import com.skripsi.siap_sewa.dto.authentication.otp.OtpResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.OtpHistoryEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
@@ -16,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -31,67 +30,71 @@ public class OtpService {
     private final ObjectMapper objectMapper;
     private final JWTService jwtService;
     private final EmailService emailService;
-    private final OtpHistoryRepository otpHistoryRepository;
     private final CustomerRepository customerRepository;
 
     public ResponseEntity<ApiResponse> verifyOtp(@Valid OtpRequest request) {
 
-        if (request.getAttempt() > 3) {
+        if (request.getVerifyCount() > 10 || request.getResendOtpCount() > 3) {
             return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
         }
 
-        Optional<OtpHistoryEntity> isPresentOtp = otpHistoryRepository.findById(request.getOtpId());
+        Optional<CustomerEntity> isPresentOtp = customerRepository.findById(request.getCustomerId());
 
         if (isPresentOtp.isPresent()) {
-            OtpHistoryEntity otpHistory = isPresentOtp.get();
-            if (request.getOtpCode().equals(otpHistory.getOtp())) {
-                List<CustomerEntity> customerEntityOptional = customerRepository.findByEmailOrPhoneNumber(request.getEmail(), request.getPhoneNumber());
+            CustomerEntity customerOtp = isPresentOtp.get();
+            if (request.getOtpCode().equals(customerOtp.getOtp())) {
+                OtpResponse response = OtpResponse.builder()
+                        .customerId(customerOtp.getId())
+                        .username(customerOtp.getUsername())
+                        .email(customerOtp.getEmail())
+                        .phoneNumber(customerOtp.getPhoneNumber())
+                        .token(jwtService.generateToken(new CustomerPrincipal(customerOtp)))
+                        .duration(1800)
+                        .build();
 
-                if (customerEntityOptional.size() == 1) {
-                    CustomerEntity customer = customerEntityOptional.getFirst();
+                customerOtp.setStatus(88);
+                customerOtp.setVerifyCount(request.getVerifyCount() + 1);
+                customerOtp.setLastUpdateAt(LocalDateTime.now());
+                customerRepository.save(customerOtp);
 
-                    OtpResponse response = OtpResponse.builder()
-                            .userId(customer.getId())
-                            .username(customer.getUsername())
-                            .email(customer.getEmail())
-                            .phoneNumber(customer.getPhoneNumber())
-                            .token(jwtService.generateToken(new CustomerPrincipal(customer)))
-                            .duration(1800)
-                            .build();
-                    return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-                }
-                else {
-                    return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid Credentials");
-                }
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             } else {
+                customerOtp.setVerifyCount(request.getVerifyCount() + 1);
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP");
             }
         } else {
-            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "OTP expired or invalid");
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Credential invalid");
         }
     }
 
     public ResponseEntity<ApiResponse> resendOtp(@Valid OtpRequest request) {
 
-        if (request.getAttempt() > 3) {
+        if (request.getResendOtpCount() > 3) {
             return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
         }
 
-        Optional<OtpHistoryEntity> isPresentOtp = otpHistoryRepository.findById(request.getOtpId());
+        Optional<CustomerEntity> isPresentOtp = customerRepository.findById(request.getCustomerId());
 
         if(isPresentOtp.isPresent()){
-            OtpHistoryEntity updatedOtp = isPresentOtp.get();
+            CustomerEntity updatedCustomerOtp = isPresentOtp.get();
 
             String newOtp = commonUtils.generateOtp();
 
-           updatedOtp.setOtp(newOtp);
-           updatedOtp.setCreatedAt(LocalDateTime.now());
+           updatedCustomerOtp.setOtp(newOtp);
+           updatedCustomerOtp.setResendOtpCount(request.getResendOtpCount() + 1); 
+           updatedCustomerOtp.setLastUpdateAt(LocalDateTime.now());
 
-            otpHistoryRepository.save(updatedOtp);
+            OtpResponse response = OtpResponse.builder()
+                    .customerId(updatedCustomerOtp.getId())
+                    .verifyCount(updatedCustomerOtp.getVerifyCount())
+                    .resendOtpCount(updatedCustomerOtp.getResendOtpCount())
+                    .build();
 
-            emailService.sendEmail(request.getEmail(), Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(updatedOtp.getOtp()));
+            customerRepository.save(updatedCustomerOtp);
 
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, request.getAttempt() + 1);
+            emailService.sendEmail(updatedCustomerOtp.getEmail(), Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(newOtp));
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }
         return commonUtils.setResponse(ErrorMessageEnum.FAILED, "OTP expired or invalid");
     }
