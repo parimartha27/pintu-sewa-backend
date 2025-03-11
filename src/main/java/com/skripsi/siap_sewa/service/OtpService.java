@@ -6,10 +6,8 @@ import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import com.skripsi.siap_sewa.dto.authentication.otp.OtpRequest;
 import com.skripsi.siap_sewa.dto.authentication.otp.OtpResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
-import com.skripsi.siap_sewa.entity.OtpHistoryEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
-import com.skripsi.siap_sewa.repository.OtpHistoryRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.Constant;
 import jakarta.validation.Valid;
@@ -19,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Service

@@ -11,6 +11,7 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CommonUtils commonUtils;
     private final ObjectMapper objectMapper;
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public ResponseEntity<ApiResponse> getCustomerDetails(String id) {
         Optional<CustomerEntity> customerEntity = customerRepository.findById(id);
@@ -61,6 +63,7 @@ public class CustomerService {
                 }
                 editedCustomerData.setGender(request.getGender());
                 editedCustomerData.setBirthDate(request.getBirthDate());
+                editedCustomerData.setPassword(encoder.encode(request.getPassword()));
 //                Address
                 editedCustomerData.setStreet(request.getStreet());
                 editedCustomerData.setDistrict(request.getDistrict());
@@ -85,7 +88,4 @@ public class CustomerService {
 
        return customerWithSameUsername.size() == 1 ? true : false;
     }
-
-
-
 }

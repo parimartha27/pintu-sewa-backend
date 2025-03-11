@@ -12,7 +12,6 @@ import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.EmailExistException;
 import com.skripsi.siap_sewa.exception.PhoneNumberExistException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
-import com.skripsi.siap_sewa.repository.OtpHistoryRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.Constant;
 import jakarta.validation.Valid;
@@ -35,7 +34,6 @@ public class AuthenticationService {
     private final CommonUtils commonUtils;
     private final ObjectMapper objectMapper;
     private final AuthenticationManager authManager;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
@@ -97,7 +95,7 @@ public class AuthenticationService {
 
             if (authentication.isAuthenticated()) {
                 LoginResponse response = LoginResponse.builder()
-                        .userId(customer.getId())
+                        .customerId(customer.getId())
                         .username(customer.getUsername())
                         .email(customer.getEmail())
                         .phoneNumber(customer.getPhoneNumber())

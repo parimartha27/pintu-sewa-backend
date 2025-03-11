@@ -25,4 +25,7 @@ public class AuthenticationController {
     public ResponseEntity<ApiResponse> login(@RequestBody @Valid LoginRequest request){
         return authenticationService.login(request);
     }
+
+    @PutMapping("/forget-password")
+    public ResponseEntity<ApiResponse> forgetPassword(@RequestBody @Valid )
 }
