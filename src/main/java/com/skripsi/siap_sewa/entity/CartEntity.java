@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,24 +22,20 @@ public class CartEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(name = "customer_id", nullable = false)
     private String customerId;
 
-    @Column(name = "product_id", nullable = false)
-    private String productId;
+    @ManyToOne
+    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @JsonBackReference
+    private ProductEntity product;
 
-    @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
-    @Column(name = "start_rent_date", nullable = false)
     private LocalDate startRentDate;
 
-    @Column(name = "end_rent_date", nullable = false)
     private LocalDate endRentDate;
 
-    @Column(name = "shipping_address", nullable = false, columnDefinition = "TEXT")
     private String shippingAddress;
 }

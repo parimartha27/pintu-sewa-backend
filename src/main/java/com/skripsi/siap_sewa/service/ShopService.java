@@ -2,7 +2,7 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.EditShopRequest;
+import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
 import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
 import com.skripsi.siap_sewa.dto.shop.CreateShopResponse;
 import com.skripsi.siap_sewa.dto.shop.EditShopResponse;
