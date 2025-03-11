@@ -32,10 +32,8 @@ public class ProductController {
         return productService.getProductDetail(productId);
     }
 
-//    @PostMapping("/insert")
-//    public ResponseEntity<ApiResponse> insertProduct(@RequestBody @Valid AddProductRequest request){
-//        AddProductResponse response = productService.insertProduct(request);
-//
-//        return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
-//    }
+    @PostMapping("/add")
+    public ResponseEntity<ApiResponse> addProduct(@RequestBody @Valid AddProductRequest request){
+        return productService.addProduct(request);
+    }
 }

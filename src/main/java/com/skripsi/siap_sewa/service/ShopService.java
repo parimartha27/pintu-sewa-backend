@@ -90,18 +90,7 @@ public class ShopService {
         Optional<ShopEntity> shopEntity = shopRepository.findById(request.getId());
 
         if(shopEntity.isPresent()) {
-            ShopEntity updatedShop = shopEntity.get();
-
-            updatedShop.setName(request.getName());
-            updatedShop.setDescription(request.getDescription());
-            updatedShop.setInstagram(request.getInstagram());
-            updatedShop.setFacebook(request.getFacebook());
-            updatedShop.setImage(request.getImage());
-            updatedShop.setStreet(request.getStreet());
-            updatedShop.setDistrict(request.getDistrict());
-            updatedShop.setRegency(request.getRegency());
-            updatedShop.setProvince(request.getProvince());
-            updatedShop.setPostCode(request.getPostCode());
+            ShopEntity updatedShop = getShopEntity(request, shopEntity);
 
             shopRepository.save(updatedShop);
 
@@ -111,5 +100,21 @@ public class ShopService {
         }
 
         return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+    }
+
+    private ShopEntity getShopEntity(EditShopRequest request, Optional<ShopEntity> shopEntity) {
+        ShopEntity updatedShop = shopEntity.get();
+
+        updatedShop.setName(request.getName());
+        updatedShop.setDescription(request.getDescription());
+        updatedShop.setInstagram(request.getInstagram());
+        updatedShop.setFacebook(request.getFacebook());
+        updatedShop.setImage(request.getImage());
+        updatedShop.setStreet(request.getStreet());
+        updatedShop.setDistrict(request.getDistrict());
+        updatedShop.setRegency(request.getRegency());
+        updatedShop.setProvince(request.getProvince());
+        updatedShop.setPostCode(request.getPostCode());
+        return updatedShop;
     }
 }

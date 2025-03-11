@@ -24,8 +24,8 @@ public class ShopController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getShopDetail (@PathVariable String shopId){
-        return shopService.shopDetail(shopId);
+    public ResponseEntity<ApiResponse> getShopDetail (@PathVariable String id){
+        return shopService.shopDetail(id);
     }
 
     @PutMapping("/edit")
