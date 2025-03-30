@@ -81,11 +81,11 @@ public class OtpService {
                 updatedCustomerOtp.setLastUpdateAt(LocalDateTime.now());
             }
 
-            if (updatedCustomerOtp.getResendOtpCount() > 3) {
+            if (updatedCustomerOtp.getResendOtpCount() >= 3) {
                 return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
             }
 
-            if (updatedCustomerOtp.getVerifyCount() > 10) {
+            if (updatedCustomerOtp.getVerifyCount() >= 10) {
                 return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
             }
 
