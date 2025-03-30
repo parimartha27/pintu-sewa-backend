@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.customer.CreateNewCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.ForgetPasswordRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerResponse;
@@ -41,7 +42,7 @@ public class CustomerService {
         }
     }
 
-    public ResponseEntity<ApiResponse> editCustomerData(EditCustomerRequest request) {
+    public ResponseEntity<ApiResponse> inputCustomerData (CreateNewCustomerRequest request) {
         Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
 
         if (customerEntity.isEmpty()) {
@@ -50,10 +51,10 @@ public class CustomerService {
         else {
             CustomerEntity editedCustomerData = customerEntity.get();
 
-            boolean isValidUsername = validateSameUsername(request.getUsername());
+            boolean isValidUsername = customerRepository.existsByUsername(request.getUsername());
 
-            if(!isValidUsername){
-                return commonUtils.setResponse("SIAP-SEWA-02-001", "Username Already Exists", HttpStatus.OK, null);
+            if(isValidUsername){
+                return commonUtils.setResponse("SIAP-SEWA-02-001", "Please use other username", HttpStatus.OK, null);
             }else{
 //                personal information
                 editedCustomerData.setUsername(request.getUsername());
@@ -67,6 +68,7 @@ public class CustomerService {
                 editedCustomerData.setGender(request.getGender());
                 editedCustomerData.setBirthDate(request.getBirthDate());
                 editedCustomerData.setPassword(encoder.encode(request.getPassword()));
+                editedCustomerData.setStatus("ACTIVE");
 //                Address
                 editedCustomerData.setStreet(request.getStreet());
                 editedCustomerData.setDistrict(request.getDistrict());
@@ -83,6 +85,37 @@ public class CustomerService {
 
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             }
+        }
+    }
+
+    public ResponseEntity<ApiResponse> editCustomerData(EditCustomerRequest request) {
+        Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+
+        if (customerEntity.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+        else {
+            CustomerEntity editedCustomerData = customerEntity.get();
+//          Personal Information
+            editedCustomerData.setGender(request.getGender());
+            editedCustomerData.setBirthDate(request.getBirthDate());
+            editedCustomerData.setPassword(encoder.encode(request.getPassword()));
+
+//                Address
+            editedCustomerData.setStreet(request.getStreet());
+            editedCustomerData.setDistrict(request.getDistrict());
+            editedCustomerData.setRegency(request.getRegency());
+            editedCustomerData.setProvince(request.getProvince());
+            editedCustomerData.setPostCode(request.getPostCode());
+            editedCustomerData.setLastUpdateAt(LocalDateTime.now());
+
+            customerRepository.save(editedCustomerData);
+
+            EditCustomerResponse response = objectMapper.convertValue(editedCustomerData, EditCustomerResponse.class);
+            response.setEmail(editedCustomerData.getEmail());
+            response.setPhoneNumber(editedCustomerData.getPhoneNumber());
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.customer.CreateNewCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.ForgetPasswordRequest;
 import com.skripsi.siap_sewa.service.CustomerService;
@@ -22,6 +23,11 @@ public class CustomerController {
         return customerService.getCustomerDetails(id);
     }
 
+    @PutMapping("/create")
+    public ResponseEntity<ApiResponse> inputNewCustomerData(@RequestBody @Valid CreateNewCustomerRequest request){
+        return customerService.inputCustomerData(request);
+    }
+
     @PutMapping("/edit")
     public ResponseEntity<ApiResponse> editCustomerData(@RequestBody @Valid EditCustomerRequest request){
         return customerService.editCustomerData(request);
@@ -31,7 +37,5 @@ public class CustomerController {
     public ResponseEntity<ApiResponse> forgetPassword(@RequestBody @Valid ForgetPasswordRequest request){
         return customerService.forgetPassword(request);
     }
-
-
 
 }

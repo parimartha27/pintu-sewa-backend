@@ -36,7 +36,7 @@ public class CustomerEntity {
     private String gender;
     private LocalDateTime birthDate;
     private String image;
-    private int status;
+    private String status;
 
 //    Address
     private String street;

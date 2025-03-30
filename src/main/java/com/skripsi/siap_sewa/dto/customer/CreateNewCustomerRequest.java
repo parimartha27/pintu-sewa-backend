@@ -17,10 +17,25 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class EditCustomerRequest {
+public class CreateNewCustomerRequest {
 
     @NotBlank(message = "ID tidak boleh kosong")
     private String id;
+
+    @NotBlank(message = "Username tidak boleh kosong")
+    private String username;
+
+    @NotBlank(message = "Nama tidak boleh kosong")
+    @Size(min = 3, max = 100, message = "Nama harus terdiri dari 3 hingga 100 karakter")
+    private String name;
+
+    @Nullable
+    @Email(message = "Format email tidak valid")
+    private String email;
+
+    @Nullable
+    @Pattern(regexp = "^(\\d{10,15})?$", message = "Nomor HP tidak valid")
+    private String phoneNumber;
 
     @NotBlank(message = "Jenis kelamin tidak boleh kosong")
     @Pattern(regexp = "^(Laki-laki|Perempuan)$", message = "Jenis kelamin harus 'Laki-laki' atau 'Perempuan'")

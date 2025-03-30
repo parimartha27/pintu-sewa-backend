@@ -49,7 +49,7 @@ public class OtpService {
                         .duration(1800)
                         .build();
 
-                customerOtp.setStatus(88);
+                customerOtp.setStatus("REGISTERED");
                 customerOtp.setVerifyCount(request.getVerifyCount() + 1);
                 customerOtp.setLastUpdateAt(LocalDateTime.now());
                 customerRepository.save(customerOtp);

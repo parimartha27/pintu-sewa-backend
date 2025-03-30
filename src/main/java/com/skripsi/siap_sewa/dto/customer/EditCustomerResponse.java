@@ -22,9 +22,11 @@ public class EditCustomerResponse {
     private String phoneNumber;
     private String gender;
     private LocalDateTime birthDate;
+    private String image;
     private String street;
     private String district;
     private String regency;
     private String province;
     private String postCode;
+    private String note;
 }

@@ -43,39 +43,43 @@ public class AuthenticationService {
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request){
 
+        if(commonUtils.isNull(request.getEmail())
+                && commonUtils.isNull(request.getPhoneNumber())){
+            return commonUtils.setResponse(ErrorMessageEnum.BAD_REQUEST, null);
+        }
+
         if(customerRepository.existsByEmail(request.getEmail())){
-            throw new EmailExistException("Email:" +  request.getEmail() + "already exists");
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Email:" +  request.getEmail() + "already exists");
         }
         else if(customerRepository.existsByPhoneNumber(request.getPhoneNumber())){
-           throw new PhoneNumberExistException("PhoneNumber:" +  request.getPhoneNumber() + "already exists");
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "PhoneNumber:" +  request.getPhoneNumber() + "already exists");
         }
-        else{
-            CustomerEntity newCustomer = new CustomerEntity();
 
-            String otp = commonUtils.generateOtp();
+        CustomerEntity newCustomer = new CustomerEntity();
 
-            if(request.getEmail().isEmpty()){
-                newCustomer.setPhoneNumber(request.getPhoneNumber());
-            }else{
-                newCustomer.setEmail(request.getEmail());
-            }
+        String otp = commonUtils.generateOtp();
 
-            newCustomer.setOtp(otp);
-            newCustomer.setVerifyCount(0);
-            newCustomer.setResendOtpCount(0);
-            newCustomer.setStatus(99);
-            newCustomer.setCreatedAt(LocalDateTime.now());
-            newCustomer.setLastUpdateAt(LocalDateTime.now());
-
-            RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
-
-            customerRepository.save(newCustomer);
-            response.setUserId(newCustomer.getId());
-
-            emailService.sendEmail(response.getEmail(),Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(otp));
-
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        if(request.getEmail().isEmpty()){
+            newCustomer.setPhoneNumber(request.getPhoneNumber());
+        }else{
+            newCustomer.setEmail(request.getEmail());
         }
+
+        newCustomer.setOtp(otp);
+        newCustomer.setVerifyCount(0);
+        newCustomer.setResendOtpCount(0);
+        newCustomer.setStatus("VERIFY_OTP");
+        newCustomer.setCreatedAt(LocalDateTime.now());
+        newCustomer.setLastUpdateAt(LocalDateTime.now());
+
+        RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
+
+        customerRepository.save(newCustomer);
+        response.setUserId(newCustomer.getId());
+
+        emailService.sendEmail(response.getEmail(),Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(otp));
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
     public ResponseEntity<ApiResponse> login(@Valid LoginRequest request) {

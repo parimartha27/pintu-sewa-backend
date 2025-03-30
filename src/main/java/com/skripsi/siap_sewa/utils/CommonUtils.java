@@ -73,4 +73,8 @@ public class CommonUtils {
                 """, otp
         );
     }
+
+    public boolean isNull(String parameter){
+        return parameter == null || parameter.isEmpty() || parameter.equalsIgnoreCase("");
+    }
 }
