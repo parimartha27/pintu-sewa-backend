@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AddProductRequest {
 
+    @NotBlank(message = "Shop ID tidak boleh kosong")
+    private String shopId;
+
     @NotBlank(message = "Nama produk tidak boleh kosong")
     @Size(min = 3, max = 100, message = "Nama produk wajib terdiri dari 3 hingga 100 karakter")
     private String name;

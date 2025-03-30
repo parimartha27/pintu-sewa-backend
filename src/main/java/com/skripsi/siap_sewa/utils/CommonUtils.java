@@ -77,4 +77,23 @@ public class CommonUtils {
     public boolean isNull(String parameter){
         return parameter == null || parameter.isEmpty() || parameter.equalsIgnoreCase("");
     }
+
+    public String generateEmailShop(String shopName) {
+        return String.format(
+                """
+                Hi, Sobat Sewa.
+                
+                Selamat atas pembukaan toko baru Anda, %s!
+                Kami sangat senang melihat Anda bergabung dengan komunitas Pintu Sewa.
+                
+                Kami berharap toko Anda sukses dan dapat menjangkau banyak pelanggan.
+                Jangan ragu untuk menghubungi kami jika ada yang bisa kami bantu.
+                
+                Selamat berjualan dan sukses selalu!
+                
+                Hormat kami,
+                Tim Pintu Sewa
+                """, shopName
+        );
+    }
 }

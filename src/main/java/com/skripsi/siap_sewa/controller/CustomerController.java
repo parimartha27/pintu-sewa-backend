@@ -24,7 +24,7 @@ public class CustomerController {
         return customerService.getCustomerDetails(id);
     }
 
-    @PutMapping("/create")
+    @PostMapping("/create")
     public ResponseEntity<ApiResponse> inputNewCustomerData(@RequestBody @Valid CreateNewCustomerRequest request){
         return customerService.inputCustomerData(request);
     }

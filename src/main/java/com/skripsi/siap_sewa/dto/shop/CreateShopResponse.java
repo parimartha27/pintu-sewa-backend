@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 public class CreateShopResponse {
 
     private String name;
-    private int shopStatus;
-    private String image;
+    private String shopStatus;
+    private String email;
     private String street;
     private String district;
     private String regency;

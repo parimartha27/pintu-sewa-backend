@@ -29,9 +29,8 @@ public class ShopEntity {
 //profile
     private String name;
     private String description;
-    private String instagram;
-    private String facebook;
-    private int shopStatus;
+    private String email;
+    private String shopStatus;
     private String image;
 
 //    Address

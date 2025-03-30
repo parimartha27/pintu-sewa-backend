@@ -25,9 +25,8 @@ public class ShopResponse {
 
     private String name;
     private String description;
-    private String instagram;
-    private String facebook;
-    private int shopStatus;
+    private String shopStatus;
+    private String image;
     private String street;
     private String district;
     private String regency;
@@ -35,6 +34,6 @@ public class ShopResponse {
     private String postCode;
     private LocalDateTime createdAt;
     private LocalDateTime lastUpdateAt;
-    private CustomerEntity customer;
+    private String customerId;
     private List<ProductEntity> products;
 }

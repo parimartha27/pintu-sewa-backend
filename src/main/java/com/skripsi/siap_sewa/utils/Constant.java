@@ -21,5 +21,6 @@ public class Constant {
     public static final String DATA_NOT_FOUND_MESSAGE = "Data Not Found";
 
     public static final String SUBJECT_EMAIL_REGISTER = "One-Time Passcode (OTP) kamu dari Pintu Sewa";
+    public static final String SUBJECT_EMAIL_CREATE_SHOP = "Selamat Atas Toko Baru Kamu";
 
 }

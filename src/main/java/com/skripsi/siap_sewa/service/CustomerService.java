@@ -149,6 +149,6 @@ public class CustomerService {
 
         customerRepository.save(updatedPassword);
 
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Change password success");
     }
 }
