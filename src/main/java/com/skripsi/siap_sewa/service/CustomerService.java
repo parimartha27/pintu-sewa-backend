@@ -2,10 +2,7 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.customer.CreateNewCustomerRequest;
-import com.skripsi.siap_sewa.dto.customer.ForgetPasswordRequest;
-import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
-import com.skripsi.siap_sewa.dto.customer.EditCustomerResponse;
+import com.skripsi.siap_sewa.dto.customer.*;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
@@ -69,6 +66,12 @@ public class CustomerService {
                 editedCustomerData.setBirthDate(request.getBirthDate());
                 editedCustomerData.setPassword(encoder.encode(request.getPassword()));
                 editedCustomerData.setStatus("ACTIVE");
+
+//                OTP
+                editedCustomerData.setOtp(null);
+                editedCustomerData.setVerifyCount(0);
+                editedCustomerData.setResendOtpCount(0);
+
 //                Address
                 editedCustomerData.setStreet(request.getStreet());
                 editedCustomerData.setDistrict(request.getDistrict());
@@ -119,8 +122,23 @@ public class CustomerService {
         }
     }
 
+    public ResponseEntity<ApiResponse> validateCredential(@Valid ValidateCredentialRequest request) {
+        boolean isCustomerValid = customerRepository.existsByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+
+        if(isCustomerValid){
+            Optional<CustomerEntity> validCustomer = customerRepository.findByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+            ValidateCredentialResponse response = ValidateCredentialResponse.builder()
+                    .customerId(validCustomer.get().getId())
+                    .build();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        }
+
+        return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "User not exist");
+    }
+
     public ResponseEntity<ApiResponse> forgetPassword(@Valid ForgetPasswordRequest request) {
-        Optional<CustomerEntity> optionalCustomer = customerRepository.findByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+        Optional<CustomerEntity> optionalCustomer = customerRepository.findById(request.getCustomerId());
 
         if(optionalCustomer.isEmpty()){
             throw new DataNotFoundException("Customer with: " + request + " is not available");
@@ -132,11 +150,5 @@ public class CustomerService {
         customerRepository.save(updatedPassword);
 
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
-    }
-
-    private boolean validateSameUsername (String username){
-        List<CustomerEntity> customerWithSameUsername = customerRepository.findByUsername(username);
-
-       return customerWithSameUsername.size() == 1 ? true : false;
     }
 }

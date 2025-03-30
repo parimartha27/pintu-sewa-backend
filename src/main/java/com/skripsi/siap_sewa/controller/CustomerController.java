@@ -4,6 +4,7 @@ import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.customer.CreateNewCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.customer.ForgetPasswordRequest;
+import com.skripsi.siap_sewa.dto.customer.ValidateCredentialRequest;
 import com.skripsi.siap_sewa.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,11 @@ public class CustomerController {
     @PutMapping("/edit")
     public ResponseEntity<ApiResponse> editCustomerData(@RequestBody @Valid EditCustomerRequest request){
         return customerService.editCustomerData(request);
+    }
+
+    @PostMapping("/validate/credential")
+    public ResponseEntity<ApiResponse> validateCredential(@RequestBody @Valid ValidateCredentialRequest request){
+        return customerService.validateCredential(request);
     }
 
     @PutMapping("/forget-password")
