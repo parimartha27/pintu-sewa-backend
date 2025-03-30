@@ -5,6 +5,7 @@ import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.*;
 import com.skripsi.siap_sewa.dto.authentication.login.LoginRequest;
 import com.skripsi.siap_sewa.dto.authentication.login.LoginResponse;
+import com.skripsi.siap_sewa.dto.authentication.register.RegisterOauthRequest;
 import com.skripsi.siap_sewa.dto.authentication.register.RegisterRequest;
 import com.skripsi.siap_sewa.dto.authentication.register.RegisterResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
@@ -75,9 +76,35 @@ public class AuthenticationService {
         RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
 
         customerRepository.save(newCustomer);
-        response.setUserId(newCustomer.getId());
+        response.setCustomerId(newCustomer.getId());
 
         emailService.sendEmail(response.getEmail(),Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateOtpMessage(otp));
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    }
+
+    public ResponseEntity<ApiResponse> registerOauth(RegisterOauthRequest request){
+
+        if(commonUtils.isNull(request.getEmail())){
+            return commonUtils.setResponse(ErrorMessageEnum.BAD_REQUEST, null);
+        }
+
+        if(customerRepository.existsByEmail(request.getEmail())){
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Email:" +  request.getEmail() + "already exists");
+        }
+
+        CustomerEntity newCustomer = new CustomerEntity();
+
+        newCustomer.setEmail(request.getEmail());
+        newCustomer.setImage(request.getImage());
+        newCustomer.setStatus("REGISTERED");
+        newCustomer.setCreatedAt(LocalDateTime.now());
+        newCustomer.setLastUpdateAt(LocalDateTime.now());
+
+        RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
+
+        customerRepository.save(newCustomer);
+        response.setCustomerId(newCustomer.getId());
 
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
