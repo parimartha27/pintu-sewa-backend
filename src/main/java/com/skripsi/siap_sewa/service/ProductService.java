@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.product.AddProductRequest;
 import com.skripsi.siap_sewa.dto.product.AddProductResponse;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
@@ -14,6 +15,8 @@ import com.skripsi.siap_sewa.repository.ShopRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -31,10 +34,10 @@ public class ProductService {
     private final ObjectMapper objectMapper;
     private final CommonUtils commonUtils;
 
-    public ResponseEntity<ApiResponse> getProducts() {
-        List<ProductEntity> products = productRepository.findAll();
+    public ResponseEntity<ApiResponse> getProducts(Pageable pageable) {
+        Page<ProductEntity> productPage = productRepository.findAll(pageable);
 
-        List<ProductResponse> responseList = products.stream().map(product ->
+        List<ProductResponse> responseList = productPage.getContent().stream().map(product ->
                 ProductResponse.builder()
                         .name(product.getName())
                         .category(product.getCategory())
@@ -56,7 +59,15 @@ public class ProductService {
                         .build()
         ).collect(Collectors.toList());
 
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+        PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
+                responseList,
+                productPage.getNumber(),
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages()
+        );
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
     }
 
     public ResponseEntity<ApiResponse> getProductDetail(String id) {
