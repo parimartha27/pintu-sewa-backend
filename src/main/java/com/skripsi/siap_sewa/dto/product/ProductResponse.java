@@ -33,6 +33,5 @@ public class ProductResponse {
     private int stock;
     private String status;
     private String image;
-    private ShopEntity shop;
-
+    private String shopId;
 }
