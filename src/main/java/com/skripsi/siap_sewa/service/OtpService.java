@@ -5,6 +5,8 @@ import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import com.skripsi.siap_sewa.dto.authentication.otp.OtpRequest;
 import com.skripsi.siap_sewa.dto.authentication.otp.OtpResponse;
+import com.skripsi.siap_sewa.dto.authentication.otp.ResendOtpRequest;
+import com.skripsi.siap_sewa.dto.authentication.otp.ResendOtpResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -64,24 +67,35 @@ public class OtpService {
         }
     }
 
-    public ResponseEntity<ApiResponse> resendOtp(@Valid OtpRequest request) {
-
-        if (request.getResendOtpCount() > 3) {
-            return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
-        }
-
+    public ResponseEntity<ApiResponse> resendOtp(@Valid ResendOtpRequest request) {
         Optional<CustomerEntity> isPresentOtp = customerRepository.findById(request.getCustomerId());
 
-        if(isPresentOtp.isPresent()){
+        if (isPresentOtp.isPresent()) {
             CustomerEntity updatedCustomerOtp = isPresentOtp.get();
+
+            boolean isLessThan30Minutes = isLessThan30Minutes(updatedCustomerOtp.getLastUpdateAt());
+
+            if (!isLessThan30Minutes) {
+                updatedCustomerOtp.setResendOtpCount(0);
+                updatedCustomerOtp.setVerifyCount(0);
+                updatedCustomerOtp.setLastUpdateAt(LocalDateTime.now());
+            }
+
+            if (updatedCustomerOtp.getResendOtpCount() > 3) {
+                return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
+            }
+
+            if (updatedCustomerOtp.getVerifyCount() > 10) {
+                return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
+            }
 
             String newOtp = commonUtils.generateOtp();
 
-           updatedCustomerOtp.setOtp(newOtp);
-           updatedCustomerOtp.setResendOtpCount(request.getResendOtpCount() + 1); 
-           updatedCustomerOtp.setLastUpdateAt(LocalDateTime.now());
+            updatedCustomerOtp.setOtp(newOtp);
+            updatedCustomerOtp.setResendOtpCount(updatedCustomerOtp.getResendOtpCount() + 1);
+            updatedCustomerOtp.setLastUpdateAt(LocalDateTime.now());
 
-            OtpResponse response = OtpResponse.builder()
+            ResendOtpResponse response = ResendOtpResponse.builder()
                     .customerId(updatedCustomerOtp.getId())
                     .verifyCount(updatedCustomerOtp.getVerifyCount())
                     .resendOtpCount(updatedCustomerOtp.getResendOtpCount())
@@ -93,7 +107,14 @@ public class OtpService {
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }
+
         return commonUtils.setResponse(ErrorMessageEnum.FAILED, "OTP expired or invalid");
+    }
+
+    public boolean isLessThan30Minutes(LocalDateTime lastUpdateAt) {
+        LocalDateTime now = LocalDateTime.now();
+        Duration duration = Duration.between(lastUpdateAt, now);
+        return duration.toMinutes() < 30;
     }
 
 //    TODO: fix this
