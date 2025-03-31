@@ -10,7 +10,7 @@ COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/
 COPY src ./src
 
 # Build aplikasi
-RUN ./gradlew clean build --no-daemon
+RUN ./gradlew clean bootJar --no-daemon
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:21-jre-alpine
