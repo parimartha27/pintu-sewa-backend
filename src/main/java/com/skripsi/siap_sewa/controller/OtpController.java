@@ -7,10 +7,7 @@ import com.skripsi.siap_sewa.service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/otp")
@@ -25,7 +22,14 @@ public class OtpController {
     }
 
     @PostMapping("/resend")
-    public ResponseEntity<ApiResponse> resendOtp(@RequestBody @Valid ResendOtpRequest request){
-        return otpService.resendOtp(request);
+    public ResponseEntity<ApiResponse> resendOtp(@RequestParam String customerId){
+        return otpService.resendOtp(customerId);
     }
+
+    @GetMapping("/valid")
+    public ResponseEntity<ApiResponse> valid(@RequestParam String customerId){
+        return otpService.validateOtp(customerId);
+    }
+
+
 }

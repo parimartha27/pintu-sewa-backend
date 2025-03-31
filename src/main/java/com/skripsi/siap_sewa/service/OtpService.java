@@ -3,10 +3,7 @@ package com.skripsi.siap_sewa.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
-import com.skripsi.siap_sewa.dto.authentication.otp.OtpRequest;
-import com.skripsi.siap_sewa.dto.authentication.otp.OtpResponse;
-import com.skripsi.siap_sewa.dto.authentication.otp.ResendOtpRequest;
-import com.skripsi.siap_sewa.dto.authentication.otp.ResendOtpResponse;
+import com.skripsi.siap_sewa.dto.authentication.otp.*;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
@@ -67,8 +64,8 @@ public class OtpService {
         }
     }
 
-    public ResponseEntity<ApiResponse> resendOtp(@Valid ResendOtpRequest request) {
-        Optional<CustomerEntity> isPresentOtp = customerRepository.findById(request.getCustomerId());
+    public ResponseEntity<ApiResponse> resendOtp(String customerId) {
+        Optional<CustomerEntity> isPresentOtp = customerRepository.findById(customerId);
 
         if (isPresentOtp.isPresent()) {
             CustomerEntity updatedCustomerOtp = isPresentOtp.get();
@@ -115,6 +112,22 @@ public class OtpService {
         LocalDateTime now = LocalDateTime.now();
         Duration duration = Duration.between(lastUpdateAt, now);
         return duration.toMinutes() < 30;
+    }
+
+    public ResponseEntity<ApiResponse> validateOtp(String customerId) {
+        Optional<CustomerEntity> isPresentOtp = customerRepository.findById(customerId);
+
+        if(isPresentOtp.isEmpty()){
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+
+        CustomerEntity customer = isPresentOtp.get();
+        ValidOtpResponse response = ValidOtpResponse.builder()
+                .verifyCount(customer.getVerifyCount())
+                .resendOtpCount(customer.getResendOtpCount())
+                .build();
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
 //    TODO: fix this
