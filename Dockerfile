@@ -2,15 +2,12 @@
 FROM gradle:8.4-jdk21-alpine AS builder
 WORKDIR /app
 
-# Copy file yang dibutuhkan untuk build
-COPY build.gradle .
-COPY settings.gradle .
-COPY gradlew .
-COPY gradle/wrapper/gradle-wrapper.properties gradle/wrapper/
-COPY src ./src
+# Copy file build dan set permission
+COPY . .
+RUN chmod +x gradlew
 
-# Build aplikasi
-RUN ./gradlew clean bootJar --no-daemon
+# Build aplikasi (dengan cache untuk dependencies)
+RUN ./gradlew clean build --no-daemon
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:21-jre-alpine
