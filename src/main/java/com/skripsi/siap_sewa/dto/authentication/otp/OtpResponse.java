@@ -17,6 +17,7 @@ public class OtpResponse {
     private String username;
     private String email;
     private String phoneNumber;
+    private String status;
     private int verifyCount;
     private int resendOtpCount;
     private String token;

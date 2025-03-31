@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ValidOtpResponse {
+    private String customerId;
+    private String status;
     private int verifyCount;
     private int resendOtpCount;
 }

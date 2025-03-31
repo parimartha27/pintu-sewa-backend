@@ -17,4 +17,5 @@ public class RegisterResponse {
     private String email;
     private String phoneNumber;
     private String customerId;
+    private String status;
 }

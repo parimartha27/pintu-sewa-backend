@@ -16,4 +16,5 @@ public class ResendOtpResponse {
     private String customerId;
     private int verifyCount;
     private int resendOtpCount;
+    private String status;
 }

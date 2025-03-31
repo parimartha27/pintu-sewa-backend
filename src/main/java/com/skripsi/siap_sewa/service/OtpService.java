@@ -45,6 +45,7 @@ public class OtpService {
                         .username(customerOtp.getUsername())
                         .email(customerOtp.getEmail())
                         .phoneNumber(customerOtp.getPhoneNumber())
+                        .status(customerOtp.getStatus())
                         .token(jwtService.generateToken(new CustomerPrincipal(customerOtp)))
                         .duration(1800)
                         .build();
@@ -96,6 +97,7 @@ public class OtpService {
                     .customerId(updatedCustomerOtp.getId())
                     .verifyCount(updatedCustomerOtp.getVerifyCount())
                     .resendOtpCount(updatedCustomerOtp.getResendOtpCount())
+                    .status(updatedCustomerOtp.getStatus())
                     .build();
 
             customerRepository.save(updatedCustomerOtp);
@@ -123,6 +125,8 @@ public class OtpService {
 
         CustomerEntity customer = isPresentOtp.get();
         ValidOtpResponse response = ValidOtpResponse.builder()
+                .customerId(customer.getId())
+                .status(customer.getStatus())
                 .verifyCount(customer.getVerifyCount())
                 .resendOtpCount(customer.getResendOtpCount())
                 .build();

@@ -133,6 +133,7 @@ public class AuthenticationService {
                         .username(customer.getUsername())
                         .email(customer.getEmail())
                         .phoneNumber(customer.getPhoneNumber())
+                        .status(customer.getStatus())
                         .token(jwtService.generateToken(new CustomerPrincipal(customer)))
                         .duration(1800)
                         .build();
