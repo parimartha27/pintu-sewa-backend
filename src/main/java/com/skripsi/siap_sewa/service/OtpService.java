@@ -58,6 +58,7 @@ public class OtpService {
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             } else {
                 customerOtp.setVerifyCount(request.getVerifyCount() + 1);
+                customerRepository.save(customerOtp);
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP");
             }
         } else {
