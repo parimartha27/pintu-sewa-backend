@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +55,9 @@ public class CustomerEntity {
 
     private LocalDateTime createdAt;
     private LocalDateTime lastUpdateAt;
+
+    private LocalDateTime lastLogin;
+    private BigDecimal walletAmount;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ShopEntity shop;
