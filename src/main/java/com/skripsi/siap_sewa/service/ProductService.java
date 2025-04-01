@@ -8,15 +8,9 @@ import com.skripsi.siap_sewa.dto.product.AddProductResponse;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.product.ProductResponse;
-import com.skripsi.siap_sewa.entity.ProductEntity;
-import com.skripsi.siap_sewa.entity.ReviewEntity;
-import com.skripsi.siap_sewa.entity.ShopEntity;
-import com.skripsi.siap_sewa.entity.TransactionEntity;
+import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
-import com.skripsi.siap_sewa.repository.ProductRepository;
-import com.skripsi.siap_sewa.repository.ReviewRepository;
-import com.skripsi.siap_sewa.repository.ShopRepository;
-import com.skripsi.siap_sewa.repository.TransactionRepository;
+import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +31,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ReviewRepository  reviewRepository;
     private final TransactionRepository transactionRepository;
+    private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
     private final ObjectMapper objectMapper;
     private final CommonUtils commonUtils;
@@ -181,4 +175,63 @@ public class ProductService {
         return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Shop ID not exist");
     }
 
+    public ResponseEntity<ApiResponse> getProductNearCustomer(String customerId) {
+        // 1. Dapatkan customer dan regency-nya
+        Optional<CustomerEntity> customerOpt = customerRepository.findById(customerId);
+        if (customerOpt.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+
+        String customerRegency = customerOpt.get().getRegency();
+
+        // 2. Dapatkan semua shop di regency yang sama
+        List<ShopEntity> shopsInSameRegency = shopRepository.findByRegency(customerRegency);
+        if (shopsInSameRegency.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+
+        // 3. Dapatkan semua produk dari shop-shop tersebut
+        List<ProductEntity> products = new ArrayList<>();
+        for (ShopEntity shop : shopsInSameRegency) {
+            products.addAll(shop.getProducts());
+        }
+
+        if (products.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+
+        // 4. Acak urutan produk
+        Collections.shuffle(products);
+
+        // 5. Konversi ke ProductResponse dan hitung rating serta rentedTimes
+        List<ProductResponse> responseList = products.stream()
+                .map(product -> {
+                    ProductResponse response = modelMapper.map(product, ProductResponse.class);
+
+                    // Set alamat toko (regency)
+                    response.setAddress(product.getShop().getRegency());
+
+                    // Hitung rating rata-rata
+                    Double averageRating = calculateAverageRating(product.getReviews());
+                    response.setRating(averageRating);
+
+                    // Hitung jumlah transaksi (rentedTimes)
+                    int rentedTimes = countRentedTimes(product.getTransactions());
+                    response.setRentedTimes(rentedTimes);
+
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+    }
+
+    private int countRentedTimes(Set<TransactionEntity> transactions) {
+        if (transactions == null) {
+            return 0;
+        }
+        return (int) transactions.stream()
+                .filter(t -> !t.isSelled())
+                .count();
+    }
 }

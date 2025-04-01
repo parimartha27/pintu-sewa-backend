@@ -47,5 +47,8 @@ public class ProductController {
         return productService.addProduct(request);
     }
 
-
+    @GetMapping("/near-customer")
+    public ResponseEntity<ApiResponse> getProductNearCustomer(@RequestParam String customerId){
+        return productService.getProductNearCustomer(customerId);
+    }
 }
