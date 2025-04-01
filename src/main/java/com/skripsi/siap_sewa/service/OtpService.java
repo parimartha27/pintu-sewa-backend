@@ -31,14 +31,16 @@ public class OtpService {
 
     public ResponseEntity<ApiResponse> verifyOtp(@Valid OtpRequest request) {
 
-        if (request.getVerifyCount() > 10 || request.getResendOtpCount() > 3) {
-            return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
-        }
-
         Optional<CustomerEntity> isPresentOtp = customerRepository.findById(request.getCustomerId());
+
+
+
 
         if (isPresentOtp.isPresent()) {
             CustomerEntity customerOtp = isPresentOtp.get();
+            if (customerOtp.getVerifyCount() > 10 || customerOtp.getResendOtpCount() > 3) {
+                return commonUtils.setResponse("PS-01-005", "The attempt has run out", HttpStatus.OK, null);
+            }
             if (request.getOtpCode().equals(customerOtp.getOtp())) {
                 OtpResponse response = OtpResponse.builder()
                         .customerId(customerOtp.getId())
@@ -51,13 +53,13 @@ public class OtpService {
                         .build();
 
                 customerOtp.setStatus("REGISTERED");
-                customerOtp.setVerifyCount(request.getVerifyCount() + 1);
+                customerOtp.setVerifyCount(customerOtp.getVerifyCount() + 1);
                 customerOtp.setLastUpdateAt(LocalDateTime.now());
                 customerRepository.save(customerOtp);
 
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             } else {
-                customerOtp.setVerifyCount(request.getVerifyCount() + 1);
+                customerOtp.setVerifyCount(customerOtp.getVerifyCount() + 1);
                 customerRepository.save(customerOtp);
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Invalid OTP");
             }

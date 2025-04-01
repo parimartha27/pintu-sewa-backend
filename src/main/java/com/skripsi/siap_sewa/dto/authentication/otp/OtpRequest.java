@@ -19,11 +19,11 @@ public class OtpRequest {
     @NotBlank(message = "OTP tidak boleh kosong")
     private String otpCode;
 
-    @NotNull(message = "Verify count tidak boleh kosong")
-    private int verifyCount;
-
-    @NotNull(message = "Resend OTP count tidak boleh kosong")
-    private int resendOtpCount;
+//    @NotNull(message = "Verify count tidak boleh kosong")
+//    private int verifyCount;
+//
+//    @NotNull(message = "Resend OTP count tidak boleh kosong")
+//    private int resendOtpCount;
 
     @NotBlank(message = "Customer ID tidak boleh kosong")
     private String customerId;
