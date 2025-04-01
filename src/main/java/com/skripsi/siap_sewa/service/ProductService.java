@@ -2,19 +2,25 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.skripsi.siap_sewa.dto.ProductDetailResponse;
 import com.skripsi.siap_sewa.dto.product.AddProductRequest;
 import com.skripsi.siap_sewa.dto.product.AddProductResponse;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.ProductEntity;
+import com.skripsi.siap_sewa.entity.ReviewEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
+import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.ProductRepository;
+import com.skripsi.siap_sewa.repository.ReviewRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
+import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -30,34 +36,52 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ReviewRepository  reviewRepository;
+    private final TransactionRepository transactionRepository;
     private final ShopRepository shopRepository;
     private final ObjectMapper objectMapper;
     private final CommonUtils commonUtils;
+    private final ModelMapper modelMapper;
 
     public ResponseEntity<ApiResponse> getProducts(Pageable pageable) {
         Page<ProductEntity> productPage = productRepository.findAll(pageable);
 
-        List<ProductResponse> responseList = productPage.getContent().stream().map(product ->
-                ProductResponse.builder()
-                        .name(product.getName())
-                        .category(product.getCategory())
-                        .rentCategory(product.getRentCategory())
-                        .isRnb(product.isRnb())
-                        .weight(product.getWeight())
-                        .height(product.getHeight())
-                        .width(product.getWidth())
-                        .length(product.getLength())
-                        .dailyPrice(product.getDailyPrice())
-                        .weeklyPrice(product.getWeeklyPrice())
-                        .monthlyPrice(product.getMonthlyPrice())
-                        .description(product.getDescription())
-                        .conditionDescription(product.getConditionDescription())
-                        .stock(product.getStock())
-                        .status(product.getStatus())
-                        .image(product.getImage())
-                        .shopId(product.getShop() != null ? String.valueOf(product.getShop().getId()) : null)
-                        .build()
-        ).collect(Collectors.toList());
+        List<ProductResponse> responseList = productPage.getContent().stream().map(product -> {
+            Double averageRating = reviewRepository.findByProductId(product.getId())
+                    .stream()
+                    .mapToDouble(ReviewEntity::getRating)
+                    .average()
+                    .orElse(0.0);
+
+            int rentedTimes = transactionRepository.countByProductsId(product.getId());
+
+            String address = product.getShop() != null ?
+                    product.getShop().getRegency() :
+                    "Unknown";
+
+            return ProductResponse.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .category(product.getCategory())
+                    .rentCategory(product.getRentCategory())
+                    .isRnb(product.isRnb())
+                    .weight(product.getWeight())
+                    .height(product.getHeight())
+                    .width(product.getWidth())
+                    .length(product.getLength())
+                    .dailyPrice(product.getDailyPrice())
+                    .weeklyPrice(product.getWeeklyPrice())
+                    .monthlyPrice(product.getMonthlyPrice())
+                    .description(product.getDescription())
+                    .conditionDescription(product.getConditionDescription())
+                    .stock(product.getStock())
+                    .status(product.getStatus())
+                    .image(product.getImage())
+                    .address(address)
+                    .rating(averageRating)
+                    .rentedTimes(rentedTimes)
+                    .build();
+        }).collect(Collectors.toList());
 
         PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
                 responseList,
@@ -71,16 +95,53 @@ public class ProductService {
     }
 
     public ResponseEntity<ApiResponse> getProductDetail(String id) {
-       Optional<ProductEntity> productEntity = productRepository.findById(id);
+        Optional<ProductEntity> productEntity = productRepository.findById(id);
 
-       if(productEntity.isPresent()){
-           ProductEntity productDetail = productEntity.get();
-           ProductResponse response = objectMapper.convertValue(productDetail, ProductResponse.class);
-           response.setShopId(productDetail.getShop() != null ? String.valueOf(productDetail.getShop().getId()) : null);
+        if (productEntity.isPresent()) {
+            ProductEntity product = productEntity.get();
 
-           return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-       }
+            ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
+
+            Double averageRating = calculateAverageRating(product.getReviews());
+            response.setRating(averageRating);
+
+            // Calculate rentedTimes (isSelled = false) and buyTimes (isSelled = true)
+            int[] transactionCounts = countProductTransactions(product.getId());
+            response.setRentedTimes(transactionCounts[0]);
+            response.setBuyTimes(transactionCounts[1]);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        }
         return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+    }
+
+    private Double calculateAverageRating(List<ReviewEntity> reviews) {
+        if (reviews == null || reviews.isEmpty()) {
+            return 0.0;
+        }
+
+        double sum = reviews.stream()
+                .mapToDouble(ReviewEntity::getRating)
+                .sum();
+
+        return sum / reviews.size();
+    }
+
+    private int[] countProductTransactions(String productId) {
+        List<TransactionEntity> transactions = transactionRepository.findByProductId(productId);
+
+        int rentedTimes = 0;
+        int buyTimes = 0;
+
+        for (TransactionEntity transaction : transactions) {
+            if (transaction.isSelled()) {
+                buyTimes++;
+            } else {
+                rentedTimes++;
+            }
+        }
+
+        return new int[]{rentedTimes, buyTimes};
     }
 
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {

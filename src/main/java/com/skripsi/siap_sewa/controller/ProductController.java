@@ -30,7 +30,6 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name,asc") String[] sort) {
 
-        // Parsing sorting dari parameter
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Sort sorting = Sort.by(direction, sort[0]);
 

@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -39,7 +40,9 @@ public class ShopEntity {
     private String regency;
     private String province;
     private String postCode;
+    @JsonIgnore
     private LocalDateTime createdAt;
+    @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
     @OneToOne
@@ -47,7 +50,7 @@ public class ShopEntity {
     @JsonBackReference
     private CustomerEntity customer;
 
-    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<ProductEntity> products;
 

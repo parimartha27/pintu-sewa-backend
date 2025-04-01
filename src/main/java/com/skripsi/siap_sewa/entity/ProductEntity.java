@@ -1,6 +1,8 @@
 package com.skripsi.siap_sewa.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
@@ -11,6 +13,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "PRODUCT")
@@ -41,14 +45,19 @@ public class ProductEntity {
     private int stock;
     private String status;
     private String image;
+    @JsonIgnore
     private LocalDateTime createdAt;
+    @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "shop_id", referencedColumnName = "id")
-    @JsonBackReference
     private ShopEntity shop;
+
+    @ManyToMany(mappedBy = "products")
+    @JsonBackReference
+    private Set<TransactionEntity> transactions;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<ReviewEntity> reviews;
 }
-
-
-

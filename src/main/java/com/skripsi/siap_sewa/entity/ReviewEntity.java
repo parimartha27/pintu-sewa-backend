@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +34,8 @@ public class ReviewEntity {
 
     private Double rating;
 
-    private LocalDateTime createdDate;
-    private LocalDateTime lastUpdatedDate;
+    @JsonIgnore
+    private LocalDateTime createdAt;
+    @JsonIgnore
+    private LocalDateTime lastUpdateAt;
 }

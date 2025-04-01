@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "CUSTOMER")
@@ -56,6 +57,9 @@ public class CustomerEntity {
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ShopEntity shop;
+
+    @OneToMany(mappedBy = "customer")
+    private Set<TransactionEntity> transactions;
 }
 
 

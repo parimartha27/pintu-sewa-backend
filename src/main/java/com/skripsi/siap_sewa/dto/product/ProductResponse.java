@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ProductResponse {
 
+    private String id;
     private String name;
     private String category;
     private int rentCategory;
@@ -33,5 +34,7 @@ public class ProductResponse {
     private int stock;
     private String status;
     private String image;
-    private String shopId;
+    private String address;
+    private Double rating;
+    private int rentedTimes;
 }
