@@ -22,10 +22,16 @@ import java.time.LocalDate;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CartResponse {
 
+    private String productId;
     private ProductResponse product;
     private int quantity;
     private BigDecimal totalAmount;
     private LocalDate startRentDate;
     private LocalDate endRentDate;
-    private String shippingAddress;
+    private String street;
+    private String district;
+    private String regency;
+    private String province;
+    private String postCode;
+    private String notes;
 }

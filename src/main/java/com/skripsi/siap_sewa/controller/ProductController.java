@@ -25,7 +25,8 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse> getProducts(
+    public ResponseEntity<ApiResponse> getProductsByCategory(
+            @RequestParam String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name,asc") String[] sort) {
@@ -34,7 +35,7 @@ public class ProductController {
         Sort sorting = Sort.by(direction, sort[0]);
 
         Pageable pageable = PageRequest.of(page, size, sorting);
-        return productService.getProducts(pageable);
+        return productService.getProductsByCategory(category,pageable);
     }
 
     @GetMapping("/{productId}")

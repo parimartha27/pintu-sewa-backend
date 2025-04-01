@@ -37,8 +37,8 @@ public class ProductService {
     private final CommonUtils commonUtils;
     private final ModelMapper modelMapper;
 
-    public ResponseEntity<ApiResponse> getProducts(Pageable pageable) {
-        Page<ProductEntity> productPage = productRepository.findAll(pageable);
+    public ResponseEntity<ApiResponse> getProductsByCategory(String category, Pageable pageable) {
+        Page<ProductEntity> productPage = productRepository.findByCategory(category, pageable);
 
         List<ProductResponse> responseList = productPage.getContent().stream().map(product -> {
             Double averageRating = reviewRepository.findByProductId(product.getId())
@@ -272,4 +272,5 @@ public class ProductService {
 
         return new int[]{rentedTimes, buyTimes};
     }
+
 }
