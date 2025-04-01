@@ -50,10 +50,16 @@ public class AuthenticationService {
         }
 
         if(customerRepository.existsByEmail(request.getEmail())){
-            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Email:" +  request.getEmail() + "already exists");
+            return commonUtils.setResponse(Constant.FAILED_CODE,
+                    "Please use other email to register",
+                    HttpStatus.OK,
+                    "Email:" +  request.getEmail() + "already exists");
         }
         else if(customerRepository.existsByPhoneNumber(request.getPhoneNumber())){
-            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "PhoneNumber:" +  request.getPhoneNumber() + "already exists");
+            return commonUtils.setResponse(Constant.FAILED_CODE,
+                    "Please use other email to register",
+                    HttpStatus.OK,
+                    "PhoneNumber:" +  request.getPhoneNumber() + " already exists");
         }
 
         CustomerEntity newCustomer = new CustomerEntity();
