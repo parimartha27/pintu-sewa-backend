@@ -1,14 +1,14 @@
 package com.skripsi.siap_sewa.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -18,12 +18,16 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"customer", "products"})
 public class TransactionEntity {
 
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
     private CustomerEntity customer;
 
@@ -33,7 +37,8 @@ public class TransactionEntity {
             joinColumns = @JoinColumn(name = "transaction_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
-    private Set<ProductEntity> products;
+    @JsonManagedReference
+    private Set<ProductEntity> products = new HashSet<>();
 
     private String transactionNumber;
     private String startDate;
@@ -47,7 +52,11 @@ public class TransactionEntity {
     private String isReturn;
     private String shippingCode;
     private String returnCode;
+
+    @JsonIgnore
     private LocalDateTime createdAt;
+
+    @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
     @Column(name = "is_selled", columnDefinition = "boolean default false")

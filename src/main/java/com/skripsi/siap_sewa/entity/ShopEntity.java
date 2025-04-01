@@ -6,10 +6,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,37 +19,42 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"customer", "products"})
 public class ShopEntity {
 
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-//profile
+
+    // profile
     private String name;
     private String description;
     private String email;
     private String shopStatus;
     private String image;
 
-//    Address
+    // Address
     private String street;
     private String district;
     private String regency;
     private String province;
     private String postCode;
+
     @JsonIgnore
     private LocalDateTime createdAt;
+
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
     @OneToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
-    @JsonBackReference
+    @JsonManagedReference
     private CustomerEntity customer;
 
-    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
-    private List<ProductEntity> products;
-
+    private List<ProductEntity> products = new ArrayList<>();
 }
 

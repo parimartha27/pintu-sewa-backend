@@ -6,15 +6,13 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "PRODUCT")
@@ -23,8 +21,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"shop", "transactions", "reviews"})
 public class ProductEntity {
 
+    @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -45,12 +46,14 @@ public class ProductEntity {
     private int stock;
     private String status;
     private String image;
+
     @JsonIgnore
     private LocalDateTime createdAt;
+
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id", referencedColumnName = "id")
     private ShopEntity shop;
 
@@ -58,6 +61,10 @@ public class ProductEntity {
     @JsonBackReference
     private Set<TransactionEntity> transactions;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<ReviewEntity> reviews;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<ReviewEntity> reviews = new ArrayList<>();
 }
+
+
+

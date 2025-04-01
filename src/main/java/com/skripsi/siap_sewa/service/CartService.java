@@ -62,7 +62,6 @@ public class CartService {
                     .totalAmount(cart.getTotalAmount())
                     .startRentDate(cart.getStartRentDate())
                     .endRentDate(cart.getEndRentDate())
-                    .shippingAddress(cart.getShippingAddress())
                     .build();
         }).toList();
 
