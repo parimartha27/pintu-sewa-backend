@@ -51,4 +51,9 @@ public class ProductController {
     public ResponseEntity<ApiResponse> getProductNearCustomer(@RequestParam String customerId){
         return productService.getProductNearCustomer(customerId);
     }
+
+    @GetMapping("/most-rented")
+    public ResponseEntity<ApiResponse> getProductByMostRented(){
+        return productService.getProductByMostRented();
+    }
 }

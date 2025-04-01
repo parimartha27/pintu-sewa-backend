@@ -109,35 +109,6 @@ public class ProductService {
         return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
     }
 
-    private Double calculateAverageRating(List<ReviewEntity> reviews) {
-        if (reviews == null || reviews.isEmpty()) {
-            return 0.0;
-        }
-
-        double sum = reviews.stream()
-                .mapToDouble(ReviewEntity::getRating)
-                .sum();
-
-        return sum / reviews.size();
-    }
-
-    private int[] countProductTransactions(String productId) {
-        List<TransactionEntity> transactions = transactionRepository.findByProductId(productId);
-
-        int rentedTimes = 0;
-        int buyTimes = 0;
-
-        for (TransactionEntity transaction : transactions) {
-            if (transaction.isSelled()) {
-                buyTimes++;
-            } else {
-                rentedTimes++;
-            }
-        }
-
-        return new int[]{rentedTimes, buyTimes};
-    }
-
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {
 
         Optional<ShopEntity> shopEntity = shopRepository.findById(request.getShopId());
@@ -226,6 +197,44 @@ public class ProductService {
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
     }
 
+    public ResponseEntity<ApiResponse> getProductByMostRented() {
+        // 1. Dapatkan semua produk
+        List<ProductEntity> allProducts = productRepository.findAll();
+
+        if (allProducts.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+
+        // 2. Map ke ProductResponse dengan menghitung rentedTimes
+        List<ProductResponse> productsWithRentedCount = allProducts.stream()
+                .map(product -> {
+                    ProductResponse response = modelMapper.map(product, ProductResponse.class);
+
+                    // Set alamat toko
+                    response.setAddress(product.getShop().getRegency());
+
+                    // Hitung rating
+                    Double averageRating = calculateAverageRating(product.getReviews());
+                    response.setRating(averageRating);
+
+                    // Hitung jumlah disewa (transaksi dengan isSelled = false)
+                    int rentedTimes = countRentedTimes(product.getTransactions());
+                    response.setRentedTimes(rentedTimes);
+
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        // 3. Urutkan berdasarkan rentedTimes descending
+        List<ProductResponse> sortedProducts = productsWithRentedCount.stream()
+                .sorted(Comparator.comparingInt(ProductResponse::getRentedTimes).reversed())
+                .collect(Collectors.toList());
+
+         List<ProductResponse> topProducts = sortedProducts.stream().limit(10).collect(Collectors.toList());
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, sortedProducts);
+    }
+
     private int countRentedTimes(Set<TransactionEntity> transactions) {
         if (transactions == null) {
             return 0;
@@ -233,5 +242,34 @@ public class ProductService {
         return (int) transactions.stream()
                 .filter(t -> !t.isSelled())
                 .count();
+    }
+
+    private Double calculateAverageRating(List<ReviewEntity> reviews) {
+        if (reviews == null || reviews.isEmpty()) {
+            return 0.0;
+        }
+
+        double sum = reviews.stream()
+                .mapToDouble(ReviewEntity::getRating)
+                .sum();
+
+        return sum / reviews.size();
+    }
+
+    private int[] countProductTransactions(String productId) {
+        List<TransactionEntity> transactions = transactionRepository.findByProductId(productId);
+
+        int rentedTimes = 0;
+        int buyTimes = 0;
+
+        for (TransactionEntity transaction : transactions) {
+            if (transaction.isSelled()) {
+                buyTimes++;
+            } else {
+                rentedTimes++;
+            }
+        }
+
+        return new int[]{rentedTimes, buyTimes};
     }
 }
