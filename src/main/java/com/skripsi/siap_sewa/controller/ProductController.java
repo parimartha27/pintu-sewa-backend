@@ -3,6 +3,7 @@ package com.skripsi.siap_sewa.controller;
 import com.skripsi.siap_sewa.dto.*;
 import com.skripsi.siap_sewa.dto.product.AddProductRequest;
 import com.skripsi.siap_sewa.dto.product.AddProductResponse;
+import com.skripsi.siap_sewa.dto.product.EditProductRequest;
 import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductService;
@@ -23,6 +24,21 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+
+    @GetMapping("/recommended")
+    public ResponseEntity<ApiResponse> getProductRecommendedForGuest(){
+        return productService.getProductRecommendedForGuest();
+    }
+
+    @GetMapping("/near-customer")
+    public ResponseEntity<ApiResponse> getProductNearCustomer(@RequestParam String customerId){
+        return productService.getProductNearCustomer(customerId);
+    }
+
+    @GetMapping("/most-rented")
+    public ResponseEntity<ApiResponse> getProductByMostRented(){
+        return productService.getProductByMostRented();
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse> getProductsByCategory(
@@ -48,13 +64,19 @@ public class ProductController {
         return productService.addProduct(request);
     }
 
-    @GetMapping("/near-customer")
-    public ResponseEntity<ApiResponse> getProductNearCustomer(@RequestParam String customerId){
-        return productService.getProductNearCustomer(customerId);
+    @PutMapping("/edit/{id}")
+    public ResponseEntity<ApiResponse> editProduct(
+            @PathVariable String id,
+            @RequestBody @Valid EditProductRequest request){
+        return productService.editProduct(id, request);
     }
 
-    @GetMapping("/most-rented")
-    public ResponseEntity<ApiResponse> getProductByMostRented(){
-        return productService.getProductByMostRented();
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable String id){
+        return productService.deleteProduct(id);
     }
+
+
+
+
 }
