@@ -89,7 +89,7 @@ public class CustomerService {
                         .username(inputCustomerData.getUsername())
                         .phoneNumber(inputCustomerData.getPhoneNumber())
                         .email(inputCustomerData.getEmail())
-                        .image(inputCustomerData.getImage())
+                        .image(inputCustomerData.getImage() == null? "": inputCustomerData.getImage())
                         .status(inputCustomerData.getStatus())
                         .token(jwtService.generateToken(new CustomerPrincipal(inputCustomerData)))
                         .duration(1800)
