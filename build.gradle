@@ -27,7 +27,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
@@ -60,6 +59,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-logging'
 
 	implementation 'org.modelmapper:modelmapper:3.1.1'
+
+//	Chatting
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	implementation("org.webjars:sockjs-client:1.1.1")
+	implementation("org.webjars:stomp-websocket:2.3.4")
 }
 
 tasks.named('test') {

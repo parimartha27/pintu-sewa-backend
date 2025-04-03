@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import com.skripsi.siap_sewa.dto.customer.*;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
@@ -27,6 +28,7 @@ public class CustomerService {
     private final CommonUtils commonUtils;
     private final ObjectMapper objectMapper;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
+    private final JWTService jwtService;
 
     public ResponseEntity<ApiResponse> getCustomerDetails(String id) {
         Optional<CustomerEntity> customerEntity = customerRepository.findById(id);
@@ -46,7 +48,7 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }
         else {
-            CustomerEntity editedCustomerData = customerEntity.get();
+            CustomerEntity inputCustomerData = customerEntity.get();
 
             boolean isValidUsername = customerRepository.existsByUsername(request.getUsername());
 
@@ -54,38 +56,43 @@ public class CustomerService {
                 return commonUtils.setResponse("SIAP-SEWA-02-001", "Please use other username", HttpStatus.OK, null);
             }else{
 //                personal information
-                editedCustomerData.setUsername(request.getUsername());
-                editedCustomerData.setName(request.getName());
+                inputCustomerData.setUsername(request.getUsername());
+                inputCustomerData.setName(request.getName());
                 if(request.getEmail() != null){
-                    editedCustomerData.setEmail(request.getEmail());
+                    inputCustomerData.setEmail(request.getEmail());
                 }
                 if(request.getPhoneNumber() != null){
-                    editedCustomerData.setPhoneNumber(request.getPhoneNumber());
+                    inputCustomerData.setPhoneNumber(request.getPhoneNumber());
                 }
-                editedCustomerData.setGender(request.getGender());
-                editedCustomerData.setBirthDate(request.getBirthDate());
-                editedCustomerData.setPassword(encoder.encode(request.getPassword()));
-                editedCustomerData.setStatus("ACTIVE");
+                inputCustomerData.setGender(request.getGender());
+                inputCustomerData.setBirthDate(request.getBirthDate());
+                inputCustomerData.setPassword(encoder.encode(request.getPassword()));
+                inputCustomerData.setStatus("ACTIVE");
 
 //                OTP
-                editedCustomerData.setOtp(null);
-                editedCustomerData.setVerifyCount(0);
-                editedCustomerData.setResendOtpCount(0);
+                inputCustomerData.setOtp(null);
+                inputCustomerData.setVerifyCount(0);
+                inputCustomerData.setResendOtpCount(0);
 
 //                Address
-                editedCustomerData.setStreet(request.getStreet());
-                editedCustomerData.setDistrict(request.getDistrict());
-                editedCustomerData.setRegency(request.getRegency());
-                editedCustomerData.setProvince(request.getProvince());
-                editedCustomerData.setPostCode(request.getPostCode());
-                editedCustomerData.setLastUpdateAt(LocalDateTime.now());
+                inputCustomerData.setStreet(request.getStreet());
+                inputCustomerData.setDistrict(request.getDistrict());
+                inputCustomerData.setRegency(request.getRegency());
+                inputCustomerData.setProvince(request.getProvince());
+                inputCustomerData.setPostCode(request.getPostCode());
+                inputCustomerData.setLastUpdateAt(LocalDateTime.now());
 
-                customerRepository.save(editedCustomerData);
+                customerRepository.save(inputCustomerData);
 
-                EditCustomerResponse response = objectMapper.convertValue(editedCustomerData, EditCustomerResponse.class);
-                response.setEmail(editedCustomerData.getEmail());
-                response.setPhoneNumber(editedCustomerData.getPhoneNumber());
-
+                EditCustomerResponse response = EditCustomerResponse.builder()
+                        .customerId(inputCustomerData.getId())
+                        .username(inputCustomerData.getUsername())
+                        .phoneNumber(inputCustomerData.getPhoneNumber())
+                        .email(inputCustomerData.getEmail())
+                        .status(inputCustomerData.getStatus())
+                        .token(jwtService.generateToken(new CustomerPrincipal(inputCustomerData)))
+                        .duration(1800)
+                        .build();
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
             }
         }

@@ -16,17 +16,11 @@ import java.time.LocalDateTime;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class EditCustomerResponse {
 
+    private String customerId;
     private String username;
-    private String name;
     private String email;
     private String phoneNumber;
-    private String gender;
-    private LocalDateTime birthDate;
-    private String image;
-    private String street;
-    private String district;
-    private String regency;
-    private String province;
-    private String postCode;
-    private String note;
+    private String status;
+    private String token;
+    private int duration;
 }
