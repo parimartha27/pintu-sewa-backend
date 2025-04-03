@@ -1,7 +1,7 @@
 package com.skripsi.siap_sewa.config;
 
-import com.alibou.websocket.chat.ChatMessage;
-import com.alibou.websocket.chat.MessageType;
+import com.skripsi.siap_sewa.dto.chat.ChatMessageRequest;
+import com.skripsi.siap_sewa.enums.MessageTypeEnum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -23,8 +23,8 @@ public class WebSocketEventListener {
         String username = (String) headerAccessor.getSessionAttributes().get("username");
         if (username != null) {
             log.info("user disconnected: {}", username);
-            var chatMessage = ChatMessage.builder()
-                    .type(MessageType.LEAVE)
+            var chatMessage = ChatMessageRequest.builder()
+                    .type(MessageTypeEnum.LEAVE)
                     .sender(username)
                     .build();
             messagingTemplate.convertAndSend("/topic/public", chatMessage);
