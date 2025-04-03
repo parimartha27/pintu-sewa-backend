@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class CustomerEntity {
 
     private String password;
     private String gender;
-    private LocalDateTime birthDate;
+    private LocalDate birthDate;
     private String image;
     private String status;
 

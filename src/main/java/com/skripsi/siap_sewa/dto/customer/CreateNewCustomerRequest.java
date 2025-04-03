@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.dto.customer;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.annotation.Nullable;
@@ -10,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -38,11 +40,12 @@ public class CreateNewCustomerRequest {
     private String phoneNumber;
 
     @NotBlank(message = "Jenis kelamin tidak boleh kosong")
-    @Pattern(regexp = "^(Laki-laki|Perempuan)$", message = "Jenis kelamin harus 'Laki-laki' atau 'Perempuan'")
+    @Pattern(regexp = "^(Laki-Laki|Perempuan)$", message = "Jenis kelamin harus 'Laki-laki' atau 'Perempuan'")
     private String gender;
 
     @NotNull(message = "Tanggal lahir tidak boleh kosong")
-    private LocalDateTime birthDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate birthDate;
 
     private String image;
 
