@@ -140,6 +140,7 @@ public class AuthenticationService {
                         .email(customer.getEmail())
                         .phoneNumber(customer.getPhoneNumber())
                         .status(customer.getStatus())
+                        .image(customer.getImage())
                         .token(jwtService.generateToken(new CustomerPrincipal(customer)))
                         .duration(1800)
                         .build();

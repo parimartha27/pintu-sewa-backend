@@ -21,6 +21,7 @@ public class EditCustomerResponse {
     private String email;
     private String phoneNumber;
     private String status;
+    private String image;
     private String token;
     private int duration;
 }

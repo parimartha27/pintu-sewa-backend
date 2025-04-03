@@ -18,6 +18,7 @@ public class LoginResponse {
     private String username;
     private String email;
     private String phoneNumber;
+    private String image;
     private String status;
     private String token;
     private int duration;
