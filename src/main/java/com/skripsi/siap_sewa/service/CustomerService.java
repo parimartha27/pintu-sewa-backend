@@ -36,6 +36,7 @@ public class CustomerService {
         }else{
             CustomerEntity data = customerEntity.get();
             CustomerDetailResponse response = objectMapper.convertValue(data, CustomerDetailResponse.class);
+            response.setImage(data.getImage() == null ? "" : data.getImage());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }
     }
