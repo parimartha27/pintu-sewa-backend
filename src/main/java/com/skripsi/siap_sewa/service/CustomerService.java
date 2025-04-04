@@ -17,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,7 +35,7 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }else{
             CustomerEntity data = customerEntity.get();
-            EditCustomerResponse response = objectMapper.convertValue(data, EditCustomerResponse.class);
+            CustomerDetailResponse response = objectMapper.convertValue(data, CustomerDetailResponse.class);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         }
     }
@@ -84,7 +83,7 @@ public class CustomerService {
 
                 customerRepository.save(inputCustomerData);
 
-                EditCustomerResponse response = EditCustomerResponse.builder()
+                CreateNewCustomerResponse response = CreateNewCustomerResponse.builder()
                         .customerId(inputCustomerData.getId())
                         .username(inputCustomerData.getUsername())
                         .phoneNumber(inputCustomerData.getPhoneNumber())
@@ -122,7 +121,7 @@ public class CustomerService {
 
             customerRepository.save(editedCustomerData);
 
-            EditCustomerResponse response = objectMapper.convertValue(editedCustomerData, EditCustomerResponse.class);
+            CreateNewCustomerResponse response = objectMapper.convertValue(editedCustomerData, CreateNewCustomerResponse.class);
             response.setEmail(editedCustomerData.getEmail());
             response.setPhoneNumber(editedCustomerData.getPhoneNumber());
 
