@@ -63,8 +63,11 @@ public class AddProductRequest {
     
     private String conditionDescription;
 
-    @Min(value = 0, message = "Stok tidak boleh harus lebih dari 0")
+    @Min(value = 0, message = "Stok tidak boleh 0, harus lebih dari 0")
     private int stock;
+
+    @Min(value = 0, message = "Minimal sewa tidak boleh 0, harus lebih dari 0")
+    private int minRented;
 
     private String status;
 

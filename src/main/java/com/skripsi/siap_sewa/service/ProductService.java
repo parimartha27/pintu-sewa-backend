@@ -221,6 +221,7 @@ public class ProductService {
                     .description(request.getDescription())
                     .conditionDescription(request.getConditionDescription())
                     .stock(request.getStock())
+                    .minRented(request.getMinRented())
                     .status(request.getStatus())
                     .image(request.getImage())
                     .createdAt(LocalDateTime.now())
@@ -273,6 +274,7 @@ public class ProductService {
             product.setDescription(request.getDescription());
             product.setConditionDescription(request.getConditionDescription());
             product.setStock(request.getStock());
+            product.setMinRented(request.getMinRented());
             product.setStatus(request.getStatus());
             product.setImage(request.getImage());
             product.setShop(shop);

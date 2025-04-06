@@ -43,14 +43,14 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<ApiResponse> getProductsByCategory(
             @RequestParam String category,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "16") int size,
             @RequestParam(defaultValue = "name,asc") String[] sort) {
 
         Sort.Direction direction = Sort.Direction.fromString(sort[1]);
         Sort sorting = Sort.by(direction, sort[0]);
 
-        Pageable pageable = PageRequest.of(page, size, sorting);
+        Pageable pageable = PageRequest.of(page - 1, size, sorting);
         return productService.getProductsByCategory(category,pageable);
     }
 

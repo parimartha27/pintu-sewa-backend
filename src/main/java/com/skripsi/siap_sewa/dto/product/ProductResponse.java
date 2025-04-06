@@ -32,6 +32,7 @@ public class ProductResponse {
     private String description;
     private String conditionDescription;
     private int stock;
+    private int minRented;
     private String status;
     private String image;
     private String address;
