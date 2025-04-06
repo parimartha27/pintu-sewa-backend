@@ -32,6 +32,7 @@ public class ShopDetailResponse {
     private String customerId;
     private Double rating;
     private int totalReviewedTimes;
+    private String workHours;
     private List<ProductInfo> products;
 
     @Data
