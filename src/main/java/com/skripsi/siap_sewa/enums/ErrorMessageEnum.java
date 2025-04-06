@@ -26,7 +26,10 @@ public enum ErrorMessageEnum {
     PHONE_NUMBER_EXIST(Constant.PHONE_NUMBER_EXIST_CODE, "Nomor telepon sudah digunakan", HttpStatus.BAD_REQUEST),
 
     EMAIL_SENDING_ERROR(Constant.EMAIL_SENDING_ERROR_CODE, "Gagal mengirim email", HttpStatus.INTERNAL_SERVER_ERROR),
-    INVALID_EMAIL_PARAMETER(Constant.INVALID_EMAIL_PARAMETER_CODE, "Parameter email tidak valid", HttpStatus.BAD_REQUEST);
+    INVALID_EMAIL_PARAMETER(Constant.INVALID_EMAIL_PARAMETER_CODE, "Parameter email tidak valid", HttpStatus.BAD_REQUEST),
+
+    OTP_ATTEMPTS_EXCEEDED(Constant.OTP_ATTEMPTS_EXCEEDED_CODE, "Percobaan OTP telah habis", HttpStatus.BAD_REQUEST),
+    INVALID_OTP(Constant.INVALID_OTP_CODE, "Kode OTP tidak valid", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String errorMessage;

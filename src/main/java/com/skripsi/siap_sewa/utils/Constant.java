@@ -30,6 +30,13 @@ public class Constant {
     public static final String EMAIL_EXIST_CODE = "PS-01-002";
     public static final String PHONE_NUMBER_EXIST_CODE = "PS-01-003";
 
+    public static final String OTP_ATTEMPTS_EXCEEDED_CODE = "PS-01-005";
+    public static final String INVALID_OTP_CODE = "PS-01-006";
+
+    public static final int MAX_OTP_VERIFY_ATTEMPTS = 10;
+    public static final int MAX_OTP_RESEND_ATTEMPTS = 3;
+    public static final int TOKEN_EXPIRATION_SECONDS = 1800;
+
     public static final String CART_PRODUCT_NOT_FOUND_CODE = "PS-02-001";
     public static final String INSUFFICIENT_STOCK_CODE = "PS-02-002";
     public static final String CART_ITEM_EXISTS_CODE = "PS-02-003";
