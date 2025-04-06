@@ -76,7 +76,8 @@ public class ProductController {
         return productService.deleteProduct(id);
     }
 
-
-
-
+    @GetMapping("/{shopId}")
+    public ResponseEntity<ApiResponse> getProductByShopId(@PathVariable String shopId){
+        return productService.getProductByShopId(shopId);
+    }
 }

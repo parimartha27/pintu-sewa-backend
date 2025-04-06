@@ -396,4 +396,36 @@ public class ProductService {
 
         return new int[]{rentedTimes, buyTimes};
     }
+
+    public ResponseEntity<ApiResponse> getProductByShopId(String shopId) {
+        try {
+            log.info("Fetching products by shop ID: {}", shopId);
+
+            ShopEntity shop = shopRepository.findById(shopId)
+                    .orElseThrow(() -> {
+                        log.warn("Shop not found with ID: {}", shopId);
+                        return new DataNotFoundException("Shop not found");
+                    });
+
+            List<ProductEntity> products = productRepository.findByShopId(shopId);
+
+            if (products.isEmpty()) {
+                log.warn("No products found for shop ID: {}", shopId);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            List<ProductResponse> responseList = products.stream()
+                    .map(this::buildProductResponse)
+                    .collect(Collectors.toList());
+
+            log.debug("Successfully fetched {} products for shop ID: {}", responseList.size(), shopId);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error fetching products by shop ID {}: {}", shopId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
 }
