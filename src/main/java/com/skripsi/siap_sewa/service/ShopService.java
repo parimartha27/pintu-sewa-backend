@@ -144,7 +144,6 @@ public class ShopService {
             List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
             int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
             productInfo.setRentedTimes(transactionCounts[0]);
-            productInfo.setBuyTimes(transactionCounts[1]);
 
             return productInfo;
         }).collect(Collectors.toList());

@@ -42,24 +42,14 @@ public class ShopDetailResponse {
     public static class ProductInfo {
         private String id;
         private String name;
-        private String category;
         private int rentCategory;
         private boolean isRnb;
-        private BigDecimal weight;
-        private BigDecimal height;
-        private BigDecimal width;
-        private BigDecimal length;
         private BigDecimal dailyPrice;
         private BigDecimal weeklyPrice;
         private BigDecimal monthlyPrice;
-        private String description;
-        private String conditionDescription;
-        private int stock;
-        private int minRented;
-        private String status;
         private String image;
+        private String address;
         private Double rating;
         private int rentedTimes;
-        private int buyTimes;
     }
 }

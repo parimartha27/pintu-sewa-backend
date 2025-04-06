@@ -41,20 +41,11 @@ public class CartService {
 
                 ProductResponse productResponse = ProductResponse.builder()
                         .name(product.getName())
-                        .category(product.getCategory())
                         .rentCategory(product.getRentCategory())
                         .isRnb(product.isRnb())
-                        .weight(product.getWeight())
-                        .height(product.getHeight())
-                        .width(product.getWidth())
-                        .length(product.getLength())
                         .dailyPrice(product.getDailyPrice())
                         .weeklyPrice(product.getWeeklyPrice())
                         .monthlyPrice(product.getMonthlyPrice())
-                        .description(product.getDescription())
-                        .conditionDescription(product.getConditionDescription())
-                        .stock(product.getStock())
-                        .status(product.getStatus())
                         .image(product.getImage())
                         .build();
 
