@@ -27,7 +27,7 @@ public class ChatController {
     @MessageMapping("/send")
     public void processMessage(@Payload ChatMessageDto chatMessage) {
         try {
-            ChatMessageDto savedMsg = chatService.processAndSaveMessage(chatMessage);
+            ResponseEntity<ApiResponse> savedMsg = chatService.processAndSaveMessage(chatMessage);
 
             // Notify buyer
             messagingTemplate.convertAndSendToUser(
@@ -53,7 +53,7 @@ public class ChatController {
             @PathVariable String customerId,
             @PathVariable String shopId) {
         try {
-            List<ChatMessageDto> messages = chatService.getChatHistory(customerId, shopId);
+            List<ChatMessageDto> messages = (List<ChatMessageDto>) chatService.getChatHistory(customerId, shopId);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, messages);
         } catch (Exception e) {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
@@ -77,7 +77,7 @@ public class ChatController {
             @PathVariable String userId,
             @PathVariable String userType) {
         try {
-            UnreadCountResponse count = chatService.getUnreadCount(userId, userType);
+            ResponseEntity<ApiResponse> count = chatService.getUnreadCount(userId, userType);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, count);
         } catch (Exception e) {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);

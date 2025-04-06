@@ -1,6 +1,5 @@
 package com.skripsi.siap_sewa.utils;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 public class Constant {
@@ -26,4 +25,11 @@ public class Constant {
     public static final String INTERNAL_SERVER_ERROR_CODE = "PS-99-500";
     public static final String INTERNAL_SERVER_ERROR_MESSAGE ="Internal Server Error";
     public static final HttpStatus STATUS_INTERNAL_SERVER_ERROR = HttpStatus.INTERNAL_SERVER_ERROR;
+
+    public static final String CART_PRODUCT_NOT_FOUND_CODE = "PS-02-001";
+    public static final String INSUFFICIENT_STOCK_CODE = "PS-02-002";
+    public static final String CART_ITEM_EXISTS_CODE = "PS-02-003";
+
+    public static final String CHAT_NOT_FOUND_CODE = "PS-03-001";
+    public static final String INVALID_USER_TYPE_CODE = "PS-03-002";
 }

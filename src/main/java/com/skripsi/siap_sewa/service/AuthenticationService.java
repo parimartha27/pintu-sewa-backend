@@ -91,7 +91,7 @@ public class AuthenticationService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (EmailExistException | PhoneNumberExistException ex) {
-            throw ex; // Biarkan GlobalExceptionHandler yang menangani
+            throw ex;
         } catch (Exception ex) {
             log.error("Error during registration: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
