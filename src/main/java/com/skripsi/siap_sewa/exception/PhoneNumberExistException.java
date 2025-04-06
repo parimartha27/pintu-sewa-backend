@@ -1,10 +1,13 @@
 package com.skripsi.siap_sewa.exception;
 
 public class PhoneNumberExistException extends RuntimeException {
+    private final String errorCode = "SIAP-SEWA-01-004";
 
-    public PhoneNumberExistException() {}
+    public PhoneNumberExistException() {
+        super("Phone number has been registered. Please use other phone number");
+    }
 
-    public PhoneNumberExistException(String message) {
-        super(message);
+    public String getErrorCode() {
+        return errorCode;
     }
 }

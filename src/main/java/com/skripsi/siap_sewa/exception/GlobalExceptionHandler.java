@@ -3,6 +3,7 @@ package com.skripsi.siap_sewa.exception;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.utils.CommonUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +16,18 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.util.*;
 
+@Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler{
+public class GlobalExceptionHandler {
 
     @Autowired
     private CommonUtils commonUtils;
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        List<Map<String, Object>> validationErrors = new ArrayList<>();
+        log.warn("Validation error: {}", ex.getMessage());
 
+        List<Map<String, Object>> validationErrors = new ArrayList<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             Map<String, Object> errorDetail = new HashMap<>();
             errorDetail.put("field_error", fieldError.getField());
@@ -36,25 +39,36 @@ public class GlobalExceptionHandler{
     }
 
     @ExceptionHandler({EmailExistException.class})
-    public ResponseEntity<ApiResponse> emailExistException(){
+    public ResponseEntity<ApiResponse> handleEmailExistException(EmailExistException ex) {
+        log.warn("Email conflict: {}", ex.getMessage());
         return commonUtils.setResponse(
-                "SIAP-SEWA-01-003",
-                "Email has been registered. Please use other email",
+                ex.getErrorCode(),
+                ex.getMessage(),
                 HttpStatus.CONFLICT,
-                null);
+                null
+        );
     }
 
     @ExceptionHandler({PhoneNumberExistException.class})
-    public ResponseEntity<ApiResponse> phoneNumberExistException(){
+    public ResponseEntity<ApiResponse> handlePhoneNumberExistException(PhoneNumberExistException ex) {
+        log.warn("Phone number conflict: {}", ex.getMessage());
         return commonUtils.setResponse(
-                "SIAP-SEWA-01-004",
-                "Phone number has been registered. Please use other phone number",
+                ex.getErrorCode(),
+                ex.getMessage(),
                 HttpStatus.CONFLICT,
-                null);
+                null
+        );
     }
 
     @ExceptionHandler({DataNotFoundException.class})
-    public ResponseEntity<ApiResponse> dataNotFoundException(){
+    public ResponseEntity<ApiResponse> handleDataNotFoundException(DataNotFoundException ex) {
+        log.warn("Data not found: {}", ex.getMessage());
         return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handleAllExceptions(Exception ex) {
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
+        return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
     }
 }
