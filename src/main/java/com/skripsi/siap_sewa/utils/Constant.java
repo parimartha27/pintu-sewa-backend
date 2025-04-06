@@ -23,4 +23,7 @@ public class Constant {
     public static final String SUBJECT_EMAIL_REGISTER = "One-Time Passcode (OTP) kamu dari Pintu Sewa";
     public static final String SUBJECT_EMAIL_CREATE_SHOP = "Selamat Atas Toko Baru Kamu";
 
+    public static final String INTERNAL_SERVER_ERROR_CODE = "PS-99-500";
+    public static final String INTERNAL_SERVER_ERROR_MESSAGE ="Internal Server Error";
+    public static final HttpStatus STATUS_INTERNAL_SERVER_ERROR = HttpStatus.INTERNAL_SERVER_ERROR;
 }
