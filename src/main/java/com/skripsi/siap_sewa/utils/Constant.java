@@ -36,4 +36,7 @@ public class Constant {
 
     public static final String CHAT_NOT_FOUND_CODE = "PS-03-001";
     public static final String INVALID_USER_TYPE_CODE = "PS-03-002";
+
+    public static final String EMAIL_SENDING_ERROR_CODE = "PS-04-001";
+    public static final String INVALID_EMAIL_PARAMETER_CODE = "PS-04-002";
 }

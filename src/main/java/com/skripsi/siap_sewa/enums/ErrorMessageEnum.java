@@ -23,7 +23,10 @@ public enum ErrorMessageEnum {
 
     USERNAME_EXIST(Constant.USERNAME_EXIST_CODE, "Username sudah digunakan", HttpStatus.BAD_REQUEST),
     EMAIL_EXIST(Constant.EMAIL_EXIST_CODE, "Email sudah digunakan", HttpStatus.BAD_REQUEST),
-    PHONE_NUMBER_EXIST(Constant.PHONE_NUMBER_EXIST_CODE, "Nomor telepon sudah digunakan", HttpStatus.BAD_REQUEST);
+    PHONE_NUMBER_EXIST(Constant.PHONE_NUMBER_EXIST_CODE, "Nomor telepon sudah digunakan", HttpStatus.BAD_REQUEST),
+
+    EMAIL_SENDING_ERROR(Constant.EMAIL_SENDING_ERROR_CODE, "Gagal mengirim email", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_EMAIL_PARAMETER(Constant.INVALID_EMAIL_PARAMETER_CODE, "Parameter email tidak valid", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String errorMessage;
