@@ -2,26 +2,29 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
-import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
-import com.skripsi.siap_sewa.dto.shop.CreateShopResponse;
-import com.skripsi.siap_sewa.dto.shop.EditShopResponse;
-import com.skripsi.siap_sewa.dto.shop.ShopResponse;
-import com.skripsi.siap_sewa.entity.CustomerEntity;
-import com.skripsi.siap_sewa.entity.ShopEntity;
+import com.skripsi.siap_sewa.dto.shop.*;
+import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
+import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.Constant;
+import com.skripsi.siap_sewa.utils.ProductUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShopService {
@@ -30,8 +33,10 @@ public class ShopService {
     private final ObjectMapper objectMapper;
     private final ShopRepository shopRepository;
     private final CustomerRepository customerRepository;
+    private final TransactionRepository transactionRepository;
     private final EmailService emailService;
     private final CommonUtils commonUtils;
+    private final ModelMapper modelMapper;
 
     public ResponseEntity<ApiResponse> createShop(CreateShopRequest request) {
         
@@ -83,18 +88,66 @@ public class ShopService {
     }
 
     public ResponseEntity<ApiResponse> shopDetail(String shopId) {
+        try {
+            log.info("Fetching shop details for ID: {}", shopId);
 
-        Optional<ShopEntity> optionalShop = shopRepository.findById(shopId);
+            ShopEntity shop = shopRepository.findById(shopId)
+                    .orElseThrow(() -> {
+                        log.warn("Shop not found with ID: {}", shopId);
+                        return new DataNotFoundException("Shop not found");
+                    });
 
-        if(optionalShop.isPresent()) {
-            ShopEntity shop = optionalShop.get();
-            ShopResponse response = objectMapper.convertValue(shop, ShopResponse.class);
-            response.setCustomerId(shop.getCustomer().getId());
+            ShopDetailResponse response = mapShopToDetailResponse(shop);
 
-            return utils.setResponse(ErrorMessageEnum.SUCCESS,response);
+            log.debug("Successfully fetched shop details for ID: {}", shopId);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error fetching shop details for ID {}: {}", shopId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
 
-        return utils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND,null);
+    private ShopDetailResponse mapShopToDetailResponse(ShopEntity shop) {
+        ShopDetailResponse response = modelMapper.map(shop, ShopDetailResponse.class);
+
+        // Set customer ID
+        response.setCustomerId(shop.getCustomer().getId());
+
+        // Get all reviews from all products
+        List<ReviewEntity> allReviews = shop.getProducts().stream()
+                .flatMap(p -> p.getReviews().stream())
+                .collect(Collectors.toList());
+
+        // Calculate shop rating (median of all product ratings)
+        response.setRating(ProductUtils.calculateMedianRating(allReviews));
+
+        // Count total unique reviewers
+        response.setTotalReviewedTimes((int) ProductUtils.countUniqueReviewers(shop.getProducts()));
+
+        // Map products
+        response.setProducts(mapProductsToProductInfo(shop.getProducts()));
+
+        return response;
+    }
+
+    private List<ShopDetailResponse.ProductInfo> mapProductsToProductInfo(List<ProductEntity> products) {
+        return products.stream().map(product -> {
+            ShopDetailResponse.ProductInfo productInfo = modelMapper.map(product, ShopDetailResponse.ProductInfo.class);
+
+            // Set product rating (median)
+            productInfo.setRating(ProductUtils.calculateMedianRating(product.getReviews()));
+
+            // Set transaction counts
+            List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
+            int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
+            productInfo.setRentedTimes(transactionCounts[0]);
+            productInfo.setBuyTimes(transactionCounts[1]);
+
+            return productInfo;
+        }).collect(Collectors.toList());
     }
 
     public ResponseEntity<ApiResponse> editShop(@Valid EditShopRequest request) {

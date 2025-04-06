@@ -2,13 +2,19 @@ package com.skripsi.siap_sewa.utils;
 
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ReviewEntity;
+import com.skripsi.siap_sewa.entity.TransactionEntity;
+import com.skripsi.siap_sewa.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public class ProductUtils {
+
+    private final TransactionRepository transactionRepository;
 
     public static Double calculateMedianRating(List<ReviewEntity> reviews) {
         if (reviews == null || reviews.isEmpty()) {
@@ -60,5 +66,21 @@ public class ProductUtils {
                 .map(review -> review.getCustomer().getId())
                 .distinct()
                 .count();
+    }
+
+    public static int[] countProductTransactions(List<TransactionEntity> transactions) {
+
+        int rentedTimes = 0;
+        int buyTimes = 0;
+
+        for (TransactionEntity transaction : transactions) {
+            if (transaction.isSelled()) {
+                buyTimes++;
+            } else {
+                rentedTimes++;
+            }
+        }
+
+        return new int[]{rentedTimes, buyTimes};
     }
 }

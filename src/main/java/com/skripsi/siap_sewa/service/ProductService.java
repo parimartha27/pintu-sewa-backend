@@ -100,7 +100,8 @@ public class ProductService {
         response.setRating(medianRating);
 
         // Set transaction counts
-        int[] transactionCounts = countProductTransactions(product.getId());
+        List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
+        int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
         response.setRentedTimes(transactionCounts[0]);
         response.setBuyTimes(transactionCounts[1]);
 
@@ -445,22 +446,7 @@ public class ProductService {
         return response;
     }
 
-    private int[] countProductTransactions(String productId) {
-        List<TransactionEntity> transactions = transactionRepository.findByProductId(productId);
 
-        int rentedTimes = 0;
-        int buyTimes = 0;
-
-        for (TransactionEntity transaction : transactions) {
-            if (transaction.isSelled()) {
-                buyTimes++;
-            } else {
-                rentedTimes++;
-            }
-        }
-
-        return new int[]{rentedTimes, buyTimes};
-    }
 
     public ResponseEntity<ApiResponse> getProductByShopId(String shopId) {
         try {
