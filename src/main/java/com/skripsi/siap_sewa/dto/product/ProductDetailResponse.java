@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -62,6 +63,8 @@ public class ProductDetailResponse {
         private String regency;
         private String province;
         private String postCode;
+        private Double rating;
+        private int totalReviewedTimes;
     }
 
     @Data
@@ -71,9 +74,10 @@ public class ProductDetailResponse {
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class ReviewInfo {
         private String id;
-        private String customerId;
+        private String username;
         private String comment;
-        private String image;
+        private List<String> images;
         private Double rating;
+        private String timeAgo;
     }
 }
