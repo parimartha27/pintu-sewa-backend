@@ -34,6 +34,7 @@ public class ShopEntity {
     private String email;
     private String shopStatus;
     private String image;
+    private String workHours;
 
     // Address
     private String street;
