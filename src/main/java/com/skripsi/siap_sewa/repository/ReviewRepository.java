@@ -12,5 +12,4 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<ReviewEntity, String> {
     List<ReviewEntity> findByProductId(String productId);
-
 }

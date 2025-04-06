@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
     private final CartService cartService;
 
-    @GetMapping()
-    public ResponseEntity<ApiResponse> getAllCartProductByCustomerId(@RequestParam String customerId) {
+    @GetMapping("/{customerId}")
+    public ResponseEntity<ApiResponse> getAllCartProductByCustomerId(@PathVariable String customerId) {
         log.info("Get all cart products for customer: {}", customerId);
         return cartService.getAllCartProductByCustomerId(customerId);
     }

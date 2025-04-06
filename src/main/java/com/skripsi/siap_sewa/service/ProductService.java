@@ -446,8 +446,6 @@ public class ProductService {
         return response;
     }
 
-
-
     public ResponseEntity<ApiResponse> getProductByShopId(String shopId) {
         try {
             log.info("Fetching products by shop ID: {}", shopId);

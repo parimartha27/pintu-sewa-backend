@@ -2,13 +2,12 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.shop.*;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
-import com.skripsi.siap_sewa.repository.CustomerRepository;
-import com.skripsi.siap_sewa.repository.ShopRepository;
-import com.skripsi.siap_sewa.repository.TransactionRepository;
+import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.Constant;
 import com.skripsi.siap_sewa.utils.ProductUtils;
@@ -16,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +34,9 @@ public class ShopService {
     private final ObjectMapper objectMapper;
     private final ShopRepository shopRepository;
     private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
     private final TransactionRepository transactionRepository;
+    private final ReviewRepository reviewRepository;
     private final EmailService emailService;
     private final CommonUtils commonUtils;
     private final ModelMapper modelMapper;
@@ -87,66 +90,70 @@ public class ShopService {
         return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
-    public ResponseEntity<ApiResponse> shopDetail(String shopId) {
+    public ResponseEntity<ApiResponse> shopDetail(String shopId, Pageable pageable) {
         try {
-            log.info("Fetching shop details for ID: {}", shopId);
-
+            // 1. Get shop basic info
             ShopEntity shop = shopRepository.findById(shopId)
-                    .orElseThrow(() -> {
-                        log.warn("Shop not found with ID: {}", shopId);
-                        return new DataNotFoundException("Shop not found");
-                    });
+                    .orElseThrow(() -> new DataNotFoundException("Toko tidak ditemukan"));
 
-            ShopDetailResponse response = mapShopToDetailResponse(shop);
+            // 2. Get products with pagination
+            Page<ProductEntity> productPage = productRepository.findByShopId(shopId, pageable);
 
-            log.debug("Successfully fetched shop details for ID: {}", shopId);
+            // 3. Map to response
+            ShopDetailResponse response = mapToShopDetailResponse(shop, productPage);
+
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error fetching shop details for ID {}: {}", shopId, ex.getMessage(), ex);
+            log.error("Error fetching shop details: {}", ex.getMessage());
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
-    private ShopDetailResponse mapShopToDetailResponse(ShopEntity shop) {
+    private ShopDetailResponse mapToShopDetailResponse(ShopEntity shop, Page<ProductEntity> productPage) {
         ShopDetailResponse response = modelMapper.map(shop, ShopDetailResponse.class);
-
-        // Set customer ID
         response.setCustomerId(shop.getCustomer().getId());
 
-        // Get all reviews from all products
-        List<ReviewEntity> allReviews = shop.getProducts().stream()
+        // Calculate shop rating from all products
+        List<ReviewEntity> allReviews = productPage.getContent().stream()
                 .flatMap(p -> p.getReviews().stream())
                 .collect(Collectors.toList());
-
-        // Calculate shop rating (median of all product ratings)
         response.setRating(ProductUtils.calculateMedianRating(allReviews));
-
-        // Count total unique reviewers
-        response.setTotalReviewedTimes((int) ProductUtils.countUniqueReviewers(shop.getProducts()));
+        response.setTotalReviewedTimes((int) allReviews.stream()
+                .map(r -> r.getCustomer().getId())
+                .distinct()
+                .count());
 
         // Map products
-        response.setProducts(mapProductsToProductInfo(shop.getProducts()));
+        response.setProducts(mapToPaginationResponse(productPage));
 
         return response;
     }
 
-    private List<ShopDetailResponse.ProductInfo> mapProductsToProductInfo(List<ProductEntity> products) {
-        return products.stream().map(product -> {
-            ShopDetailResponse.ProductInfo productInfo = modelMapper.map(product, ShopDetailResponse.ProductInfo.class);
+    private PaginationResponse<ShopDetailResponse.ProductInfo> mapToPaginationResponse(Page<ProductEntity> productPage) {
+        List<ShopDetailResponse.ProductInfo> productInfos = productPage.getContent().stream()
+                .map(this::mapToProductInfo)
+                .collect(Collectors.toList());
 
-            // Set product rating (median)
-            productInfo.setRating(ProductUtils.calculateMedianRating(product.getReviews()));
+        return new PaginationResponse<>(
+                productInfos,
+                productPage.getNumber() + 1,
+                productPage.getSize(),
+                productPage.getTotalElements(),
+                productPage.getTotalPages()
+        );
+    }
 
-            // Set transaction counts
-            List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
-            int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
-            productInfo.setRentedTimes(transactionCounts[0]);
+    private ShopDetailResponse.ProductInfo mapToProductInfo(ProductEntity product) {
+        ShopDetailResponse.ProductInfo productInfo = modelMapper.map(product, ShopDetailResponse.ProductInfo.class);
+        productInfo.setRating(ProductUtils.calculateMedianRating(product.getReviews()));
 
-            return productInfo;
-        }).collect(Collectors.toList());
+        List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
+        int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
+        productInfo.setRentedTimes(transactionCounts[0]);
+
+        return productInfo;
     }
 
     public ResponseEntity<ApiResponse> editShop(@Valid EditShopRequest request) {

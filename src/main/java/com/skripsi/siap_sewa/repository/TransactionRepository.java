@@ -9,8 +9,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, String> {
-    int countByProductsId(String productId);
-
     @Query("SELECT t FROM TransactionEntity t JOIN t.products p WHERE p.id = :productId")
     List<TransactionEntity> findByProductId(@Param("productId") String productId);
 }
