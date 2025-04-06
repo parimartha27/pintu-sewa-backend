@@ -401,12 +401,6 @@ public class ProductService {
         try {
             log.info("Fetching products by shop ID: {}", shopId);
 
-            ShopEntity shop = shopRepository.findById(shopId)
-                    .orElseThrow(() -> {
-                        log.warn("Shop not found with ID: {}", shopId);
-                        return new DataNotFoundException("Shop not found");
-                    });
-
             List<ProductEntity> products = productRepository.findByShopId(shopId);
 
             if (products.isEmpty()) {
