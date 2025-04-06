@@ -68,18 +68,24 @@ public class CustomerService {
 
             CustomerEntity inputCustomerData = customerEntity.get();
 
-            // Validate unique fields
+
             if (customerRepository.existsByUsername(request.getUsername())) {
                 log.warn("Username sudah digunakan: {}", request.getUsername());
                 throw new UsernameExistException("Username sudah digunakan");
             }
-            if (request.getEmail() != null && customerRepository.existsByEmail(request.getEmail())) {
-                log.warn("Email sudah digunakan: {}", request.getEmail());
-                throw new EmailExistException("Email sudah digunakan");
+
+            if (request.getEmail() != null && !request.getEmail().equals(inputCustomerData.getEmail())) {
+                if (customerRepository.existsByEmail(request.getEmail())) {
+                    log.warn("Email sudah digunakan: {}", request.getEmail());
+                    throw new EmailExistException("Email sudah digunakan");
+                }
             }
-            if (request.getPhoneNumber() != null && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-                log.warn("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
-                throw new PhoneNumberExistException("Nomor telepon sudah digunakan");
+            
+            if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(inputCustomerData.getPhoneNumber())) {
+                if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                    log.warn("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
+                    throw new PhoneNumberExistException("Nomor telepon sudah digunakan");
+                }
             }
 
             // Set personal information
