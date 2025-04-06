@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "TRANSASCTION")
+@Table(name = "TRANSACTION")
 @Data
 @Builder
 @NoArgsConstructor
@@ -43,8 +43,8 @@ public class TransactionEntity {
     private String transactionNumber;
     private String startDate;
     private String endDate;
-    private Integer shippingAddress;
-    private Integer quantity;
+    private String shippingAddress;
+    private int quantity;
     private Double amount;
     private String totalAmount;
     private String paymentMethod;
