@@ -1,13 +1,13 @@
 package com.skripsi.siap_sewa.exception;
 
+import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import lombok.Getter;
 
 @Getter
 public class EmailExistException extends RuntimeException {
-    private final String errorCode = "SIAP-SEWA-01-003";
+    private final String errorCode = ErrorMessageEnum.EMAIL_EXIST.getErrorCode();
 
-    public EmailExistException() {
-        super("Email has been registered. Please use other email");
+    public EmailExistException(String message) {
+        super(message);
     }
-
 }

@@ -19,7 +19,11 @@ public enum ErrorMessageEnum {
     CART_ITEM_EXISTS(Constant.CART_ITEM_EXISTS_CODE, "Produk sudah ada di keranjang", HttpStatus.CONFLICT),
 
     CHAT_NOT_FOUND(Constant.CHAT_NOT_FOUND_CODE, "Chat tidak ditemukan", HttpStatus.NOT_FOUND),
-    INVALID_USER_TYPE(Constant.INVALID_USER_TYPE_CODE, "Tipe pengguna tidak valid", HttpStatus.BAD_REQUEST);
+    INVALID_USER_TYPE(Constant.INVALID_USER_TYPE_CODE, "Tipe pengguna tidak valid", HttpStatus.BAD_REQUEST),
+
+    USERNAME_EXIST(Constant.USERNAME_EXIST_CODE, "Username sudah digunakan", HttpStatus.BAD_REQUEST),
+    EMAIL_EXIST(Constant.EMAIL_EXIST_CODE, "Email sudah digunakan", HttpStatus.BAD_REQUEST),
+    PHONE_NUMBER_EXIST(Constant.PHONE_NUMBER_EXIST_CODE, "Nomor telepon sudah digunakan", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String errorMessage;

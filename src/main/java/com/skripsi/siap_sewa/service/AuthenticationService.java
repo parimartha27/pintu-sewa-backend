@@ -55,10 +55,10 @@ public class AuthenticationService {
             log.info("Checking existing customer");
             if(customerRepository.existsByEmail(request.getEmail())) {
                 log.warn("Email already exists: {}", request.getEmail());
-                throw new EmailExistException();
+                throw new EmailExistException("Email sudah digunakan");
             } else if(customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
                 log.warn("Phone number already exists: {}", request.getPhoneNumber());
-                throw new PhoneNumberExistException();
+                throw new PhoneNumberExistException("No Handphone sudah digunakan");
             }
 
             CustomerEntity newCustomer = new CustomerEntity();
@@ -108,7 +108,7 @@ public class AuthenticationService {
 
             if(customerRepository.existsByEmail(request.getEmail())) {
                 log.warn("Email already exists: {}", request.getEmail());
-                throw new EmailExistException();
+                throw new EmailExistException("Email sudah digunakan");
             }
 
             CustomerEntity newCustomer = new CustomerEntity();

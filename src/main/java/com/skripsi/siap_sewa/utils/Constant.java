@@ -26,6 +26,10 @@ public class Constant {
     public static final String INTERNAL_SERVER_ERROR_MESSAGE ="Internal Server Error";
     public static final HttpStatus STATUS_INTERNAL_SERVER_ERROR = HttpStatus.INTERNAL_SERVER_ERROR;
 
+    public static final String USERNAME_EXIST_CODE = "PS-01-001";
+    public static final String EMAIL_EXIST_CODE = "PS-01-002";
+    public static final String PHONE_NUMBER_EXIST_CODE = "PS-01-003";
+
     public static final String CART_PRODUCT_NOT_FOUND_CODE = "PS-02-001";
     public static final String INSUFFICIENT_STOCK_CODE = "PS-02-002";
     public static final String CART_ITEM_EXISTS_CODE = "PS-02-003";

@@ -7,11 +7,14 @@ import com.skripsi.siap_sewa.dto.customer.*;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
+import com.skripsi.siap_sewa.exception.EmailExistException;
+import com.skripsi.siap_sewa.exception.PhoneNumberExistException;
+import com.skripsi.siap_sewa.exception.UsernameExistException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerService {
@@ -30,89 +34,121 @@ public class CustomerService {
     private final JWTService jwtService;
 
     public ResponseEntity<ApiResponse> getCustomerDetails(String id) {
-        Optional<CustomerEntity> customerEntity = customerRepository.findById(id);
-        if(customerEntity.isEmpty()){
-            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-        }else{
+        try {
+            log.info("Mengambil detail customer dengan ID: {}", id);
+
+            Optional<CustomerEntity> customerEntity = customerRepository.findById(id);
+            if(customerEntity.isEmpty()){
+                log.warn("Customer tidak ditemukan dengan ID: {}", id);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
             CustomerEntity data = customerEntity.get();
             CustomerDetailResponse response = objectMapper.convertValue(data, CustomerDetailResponse.class);
             response.setImage(data.getImage() == null ? "" : data.getImage());
+
+            log.info("Berhasil mengambil detail customer dengan ID: {}", id);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.error("Gagal mengambil detail customer: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
-    public ResponseEntity<ApiResponse> inputCustomerData (CreateNewCustomerRequest request) {
-        Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+    public ResponseEntity<ApiResponse> inputCustomerData(CreateNewCustomerRequest request) {
+        try {
+            log.info("Memproses input data customer baru: {}", request);
 
-        if (customerEntity.isEmpty()) {
-            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-        }
-        else {
+            Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+            if (customerEntity.isEmpty()) {
+                log.warn("Customer tidak ditemukan dengan ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
             CustomerEntity inputCustomerData = customerEntity.get();
 
-            boolean isValidUsername = customerRepository.existsByUsername(request.getUsername());
-
-            if(isValidUsername){
-                return commonUtils.setResponse("SIAP-SEWA-02-001", "Please use other username", HttpStatus.OK, null);
-            }else{
-//                personal information
-                inputCustomerData.setUsername(request.getUsername());
-                inputCustomerData.setName(request.getName());
-                if(request.getEmail() != null){
-                    inputCustomerData.setEmail(request.getEmail());
-                }
-                if(request.getPhoneNumber() != null){
-                    inputCustomerData.setPhoneNumber(request.getPhoneNumber());
-                }
-                inputCustomerData.setGender(request.getGender());
-                inputCustomerData.setBirthDate(request.getBirthDate());
-                inputCustomerData.setPassword(encoder.encode(request.getPassword()));
-                inputCustomerData.setStatus("ACTIVE");
-
-//                OTP
-                inputCustomerData.setOtp(null);
-                inputCustomerData.setVerifyCount(0);
-                inputCustomerData.setResendOtpCount(0);
-
-//                Address
-                inputCustomerData.setStreet(request.getStreet());
-                inputCustomerData.setDistrict(request.getDistrict());
-                inputCustomerData.setRegency(request.getRegency());
-                inputCustomerData.setProvince(request.getProvince());
-                inputCustomerData.setPostCode(request.getPostCode());
-                inputCustomerData.setLastUpdateAt(LocalDateTime.now());
-
-                customerRepository.save(inputCustomerData);
-
-                CreateNewCustomerResponse response = CreateNewCustomerResponse.builder()
-                        .customerId(inputCustomerData.getId())
-                        .username(inputCustomerData.getUsername())
-                        .phoneNumber(inputCustomerData.getPhoneNumber())
-                        .email(inputCustomerData.getEmail())
-                        .image(inputCustomerData.getImage() == null? "": inputCustomerData.getImage())
-                        .status(inputCustomerData.getStatus())
-                        .token(jwtService.generateToken(new CustomerPrincipal(inputCustomerData)))
-                        .duration(1800)
-                        .build();
-                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            // Validate unique fields
+            if (customerRepository.existsByUsername(request.getUsername())) {
+                log.warn("Username sudah digunakan: {}", request.getUsername());
+                throw new UsernameExistException("Username sudah digunakan");
             }
+            if (request.getEmail() != null && customerRepository.existsByEmail(request.getEmail())) {
+                log.warn("Email sudah digunakan: {}", request.getEmail());
+                throw new EmailExistException("Email sudah digunakan");
+            }
+            if (request.getPhoneNumber() != null && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                log.warn("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
+                throw new PhoneNumberExistException("Nomor telepon sudah digunakan");
+            }
+
+            // Set personal information
+            inputCustomerData.setUsername(request.getUsername());
+            inputCustomerData.setName(request.getName());
+            inputCustomerData.setEmail(request.getEmail());
+            inputCustomerData.setPhoneNumber(request.getPhoneNumber());
+            inputCustomerData.setGender(request.getGender());
+            inputCustomerData.setBirthDate(request.getBirthDate());
+            inputCustomerData.setPassword(encoder.encode(request.getPassword()));
+            inputCustomerData.setStatus("ACTIVE");
+
+            // Clear OTP fields
+            inputCustomerData.setOtp(null);
+            inputCustomerData.setVerifyCount(0);
+            inputCustomerData.setResendOtpCount(0);
+
+            // Set address
+            inputCustomerData.setStreet(request.getStreet());
+            inputCustomerData.setDistrict(request.getDistrict());
+            inputCustomerData.setRegency(request.getRegency());
+            inputCustomerData.setProvince(request.getProvince());
+            inputCustomerData.setPostCode(request.getPostCode());
+            inputCustomerData.setLastUpdateAt(LocalDateTime.now());
+
+            customerRepository.save(inputCustomerData);
+            log.info("Berhasil menyimpan data customer baru dengan ID: {}", inputCustomerData.getId());
+
+            CreateNewCustomerResponse response = CreateNewCustomerResponse.builder()
+                    .customerId(inputCustomerData.getId())
+                    .username(inputCustomerData.getUsername())
+                    .phoneNumber(inputCustomerData.getPhoneNumber())
+                    .email(inputCustomerData.getEmail())
+                    .image(inputCustomerData.getImage() == null ? "" : inputCustomerData.getImage())
+                    .status(inputCustomerData.getStatus())
+                    .token(jwtService.generateToken(new CustomerPrincipal(inputCustomerData)))
+                    .duration(1800)
+                    .build();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (UsernameExistException | EmailExistException | PhoneNumberExistException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Gagal memproses input data customer: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
     public ResponseEntity<ApiResponse> editCustomerData(EditCustomerRequest request) {
-        Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+        try {
+            log.info("Memproses edit data customer dengan ID: {}", request.getId());
 
-        if (customerEntity.isEmpty()) {
-            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-        }
-        else {
+            Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+            if (customerEntity.isEmpty()) {
+                log.warn("Customer tidak ditemukan dengan ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
             CustomerEntity editedCustomerData = customerEntity.get();
-//          Personal Information
+
+            // Personal Information
             editedCustomerData.setGender(request.getGender());
             editedCustomerData.setBirthDate(request.getBirthDate());
-            editedCustomerData.setPassword(encoder.encode(request.getPassword()));
+            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+                editedCustomerData.setPassword(encoder.encode(request.getPassword()));
+            }
 
-//                Address
+            // Address
             editedCustomerData.setStreet(request.getStreet());
             editedCustomerData.setDistrict(request.getDistrict());
             editedCustomerData.setRegency(request.getRegency());
@@ -121,42 +157,66 @@ public class CustomerService {
             editedCustomerData.setLastUpdateAt(LocalDateTime.now());
 
             customerRepository.save(editedCustomerData);
+            log.info("Berhasil mengupdate data customer dengan ID: {}", request.getId());
 
             CreateNewCustomerResponse response = objectMapper.convertValue(editedCustomerData, CreateNewCustomerResponse.class);
             response.setEmail(editedCustomerData.getEmail());
             response.setPhoneNumber(editedCustomerData.getPhoneNumber());
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.error("Gagal mengedit data customer: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
     public ResponseEntity<ApiResponse> validateCredential(@Valid ValidateCredentialRequest request) {
-        boolean isCustomerValid = customerRepository.existsByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+        try {
+            log.info("Validasi kredensial untuk email/telepon: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
 
-        if(isCustomerValid){
+            boolean isCustomerValid = customerRepository.existsByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+            if(!isCustomerValid) {
+                log.warn("Kredensial tidak valid untuk email/telepon: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "User tidak ditemukan");
+            }
+
             Optional<CustomerEntity> validCustomer = customerRepository.findByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
             ValidateCredentialResponse response = ValidateCredentialResponse.builder()
                     .customerId(validCustomer.get().getId())
                     .build();
 
+            log.info("Berhasil validasi kredensial untuk customer ID: {}", response.getCustomerId());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-        }
 
-        return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "User not exist");
+        } catch (Exception ex) {
+            log.error("Gagal validasi kredensial: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
     }
 
     public ResponseEntity<ApiResponse> forgetPassword(@Valid ForgetPasswordRequest request) {
-        Optional<CustomerEntity> optionalCustomer = customerRepository.findById(request.getCustomerId());
+        try {
+            log.info("Memproses reset password untuk customer ID: {}", request.getCustomerId());
 
-        if(optionalCustomer.isEmpty()){
-            throw new DataNotFoundException("Customer with: " + request + " is not available");
+            Optional<CustomerEntity> optionalCustomer = customerRepository.findById(request.getCustomerId());
+            if(optionalCustomer.isEmpty()){
+                log.warn("Customer tidak ditemukan dengan ID: {}", request.getCustomerId());
+                throw new DataNotFoundException("Customer dengan ID: " + request.getCustomerId() + " tidak ditemukan");
+            }
+
+            CustomerEntity updatedPassword = optionalCustomer.get();
+            updatedPassword.setPassword(encoder.encode(request.getPassword()));
+            customerRepository.save(updatedPassword);
+
+            log.info("Berhasil reset password untuk customer ID: {}", request.getCustomerId());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Reset password berhasil");
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Gagal reset password: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
-
-        CustomerEntity updatedPassword = optionalCustomer.get();
-        updatedPassword.setPassword(encoder.encode(request.getPassword()));
-
-        customerRepository.save(updatedPassword);
-
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Change password success");
     }
 }
