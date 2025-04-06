@@ -46,4 +46,8 @@ public class Constant {
 
     public static final String EMAIL_SENDING_ERROR_CODE = "PS-04-001";
     public static final String INVALID_EMAIL_PARAMETER_CODE = "PS-04-002";
+
+    public static final String PRODUCT_NOT_FOUND_CODE = "PS-05-001";
+    public static final String SHOP_NOT_FOUND_CODE = "PS-05-002";
+    public static final String PRODUCT_HAS_TRANSACTIONS_CODE = "PS-05-003";
 }

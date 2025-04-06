@@ -29,7 +29,11 @@ public enum ErrorMessageEnum {
     INVALID_EMAIL_PARAMETER(Constant.INVALID_EMAIL_PARAMETER_CODE, "Parameter email tidak valid", HttpStatus.BAD_REQUEST),
 
     OTP_ATTEMPTS_EXCEEDED(Constant.OTP_ATTEMPTS_EXCEEDED_CODE, "Percobaan OTP telah habis", HttpStatus.BAD_REQUEST),
-    INVALID_OTP(Constant.INVALID_OTP_CODE, "Kode OTP tidak valid", HttpStatus.BAD_REQUEST);
+    INVALID_OTP(Constant.INVALID_OTP_CODE, "Kode OTP tidak valid", HttpStatus.BAD_REQUEST),
+
+    PRODUCT_NOT_FOUND(Constant.PRODUCT_NOT_FOUND_CODE, "Produk tidak ditemukan", HttpStatus.NOT_FOUND),
+    SHOP_NOT_FOUND(Constant.SHOP_NOT_FOUND_CODE, "Toko tidak ditemukan", HttpStatus.NOT_FOUND),
+    PRODUCT_HAS_TRANSACTIONS(Constant.PRODUCT_HAS_TRANSACTIONS_CODE, "Produk tidak dapat dihapus karena memiliki transaksi terkait", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String errorMessage;
