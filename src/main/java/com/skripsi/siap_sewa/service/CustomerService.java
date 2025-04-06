@@ -80,7 +80,7 @@ public class CustomerService {
                     throw new EmailExistException("Email sudah digunakan");
                 }
             }
-            
+
             if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(inputCustomerData.getPhoneNumber())) {
                 if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
                     log.warn("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());

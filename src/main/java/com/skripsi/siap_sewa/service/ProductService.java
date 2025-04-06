@@ -44,7 +44,7 @@ public class ProductService {
             Page<ProductEntity> productPage = productRepository.findByCategory(category, pageable);
 
             if (productPage.isEmpty()) {
-                log.warn("No products found for category: {}", category);
+                log.info("No products found for category: {}", category);
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -60,7 +60,7 @@ public class ProductService {
                     productPage.getTotalPages()
             );
 
-            log.debug("Successfully fetched {} products for category: {}", responseList.size(), category);
+            log.info("Successfully fetched {} products for category: {}", responseList.size(), category);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
 
         } catch (Exception ex) {
@@ -75,13 +75,13 @@ public class ProductService {
 
             ProductEntity product = productRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.warn("Product not found with ID: {}", id);
+                        log.info("Product not found with ID: {}", id);
                         return new DataNotFoundException("Product not found");
                     });
 
             ProductDetailResponse response = mapProductToDetailResponse(product);
 
-            log.debug("Successfully fetched product details for ID: {}", id);
+            log.info("Successfully fetched product details for ID: {}", id);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (DataNotFoundException ex) {
@@ -170,7 +170,7 @@ public class ProductService {
 
             CustomerEntity customer = customerRepository.findById(customerId)
                     .orElseThrow(() -> {
-                        log.warn("Customer not found with ID: {}", customerId);
+                        log.info("Customer not found with ID: {}", customerId);
                         return new DataNotFoundException("Customer not found");
                     });
 
@@ -178,7 +178,7 @@ public class ProductService {
             List<ShopEntity> shopsInSameRegency = shopRepository.findByRegency(customerRegency);
 
             if (shopsInSameRegency.isEmpty()) {
-                log.warn("No shops found in regency: {}", customerRegency);
+                log.info("No shops found in regency: {}", customerRegency);
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -187,7 +187,7 @@ public class ProductService {
                     .collect(Collectors.toList());
 
             if (products.isEmpty()) {
-                log.warn("No products found in shops for regency: {}", customerRegency);
+                log.info("No products found in shops for regency: {}", customerRegency);
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -198,7 +198,7 @@ public class ProductService {
                     .limit(10)
                     .collect(Collectors.toList());
 
-            log.debug("Found {} products near customer {} in regency {}", responseList.size(), customerId, customerRegency);
+            log.info("Found {} products near customer {} in regency {}", responseList.size(), customerId, customerRegency);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
 
         } catch (DataNotFoundException ex) {
@@ -216,7 +216,7 @@ public class ProductService {
             List<ProductEntity> allProducts = productRepository.findAll();
 
             if (allProducts.isEmpty()) {
-                log.warn("No products found in database");
+                log.info("No products found in database");
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -226,7 +226,7 @@ public class ProductService {
                     .limit(10)
                     .collect(Collectors.toList());
 
-            log.debug("Successfully fetched {} most rented products", sortedProducts.size());
+            log.info("Successfully fetched {} most rented products", sortedProducts.size());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, sortedProducts);
 
         } catch (Exception ex) {
@@ -242,7 +242,7 @@ public class ProductService {
             List<ProductEntity> allProducts = productRepository.findAll();
 
             if (allProducts.isEmpty()) {
-                log.warn("No products found in database");
+                log.info("No products found in database");
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -253,7 +253,7 @@ public class ProductService {
                     .limit(10)
                     .collect(Collectors.toList());
 
-            log.debug("Successfully fetched {} recommended products for guest", responseList.size());
+            log.info("Successfully fetched {} recommended products for guest", responseList.size());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
 
         } catch (Exception ex) {
@@ -268,7 +268,7 @@ public class ProductService {
 
             ShopEntity shop = shopRepository.findById(request.getShopId())
                     .orElseThrow(() -> {
-                        log.warn("Shop not found with ID: {}", request.getShopId());
+                        log.info("Shop not found with ID: {}", request.getShopId());
                         return new DataNotFoundException("Shop not found");
                     });
 
@@ -315,13 +315,13 @@ public class ProductService {
 
             ProductEntity product = productRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.warn("Product not found with ID: {}", id);
+                        log.info("Product not found with ID: {}", id);
                         return new DataNotFoundException("Product not found");
                     });
 
             ShopEntity shop = shopRepository.findById(request.getShopId())
                     .orElseThrow(() -> {
-                        log.warn("Shop not found with ID: {}", request.getShopId());
+                        log.info("Shop not found with ID: {}", request.getShopId());
                         return new DataNotFoundException("Shop not found");
                     });
 
@@ -385,7 +385,7 @@ public class ProductService {
 
             ProductEntity product = productRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.warn("Product not found with ID: {}", id);
+                        log.info("Product not found with ID: {}", id);
                         return new DataNotFoundException("Product not found");
                     });
 
@@ -393,7 +393,7 @@ public class ProductService {
             boolean hasTransactions = !transactionRepository.findByProductId(id).isEmpty();
 
             if (hasTransactions) {
-                log.warn("Cannot delete product with ID: {} - has associated transactions", id);
+                log.info("Cannot delete product with ID: {} - has associated transactions", id);
                 return commonUtils.setResponse(
                         ErrorMessageEnum.FAILED,
                         "Product cannot be deleted because it has associated transactions"
@@ -453,7 +453,7 @@ public class ProductService {
             List<ProductEntity> products = productRepository.findByShopId(shopId);
 
             if (products.isEmpty()) {
-                log.warn("No products found for shop ID: {}", shopId);
+                log.info("No products found for shop ID: {}", shopId);
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -461,7 +461,7 @@ public class ProductService {
                     .map(this::buildProductResponse)
                     .collect(Collectors.toList());
 
-            log.debug("Successfully fetched {} products for shop ID: {}", responseList.size(), shopId);
+            log.info("Successfully fetched {} products for shop ID: {}", responseList.size(), shopId);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
 
         } catch (DataNotFoundException ex) {
