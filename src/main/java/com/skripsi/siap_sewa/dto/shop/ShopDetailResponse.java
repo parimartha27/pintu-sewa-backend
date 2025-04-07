@@ -4,15 +4,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
-import com.skripsi.siap_sewa.repository.ReviewRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
@@ -35,6 +32,7 @@ public class ShopDetailResponse {
     private String customerId;
     private Double rating;
     private int totalReviewedTimes;
+    private String workHours;
     private PaginationResponse<ProductInfo> products;
 
     @Data

@@ -23,12 +23,6 @@ public class EditShopRequest {
 
     private String description;
 
-    @NotBlank(message = "Instagram tidak boleh kosong")
-    private String instagram;
-
-    @NotBlank(message = "Facebook tidak boleh kosong")
-    private String facebook;
-
     @NotBlank(message = "Gambar toko tidak boleh kosong")
     private String image;
 
@@ -46,4 +40,6 @@ public class EditShopRequest {
 
     @NotBlank(message = "Kode Pos tidak boleh kosong")
     private String postCode;
+
+    private String workHours;
 }
