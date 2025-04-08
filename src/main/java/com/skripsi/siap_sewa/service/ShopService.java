@@ -90,17 +90,13 @@ public class ShopService {
         return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
-    public ResponseEntity<ApiResponse> shopDetail(String shopId, Pageable pageable) {
+    public ResponseEntity<ApiResponse> shopDetail(String shopId) {
+        log.info("Start find shop with ID: {}", shopId);
         try {
-            // 1. Get shop basic info
             ShopEntity shop = shopRepository.findById(shopId)
                     .orElseThrow(() -> new DataNotFoundException("Toko tidak ditemukan"));
 
-            // 2. Get products with pagination
-            Page<ProductEntity> productPage = productRepository.findByShopId(shopId, pageable);
-
-            // 3. Map to response
-            ShopDetailResponse response = mapToShopDetailResponse(shop, productPage);
+            ShopDetailResponse response = modelMapper.map(shop, ShopDetailResponse.class);
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         } catch (DataNotFoundException ex) {
@@ -109,51 +105,6 @@ public class ShopService {
             log.error("Error fetching shop details: {}", ex.getMessage());
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
-    }
-
-    private ShopDetailResponse mapToShopDetailResponse(ShopEntity shop, Page<ProductEntity> productPage) {
-        ShopDetailResponse response = modelMapper.map(shop, ShopDetailResponse.class);
-        response.setCustomerId(shop.getCustomer().getId());
-
-        // Calculate shop rating from all products
-        List<ReviewEntity> allReviews = productPage.getContent().stream()
-                .flatMap(p -> p.getReviews().stream())
-                .collect(Collectors.toList());
-        response.setRating(ProductUtils.calculateMedianRating(allReviews));
-        response.setTotalReviewedTimes((int) allReviews.stream()
-                .map(r -> r.getCustomer().getId())
-                .distinct()
-                .count());
-
-        // Map products
-        response.setProducts(mapToPaginationResponse(productPage));
-
-        return response;
-    }
-
-    private PaginationResponse<ShopDetailResponse.ProductInfo> mapToPaginationResponse(Page<ProductEntity> productPage) {
-        List<ShopDetailResponse.ProductInfo> productInfos = productPage.getContent().stream()
-                .map(this::mapToProductInfo)
-                .collect(Collectors.toList());
-
-        return new PaginationResponse<>(
-                productInfos,
-                productPage.getNumber() + 1,
-                productPage.getSize(),
-                productPage.getTotalElements(),
-                productPage.getTotalPages()
-        );
-    }
-
-    private ShopDetailResponse.ProductInfo mapToProductInfo(ProductEntity product) {
-        ShopDetailResponse.ProductInfo productInfo = modelMapper.map(product, ShopDetailResponse.ProductInfo.class);
-        productInfo.setRating(ProductUtils.calculateMedianRating(product.getReviews()));
-
-        List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
-        int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
-        productInfo.setRentedTimes(transactionCounts[0]);
-
-        return productInfo;
     }
 
     public ResponseEntity<ApiResponse> editShop(@Valid EditShopRequest request) {

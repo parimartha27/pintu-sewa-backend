@@ -27,18 +27,8 @@ public class ShopController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getShopDetail(
-            @PathVariable String id,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "16") int size,
-            @RequestParam(defaultValue = "name,asc") String[] sort) {
-
-        Sort.Direction direction = sort.length > 1 ?
-                Sort.Direction.fromString(sort[1]) : Sort.Direction.ASC;
-        String sortField = sort.length > 0 ? sort[0] : "name";
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(direction, sortField));
-
-        return shopService.shopDetail(id, pageable);
+    public ResponseEntity<ApiResponse> getShopDetail(@PathVariable String id) {
+        return shopService.shopDetail(id);
     }
 
     @PutMapping("/edit")
