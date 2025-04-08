@@ -37,6 +37,104 @@ public class ProductService {
     private final CommonUtils commonUtils;
     private final ModelMapper modelMapper;
 
+    public ResponseEntity<ApiResponse> getProductByMostRented() {
+        try {
+            log.info("Fetching most rented products");
+
+            List<ProductEntity> allProducts = productRepository.findAll();
+
+            if (allProducts.isEmpty()) {
+                log.info("No products found in database");
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            List<ProductResponse> sortedProducts = allProducts.stream()
+                    .map(this::buildProductResponse)
+                    .sorted(Comparator.comparingInt(ProductResponse::getRentedTimes).reversed())
+                    .limit(10)
+                    .toList();
+
+            log.info("Successfully fetched {} most rented products", sortedProducts.size());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, sortedProducts);
+
+        } catch (Exception ex) {
+            log.info("Error fetching most rented products: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+    
+    public ResponseEntity<ApiResponse> getProductRecommendedForGuest() {
+        try {
+            log.info("Fetching recommended products for guest");
+
+            List<ProductEntity> allProducts = productRepository.findAll();
+
+            if (allProducts.isEmpty()) {
+                log.info("No products found in database for guest");
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            Collections.shuffle(allProducts);
+
+            List<ProductResponse> responseList = allProducts.stream()
+                    .map(this::buildProductResponse)
+                    .limit(10)
+                    .toList();
+
+            log.info("Successfully fetched {} recommended products for guest", responseList.size());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+
+        } catch (Exception ex) {
+            log.info("Error fetching recommended products for guest: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> getProductNearCustomer(String customerId) {
+        try {
+            log.info("Fetching products near customer: {}", customerId);
+
+            CustomerEntity customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", customerId);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+            String customerRegency = customer.getRegency();
+            List<ShopEntity> shopsInSameRegency = shopRepository.findByRegency(customerRegency);
+
+            if (shopsInSameRegency.isEmpty()) {
+                log.info("No shops found in regency: {}", customerRegency);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            List<ProductEntity> products = shopsInSameRegency.stream()
+                    .flatMap(shop -> shop.getProducts().stream())
+                    .collect(Collectors.toList());
+
+            if (products.isEmpty()) {
+                log.info("No products found in shops for regency: {}", customerRegency);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            Collections.shuffle(products);
+
+            List<ProductResponse> responseList = products.stream()
+                    .map(this::buildProductResponse)
+                    .limit(10)
+                    .toList();
+
+            log.info("Found {} products near customer {} in regency {}", responseList.size(), customerId, customerRegency);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.info("Error fetching products near customer {}: {}", customerId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
     public ResponseEntity<ApiResponse> getProductsByCategory(String category, Pageable pageable) {
         try {
             log.info("Fetching products by category: {}", category);
@@ -50,7 +148,7 @@ public class ProductService {
 
             List<ProductResponse> responseList = productPage.getContent().stream()
                     .map(this::buildProductResponse)
-                    .collect(Collectors.toList());
+                    .toList();
 
             PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
                     responseList,
@@ -64,7 +162,7 @@ public class ProductService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
 
         } catch (Exception ex) {
-            log.error("Error fetching products by category {}: {}", category, ex.getMessage(), ex);
+            log.info("Error fetching products by category {}: {}", category, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -87,7 +185,7 @@ public class ProductService {
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error fetching product details for ID {}: {}", id, ex.getMessage(), ex);
+            log.info("Error fetching product details for ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -96,7 +194,7 @@ public class ProductService {
         ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
 
         // Set median rating for product
-        Double medianRating = ProductUtils.calculateMedianRating(product.getReviews());
+        Double medianRating = ProductUtils.calculateWeightedRating(product.getReviews());
         response.setRating(medianRating);
 
         // Set transaction counts
@@ -120,10 +218,10 @@ public class ProductService {
         }
 
         // Hitung median rating untuk semua produk di toko ini
-        Double shopMedianRating = ProductUtils.calculateMedianRating(
+        Double shopMedianRating = ProductUtils.calculateWeightedRating(
                 shop.getProducts().stream()
                         .flatMap(p -> p.getReviews().stream())
-                        .collect(Collectors.toList())
+                        .toList()
         );
 
         // Hitung jumlah unique reviewer untuk semua produk di toko ini
@@ -161,105 +259,7 @@ public class ProductService {
                     .rating(review.getRating())
                     .timeAgo(ProductUtils.getTimeAgoInIndonesian(review.getCreatedAt()))
                     .build();
-        }).collect(Collectors.toList());
-    }
-
-    public ResponseEntity<ApiResponse> getProductNearCustomer(String customerId) {
-        try {
-            log.info("Fetching products near customer: {}", customerId);
-
-            CustomerEntity customer = customerRepository.findById(customerId)
-                    .orElseThrow(() -> {
-                        log.info("Customer not found with ID: {}", customerId);
-                        return new DataNotFoundException("Customer not found");
-                    });
-
-            String customerRegency = customer.getRegency();
-            List<ShopEntity> shopsInSameRegency = shopRepository.findByRegency(customerRegency);
-
-            if (shopsInSameRegency.isEmpty()) {
-                log.info("No shops found in regency: {}", customerRegency);
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            List<ProductEntity> products = shopsInSameRegency.stream()
-                    .flatMap(shop -> shop.getProducts().stream())
-                    .collect(Collectors.toList());
-
-            if (products.isEmpty()) {
-                log.info("No products found in shops for regency: {}", customerRegency);
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            Collections.shuffle(products);
-
-            List<ProductResponse> responseList = products.stream()
-                    .map(this::buildProductResponse)
-                    .limit(10)
-                    .collect(Collectors.toList());
-
-            log.info("Found {} products near customer {} in regency {}", responseList.size(), customerId, customerRegency);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Error fetching products near customer {}: {}", customerId, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
-
-    public ResponseEntity<ApiResponse> getProductByMostRented() {
-        try {
-            log.info("Fetching most rented products");
-
-            List<ProductEntity> allProducts = productRepository.findAll();
-
-            if (allProducts.isEmpty()) {
-                log.info("No products found in database");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            List<ProductResponse> sortedProducts = allProducts.stream()
-                    .map(this::buildProductResponse)
-                    .sorted(Comparator.comparingInt(ProductResponse::getRentedTimes).reversed())
-                    .limit(10)
-                    .collect(Collectors.toList());
-
-            log.info("Successfully fetched {} most rented products", sortedProducts.size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, sortedProducts);
-
-        } catch (Exception ex) {
-            log.error("Error fetching most rented products: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
-
-    public ResponseEntity<ApiResponse> getProductRecommendedForGuest() {
-        try {
-            log.info("Fetching recommended products for guest");
-
-            List<ProductEntity> allProducts = productRepository.findAll();
-
-            if (allProducts.isEmpty()) {
-                log.info("No products found in database");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            Collections.shuffle(allProducts);
-
-            List<ProductResponse> responseList = allProducts.stream()
-                    .map(this::buildProductResponse)
-                    .limit(10)
-                    .collect(Collectors.toList());
-
-            log.info("Successfully fetched {} recommended products for guest", responseList.size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
-
-        } catch (Exception ex) {
-            log.error("Error fetching recommended products for guest: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
+        }).toList();
     }
 
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {
@@ -304,7 +304,7 @@ public class ProductService {
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error adding new product: {}", ex.getMessage(), ex);
+            log.info("Error adding new product: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -374,7 +374,7 @@ public class ProductService {
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error editing product with ID {}: {}", id, ex.getMessage(), ex);
+            log.info("Error editing product with ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -408,28 +408,9 @@ public class ProductService {
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error deleting product with ID {}: {}", id, ex.getMessage(), ex);
+            log.info("Error deleting product with ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
-    }
-
-    private Double calculateAverageRating(List<ReviewEntity> reviews) {
-        if (reviews == null || reviews.isEmpty()) {
-            return 0.0;
-        }
-        return reviews.stream()
-                .mapToDouble(ReviewEntity::getRating)
-                .average()
-                .orElse(0.0);
-    }
-
-    private int countRentedTimes(Set<TransactionEntity> transactions) {
-        if (transactions == null) {
-            return 0;
-        }
-        return (int) transactions.stream()
-                .filter(t -> !t.isSelled())
-                .count();
     }
 
     private ProductResponse buildProductResponse(ProductEntity product) {
@@ -437,10 +418,10 @@ public class ProductService {
 
         response.setAddress(product.getShop() != null ? product.getShop().getRegency() : "Unknown");
 
-        Double averageRating = calculateAverageRating(product.getReviews());
-        response.setRating(averageRating);
+        Double productRating = ProductUtils.calculateWeightedRating(product.getReviews());
+        response.setRating(productRating);
 
-        int rentedTimes = countRentedTimes(product.getTransactions());
+        int rentedTimes = ProductUtils.countRentedTimes(product.getTransactions());
         response.setRentedTimes(rentedTimes);
 
         return response;
@@ -459,7 +440,7 @@ public class ProductService {
 
             List<ProductResponse> responseList = products.stream()
                     .map(this::buildProductResponse)
-                    .collect(Collectors.toList());
+                    .toList();
 
             log.info("Successfully fetched {} products for shop ID: {}", responseList.size(), shopId);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
@@ -467,7 +448,7 @@ public class ProductService {
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Error fetching products by shop ID {}: {}", shopId, ex.getMessage(), ex);
+            log.info("Error fetching products by shop ID {}: {}", shopId, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }

@@ -3,35 +3,31 @@ package com.skripsi.siap_sewa.utils;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ReviewEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
-import com.skripsi.siap_sewa.repository.TransactionRepository;
-import lombok.RequiredArgsConstructor;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-@RequiredArgsConstructor
 public class ProductUtils {
 
-    private final TransactionRepository transactionRepository;
-
-    public static Double calculateMedianRating(List<ReviewEntity> reviews) {
+    public static Double calculateWeightedRating(List<ReviewEntity> reviews) {
         if (reviews == null || reviews.isEmpty()) {
             return 0.0;
         }
 
-        List<Double> sortedRatings = reviews.stream()
-                .map(ReviewEntity::getRating)
-                .sorted()
-                .collect(Collectors.toList());
+        double averageRating = reviews.stream()
+                .mapToDouble(ReviewEntity::getRating)
+                .average()
+                .orElse(0.0);
 
-        int size = sortedRatings.size();
-        if (size % 2 == 0) {
-            return (sortedRatings.get(size/2 - 1) + sortedRatings.get(size/2)) / 2.0;
-        } else {
-            return sortedRatings.get(size/2);
-        }
+        int numberOfReviews = reviews.size();
+
+        // Bayesian average parameters
+        double minimumVotes = 2.0;       // Minimum votes needed to be listed
+        double globalAverageRating = 3.5; // Assumed average rating across all products
+
+        return (numberOfReviews / (numberOfReviews + minimumVotes)) * averageRating +
+                (minimumVotes / (numberOfReviews + minimumVotes)) * globalAverageRating;
     }
 
     public static String getTimeAgoInIndonesian(LocalDateTime dateTime) {
@@ -69,7 +65,6 @@ public class ProductUtils {
     }
 
     public static int[] countProductTransactions(List<TransactionEntity> transactions) {
-
         int rentedTimes = 0;
         int buyTimes = 0;
 
@@ -82,5 +77,14 @@ public class ProductUtils {
         }
 
         return new int[]{rentedTimes, buyTimes};
+    }
+
+    public static int countRentedTimes(Set<TransactionEntity> transactions) {
+        if (transactions == null) {
+            return 0;
+        }
+        return (int) transactions.stream()
+                .filter(t -> !t.isSelled())
+                .count();
     }
 }

@@ -25,6 +25,12 @@ public class ProductController {
 
     private final ProductService productService;
 
+//    =============== for product card in dashboard ==================
+    @GetMapping("/most-rented")
+    public ResponseEntity<ApiResponse> getProductByMostRented(){
+        return productService.getProductByMostRented();
+    }
+
     @GetMapping("/recommended")
     public ResponseEntity<ApiResponse> getProductRecommendedForGuest(){
         return productService.getProductRecommendedForGuest();
@@ -35,10 +41,7 @@ public class ProductController {
         return productService.getProductNearCustomer(customerId);
     }
 
-    @GetMapping("/most-rented")
-    public ResponseEntity<ApiResponse> getProductByMostRented(){
-        return productService.getProductByMostRented();
-    }
+//    =============== for search product by category ==================
 
     @GetMapping
     public ResponseEntity<ApiResponse> getProductsByCategory(
