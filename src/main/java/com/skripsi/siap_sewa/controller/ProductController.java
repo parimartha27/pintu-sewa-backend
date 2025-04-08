@@ -57,6 +57,8 @@ public class ProductController {
         return productService.getProductsByCategory(category,pageable);
     }
 
+//    for prodcut detail page
+
     @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse> getProductDetail(@PathVariable String productId){
         return productService.getProductDetail(productId);

@@ -42,42 +42,4 @@ public class ProductDetailResponse {
     private Double rating;
     private int rentedTimes;
     private int buyTimes;
-
-    private ShopInfo shop;
-    private List<ReviewInfo> reviews;
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public static class ShopInfo {
-        private String id;
-        private String name;
-        private String description;
-        private String email;
-        private String shopStatus;
-        private String image;
-        private String street;
-        private String district;
-        private String regency;
-        private String province;
-        private String postCode;
-        private Double rating;
-        private int totalReviewedTimes;
-    }
-
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public static class ReviewInfo {
-        private String id;
-        private String username;
-        private String comment;
-        private List<String> images;
-        private Double rating;
-        private String timeAgo;
-    }
 }

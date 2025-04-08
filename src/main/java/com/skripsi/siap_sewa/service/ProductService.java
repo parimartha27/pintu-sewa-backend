@@ -173,11 +173,11 @@ public class ProductService {
 
             ProductEntity product = productRepository.findById(id)
                     .orElseThrow(() -> {
-                        log.info("Product not found with ID: {}", id);
-                        return new DataNotFoundException("Product not found");
+                        log.info("Product not found with ID: {} in getProductDetail", id);
+                        return new DataNotFoundException("Product not found in getProductDetail");
                     });
 
-            ProductDetailResponse response = mapProductToDetailResponse(product);
+            ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
 
             log.info("Successfully fetched product details for ID: {}", id);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
@@ -188,78 +188,6 @@ public class ProductService {
             log.info("Error fetching product details for ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
-    }
-
-    private ProductDetailResponse mapProductToDetailResponse(ProductEntity product) {
-        ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
-
-        // Set median rating for product
-        Double medianRating = ProductUtils.calculateWeightedRating(product.getReviews());
-        response.setRating(medianRating);
-
-        // Set transaction counts
-        List<TransactionEntity> transactions = transactionRepository.findByProductId(product.getId());
-        int[] transactionCounts = ProductUtils.countProductTransactions(transactions);
-        response.setRentedTimes(transactionCounts[0]);
-        response.setBuyTimes(transactionCounts[1]);
-
-        // Map shop info with median rating and total reviewers
-        response.setShop(mapShopToShopInfo(product.getShop()));
-
-        // Map reviews with time ago and images
-        response.setReviews(mapReviewsToReviewInfo(product.getReviews()));
-
-        return response;
-    }
-
-    private ProductDetailResponse.ShopInfo mapShopToShopInfo(ShopEntity shop) {
-        if (shop == null) {
-            return null;
-        }
-
-        // Hitung median rating untuk semua produk di toko ini
-        Double shopMedianRating = ProductUtils.calculateWeightedRating(
-                shop.getProducts().stream()
-                        .flatMap(p -> p.getReviews().stream())
-                        .toList()
-        );
-
-        // Hitung jumlah unique reviewer untuk semua produk di toko ini
-        long totalReviewers = ProductUtils.countUniqueReviewers(shop.getProducts());
-
-        return ProductDetailResponse.ShopInfo.builder()
-                .id(shop.getId())
-                .name(shop.getName())
-                .description(shop.getDescription())
-                .email(shop.getEmail())
-                .shopStatus(shop.getShopStatus())
-                .image(shop.getImage())
-                .street(shop.getStreet())
-                .district(shop.getDistrict())
-                .regency(shop.getRegency())
-                .province(shop.getProvince())
-                .postCode(shop.getPostCode())
-                .rating(shopMedianRating)
-                .totalReviewedTimes((int) totalReviewers)
-                .build();
-    }
-
-    private List<ProductDetailResponse.ReviewInfo> mapReviewsToReviewInfo(List<ReviewEntity> reviews) {
-        return reviews.stream().map(review -> {
-            // Split image string menjadi list (asumsi dipisahkan oleh koma)
-            List<String> images = review.getImage() != null ?
-                    Arrays.asList(review.getImage().split(",")) :
-                    Collections.emptyList();
-
-            return ProductDetailResponse.ReviewInfo.builder()
-                    .id(review.getId())
-                    .username(review.getCustomer().getUsername())
-                    .comment(review.getComment())
-                    .images(images)
-                    .rating(review.getRating())
-                    .timeAgo(ProductUtils.getTimeAgoInIndonesian(review.getCreatedAt()))
-                    .build();
-        }).toList();
     }
 
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {
