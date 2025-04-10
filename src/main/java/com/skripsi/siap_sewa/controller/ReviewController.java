@@ -9,6 +9,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/review")
@@ -23,16 +25,22 @@ public class ReviewController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") Sort.Direction sortDirection) {
+            @RequestParam(defaultValue = "DESC") Sort.Direction sortDirection,
+            @RequestParam(required = false) Boolean hasMedia,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) List<String> reviewTopics) {
 
-        log.info("Received request to get reviews for product ID: {} with page: {}, size: {}",
-                productId, page, size);
+        log.info("Received request to get reviews for product ID: {} with page: {}, size: {}, filters - hasMedia: {}, rating: {}, topics: {}",
+                productId, page, size, hasMedia, rating, reviewTopics);
 
         ReviewProductRequest request = ReviewProductRequest.builder()
                 .page(page)
                 .size(size)
                 .sortBy(sortBy)
                 .sortDirection(sortDirection)
+                .hasMedia(hasMedia)
+                .rating(rating)
+                .reviewTopics(reviewTopics)
                 .build();
 
         return reviewService.getReviewsByProductId(productId, request);

@@ -14,8 +14,17 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<ReviewEntity, String> {
 
-    // Method to check if a product exists
-    boolean existsByProductId(String productId);
-
-    Page<ReviewEntity> findByProduct_Id(String id, Pageable pageable);
+    @Query("SELECT r FROM ReviewEntity r WHERE " +
+            "r.product.id = :productId AND " +
+            "(:hasMedia IS NULL OR r.image IS NOT NULL) AND " +
+            "(:rating IS NULL OR r.rating BETWEEN :rating AND :rating + 0.9) AND " +
+            "(:reviewTopics IS NULL OR " +
+            "   (LOWER(r.comment) LIKE '%kondisi barang%' AND 'kondisi barang' IN :reviewTopics) OR " +
+            "   (LOWER(r.comment) LIKE '%durasi pengiriman%' AND 'durasi pengiriman' IN :reviewTopics))")
+    Page<ReviewEntity> findByProductIdWithFilters(
+            @Param("productId") String productId,
+            @Param("hasMedia") Boolean hasMedia,
+            @Param("rating") Integer rating,
+            @Param("reviewTopics") List<String> reviewTopics,
+            Pageable pageable);
 }

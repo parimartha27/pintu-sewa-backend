@@ -34,30 +34,30 @@ public class ReviewService {
         try {
             log.info("Fetching reviews for product with ID: {}", productId);
 
-            // Check if product exists
             if (!productRepository.existsById(productId)) {
                 log.error("Product with ID: {} not found", productId);
                 return commonUtils.setResponse(ErrorMessageEnum.PRODUCT_NOT_FOUND, null);
             }
 
-            // Create pageable
             Sort sort = Sort.by(request.getSortDirection(), request.getSortBy());
             Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
 
-            // Get reviews
-            Page<ReviewEntity> reviewsPage = reviewRepository.findByProduct_Id(productId, pageable);
+            Page<ReviewEntity> reviewsPage = reviewRepository.findByProductIdWithFilters(
+                    productId,
+                    request.getHasMedia(),
+                    request.getRating(),
+                    request.getReviewTopics(),
+                    pageable);
 
             if (reviewsPage.isEmpty()) {
                 log.info("No reviews found for product with ID: {}", productId);
                 return commonUtils.setResponse(ErrorMessageEnum.NO_REVIEWS_FOUND, null);
             }
 
-            // Map to response DTOs
             List<ReviewProductResponse> reviewResponses = reviewsPage.getContent().stream()
                     .map(this::mapToReviewResponse)
                     .toList();
-
-            // Create pagination response
+            
             PaginationResponse<ReviewProductResponse> paginationResponse = new PaginationResponse<>(
                     reviewResponses,
                     reviewsPage.getNumber(),

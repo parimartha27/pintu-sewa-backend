@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Sort;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,4 +27,8 @@ public class ReviewProductRequest {
 
     @Builder.Default
     private Sort.Direction sortDirection = Sort.Direction.DESC;
+    
+    private Boolean hasMedia; 
+    private Integer rating; 
+    private List<String> reviewTopics; 
 }
