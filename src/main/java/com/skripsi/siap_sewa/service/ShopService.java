@@ -136,4 +136,46 @@ public class ShopService {
         updatedShop.setPostCode(request.getPostCode());
         return updatedShop;
     }
+
+    public ResponseEntity<ApiResponse> getShopDataByProductId(String productId) {
+        try {
+            log.info("Fetching shop data for product ID: {}", productId);
+
+            ProductEntity product = productRepository.findById(productId)
+                    .orElseThrow(() -> {
+                        log.info("Product not found with ID: {}", productId);
+                        return new DataNotFoundException("Product not found");
+                    });
+
+            ShopEntity shop = product.getShop();
+            if (shop == null) {
+                log.info("No shop found for product ID: {}", productId);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            List<ReviewEntity> allShopReviews = shop.getProducts().stream()
+                    .flatMap(p -> p.getReviews().stream())
+                    .toList();
+
+            Double shopRating = ProductUtils.calculateWeightedRating(allShopReviews);
+            int totalReview = allShopReviews.size();
+
+            ShopByProductResponse response = ShopByProductResponse.builder()
+                    .id(shop.getId())
+                    .name(shop.getName())
+                    .rating(shopRating)
+                    .totalReview(totalReview)
+                    .regency(shop.getRegency())
+                    .build();
+
+            log.info("Successfully fetched shop data for product ID: {}", productId);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error fetching shop data for product ID {}: {}", productId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
 }

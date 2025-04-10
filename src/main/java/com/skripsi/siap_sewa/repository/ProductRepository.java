@@ -16,11 +16,15 @@ public interface ProductRepository extends JpaRepository<ProductEntity, String> 
     Page<ProductEntity> findAll(Pageable pageable);
 
     Page<ProductEntity> findByCategory(String category, Pageable pageable);
-
-    List<ProductEntity> findByShopRegencyAndIdNot(String regency, String productId);
-
+    
     List<ProductEntity> findByShopId(String shopId);
 
     @Query("SELECT p FROM ProductEntity p WHERE p.shop.id = :shopId")
     Page<ProductEntity> findByShopId(@Param("shopId") String shopId, Pageable pageable);
+
+    @Query("SELECT p FROM ProductEntity p WHERE LOWER(p.name) LIKE LOWER(concat('%', :keyword, '%')) OR LOWER(p.category) LIKE LOWER(concat('%', :keyword, '%')) ORDER BY p.name ASC")
+    List<ProductEntity> searchProducts(@Param("keyword") String keyword);
+
+    @Query("SELECT p FROM ProductEntity p WHERE LOWER(p.category) LIKE LOWER(concat('%', :category, '%')) ORDER BY p.name ASC")
+    List<ProductEntity> findSimilarProductsByCategory(@Param("category") String category);
 }

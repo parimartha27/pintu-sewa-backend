@@ -21,14 +21,19 @@ public class ShopController {
 
     private final ShopService shopService;
 
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponse> createShop (@RequestBody @Valid CreateShopRequest request){
-        return shopService.createShop(request);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> getShopDetail(@PathVariable String id) {
         return shopService.shopDetail(id);
+    }
+
+        @GetMapping("/product/{productId}")
+    public ResponseEntity<ApiResponse> getShopByProductId(@PathVariable String productId) {
+        return shopService.getShopDataByProductId(productId);
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse> createShop (@RequestBody @Valid CreateShopRequest request){
+        return shopService.createShop(request);
     }
 
     @PutMapping("/edit")

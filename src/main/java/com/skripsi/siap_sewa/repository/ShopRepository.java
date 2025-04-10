@@ -14,10 +14,9 @@ public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
 
     List<ShopEntity> findByRegency(String regency);
 
-    @Query("SELECT s FROM ShopEntity s " +
-            "LEFT JOIN FETCH s.products p " +
-            "LEFT JOIN FETCH p.reviews " +
-            "LEFT JOIN FETCH s.customer " +
-            "WHERE s.id = :shopId")
-    Optional<ShopEntity> findByIdWithProductsAndReviews(@Param("shopId") String shopId);
+    @Query("SELECT s FROM ShopEntity s WHERE LOWER(s.name) LIKE LOWER(concat('%', :keyword, '%')) ORDER BY s.name ASC")
+    List<ShopEntity> searchShops(@Param("keyword") String keyword);
+
+    @Query("SELECT s FROM ShopEntity s WHERE LOWER(s.name) LIKE LOWER(concat('%', :shopName, '%')) ORDER BY s.name ASC")
+    List<ShopEntity> findSimilarShopsByName(@Param("shopName") String shopName);
 }
