@@ -3,10 +3,14 @@ package com.skripsi.siap_sewa.utils;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ReviewEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
+
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class ProductUtils {
 
@@ -86,5 +90,12 @@ public class ProductUtils {
         return (int) transactions.stream()
                 .filter(t -> !t.isSelled())
                 .count();
+    }
+
+    public static BigDecimal getLowestPrice (ProductEntity product) {
+        return Stream.of(product.getDailyPrice(), product.getWeeklyPrice(), product.getMonthlyPrice())
+                .filter(Objects::nonNull)
+                .min(BigDecimal::compareTo)
+                .orElse(null);
     }
 }

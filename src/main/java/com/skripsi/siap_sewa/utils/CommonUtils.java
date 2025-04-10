@@ -8,8 +8,12 @@ import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Component
@@ -146,6 +150,39 @@ public class CommonUtils {
 
         long years = months / 12;
         return years + " tahun yang lalu";
+    }
+
+    public static String calculateRentDuration(LocalDate startDate, LocalDate endDate) {
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+
+        if (days >= 365) {
+            double years = days / 365.0;
+            return formatDuration(years, "Tahun");
+        } else if (days >= 30) {
+            double months = days / 30.0;
+            return formatDuration(months, "Bulan");
+        } else if (days >= 7) {
+            double weeks = days / 7.0;
+            return formatDuration(weeks, "Minggu");
+        } else {
+            return days + (days > 1 ? " Hari" : " Hari");
+        }
+    }
+
+    private static String formatDuration(double value, String unit) {
+        if (value % 1 == 0) {
+            return (int)value + " " + unit;
+        } else {
+            // Format 1 decimal place
+            return String.format(Locale.US, "%.1f %s", value, unit)
+                    .replace(".0", "")
+                    .replace(".", ",");
+        }
+    }
+
+    public static String formatDate(LocalDate date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", new Locale("id"));
+        return date.format(formatter);
     }
 
 }

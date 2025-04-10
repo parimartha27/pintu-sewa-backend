@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -22,16 +23,22 @@ import java.time.LocalDate;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CartResponse {
 
-    private String productId;
-    private ProductResponse product;
-    private int quantity;
-    private BigDecimal totalAmount;
-    private LocalDate startRentDate;
-    private LocalDate endRentDate;
-    private String street;
-    private String district;
-    private String regency;
-    private String province;
-    private String postCode;
-    private String notes;
+    private String shopId;
+    private String shopName;
+    private List<CartInfo> carts;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public static class CartInfo {
+        private String productId;
+        private String productName;
+        private BigDecimal price;
+        private String startRentDate;
+        private String endRentDate;
+        private String rentDuration;
+        private int quantity;
+    }
 }

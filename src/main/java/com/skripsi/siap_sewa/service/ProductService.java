@@ -295,7 +295,7 @@ public class ProductService {
                 .address(product.getShop() != null ? product.getShop().getRegency() : "Kabupaten")
                 .rating(productRating)
                 .rentedTimes(ProductUtils.countRentedTimes(product.getTransactions()))
-                .price(getLowestPrice(product))
+                .price(ProductUtils.getLowestPrice(product))
                 .build();
     }
 
@@ -499,12 +499,7 @@ public class ProductService {
         }
     }
 
-    private BigDecimal getLowestPrice(ProductEntity product) {
-        return Stream.of(product.getDailyPrice(), product.getWeeklyPrice(), product.getMonthlyPrice())
-                .filter(Objects::nonNull)
-                .min(BigDecimal::compareTo)
-                .orElse(null);
-    }
+
 
 
 }

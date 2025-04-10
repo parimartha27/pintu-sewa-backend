@@ -8,19 +8,25 @@ import com.skripsi.siap_sewa.dto.cart.EditCartRequest;
 import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
 import com.skripsi.siap_sewa.entity.ProductEntity;
+import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.CartRepository;
 import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
+import com.skripsi.siap_sewa.utils.ProductUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -36,27 +42,47 @@ public class CartService {
             log.info("Mengambil semua produk cart untuk customer: {}", customerId);
             List<CartEntity> listCart = cartRepository.findByCustomerId(customerId);
 
-            List<CartResponse> cartResponses = listCart.stream().map(cart -> {
-                ProductEntity product = cart.getProduct();
+            if (listCart.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, Collections.emptyList());
+            }
 
-                ProductResponse productResponse = ProductResponse.builder()
-                        .name(product.getName())
-                        .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
-                        .isRnb(product.isRnb())
-                        .price(product.getDailyPrice())
-                        .image(product.getImage())
-                        .build();
+            // Group by shop
+            Map<ShopEntity, List<CartEntity>> cartsByShop = listCart.stream()
+                    .collect(Collectors.groupingBy(cart -> cart.getProduct().getShop()));
 
-                return CartResponse.builder()
-                        .product(productResponse)
-                        .quantity(cart.getQuantity())
-                        .totalAmount(cart.getTotalAmount())
-                        .startRentDate(cart.getStartRentDate())
-                        .endRentDate(cart.getEndRentDate())
-                        .build();
-            }).toList();
+            List<CartResponse> cartResponses = cartsByShop.entrySet().stream()
+                    .map(entry -> {
+                        ShopEntity shop = entry.getKey();
+                        List<CartEntity> shopCarts = entry.getValue();
 
-            log.info("Berhasil mengambil {} item cart", cartResponses.size());
+                        List<CartResponse.CartInfo> cartInfos = shopCarts.stream()
+                                .map(cart -> {
+                                    ProductEntity product = cart.getProduct();
+
+                                    return CartResponse.CartInfo.builder()
+                                            .productId(product.getId())
+                                            .productName(product.getName())
+                                            .price(ProductUtils.getLowestPrice(product))
+                                            .startRentDate(CommonUtils.formatDate(cart.getStartRentDate()))
+                                            .endRentDate(CommonUtils.formatDate(cart.getEndRentDate()))
+                                            .rentDuration(CommonUtils.calculateRentDuration(
+                                                    cart.getStartRentDate(),
+                                                    cart.getEndRentDate()))
+                                            .quantity(cart.getQuantity())
+                                            .build();
+                                })
+                                .toList();
+
+                        return CartResponse.builder()
+                                .shopId(shop.getId())
+                                .shopName(shop.getName())
+                                .carts(cartInfos)
+                                .build();
+                    })
+                    .toList();
+
+            log.info("Berhasil mengambil {} toko dengan total {} item cart",
+                    cartResponses.size(), listCart.size());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, cartResponses);
 
         } catch (Exception ex) {
