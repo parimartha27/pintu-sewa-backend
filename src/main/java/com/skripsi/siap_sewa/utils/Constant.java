@@ -50,4 +50,6 @@ public class Constant {
     public static final String PRODUCT_NOT_FOUND_CODE = "PS-05-001";
     public static final String SHOP_NOT_FOUND_CODE = "PS-05-002";
     public static final String PRODUCT_HAS_TRANSACTIONS_CODE = "PS-05-003";
+
+    public static final String REVIEW_NOT_FOUND_CODE = "PS-06-001";
 }

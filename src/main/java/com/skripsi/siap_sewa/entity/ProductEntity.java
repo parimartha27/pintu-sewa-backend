@@ -62,6 +62,7 @@ public class ProductEntity {
     @JsonBackReference
     private Set<TransactionEntity> transactions;
 
+    @Builder.Default
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ReviewEntity> reviews = new ArrayList<>();

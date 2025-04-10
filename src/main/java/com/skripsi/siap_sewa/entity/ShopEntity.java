@@ -54,6 +54,7 @@ public class ShopEntity {
     @JsonManagedReference
     private CustomerEntity customer;
 
+    @Builder.Default
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProductEntity> products = new ArrayList<>();

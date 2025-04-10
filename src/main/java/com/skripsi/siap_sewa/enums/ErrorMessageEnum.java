@@ -33,7 +33,9 @@ public enum ErrorMessageEnum {
 
     PRODUCT_NOT_FOUND(Constant.PRODUCT_NOT_FOUND_CODE, "Produk tidak ditemukan", HttpStatus.NOT_FOUND),
     SHOP_NOT_FOUND(Constant.SHOP_NOT_FOUND_CODE, "Toko tidak ditemukan", HttpStatus.NOT_FOUND),
-    PRODUCT_HAS_TRANSACTIONS(Constant.PRODUCT_HAS_TRANSACTIONS_CODE, "Produk tidak dapat dihapus karena memiliki transaksi terkait", HttpStatus.BAD_REQUEST);
+    PRODUCT_HAS_TRANSACTIONS(Constant.PRODUCT_HAS_TRANSACTIONS_CODE, "Produk tidak dapat dihapus karena memiliki transaksi terkait", HttpStatus.BAD_REQUEST),
+
+    NO_REVIEWS_FOUND(Constant.REVIEW_NOT_FOUND_CODE, "Review tidak ditemukan", HttpStatus.NOT_FOUND);
 
     private final String errorCode;
     private final String errorMessage;

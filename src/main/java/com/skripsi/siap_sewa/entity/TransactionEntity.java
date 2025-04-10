@@ -31,6 +31,7 @@ public class TransactionEntity {
     @JoinColumn(name = "customer_id", referencedColumnName = "id")
     private CustomerEntity customer;
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "transaction_products",

@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto.product;
+package com.skripsi.siap_sewa.dto.review;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -7,17 +7,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class PaginationResponse<T> {
-    private List<T> content;
-    private int currentPage;
-    private int pageSize;
-    private long totalItems;
-    private int totalPages;
+public class ReviewProductResponse {
+    private String username;
+    private String comment;
+    private String image;
+    private Double rating;
+    private String createdAt;
 }
