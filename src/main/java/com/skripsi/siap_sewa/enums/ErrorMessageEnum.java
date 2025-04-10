@@ -35,7 +35,10 @@ public enum ErrorMessageEnum {
     SHOP_NOT_FOUND(Constant.SHOP_NOT_FOUND_CODE, "Toko tidak ditemukan", HttpStatus.NOT_FOUND),
     PRODUCT_HAS_TRANSACTIONS(Constant.PRODUCT_HAS_TRANSACTIONS_CODE, "Produk tidak dapat dihapus karena memiliki transaksi terkait", HttpStatus.BAD_REQUEST),
 
-    NO_REVIEWS_FOUND(Constant.REVIEW_NOT_FOUND_CODE, "Review tidak ditemukan", HttpStatus.NOT_FOUND);
+    NO_REVIEWS_FOUND(Constant.REVIEW_NOT_FOUND_CODE, "Review tidak ditemukan", HttpStatus.NOT_FOUND),
+    CUSTOMER_NOT_FOUND(Constant.CUSTOMER_NOT_FOUND_CODE, "Customer tidak ditemukan", HttpStatus.NOT_FOUND),
+    MAX_QUANTITY_EXCEEDED(Constant.MAX_QUANTITY_EXCEEDED_CODE, "Jumlah maximum sewa telah tercapai", HttpStatus.BAD_REQUEST),
+    MIN_RENT_NOT_MET(Constant.MIN_RENT_NOT_MET_CODE, "Jumlah minimum sewa belum tercapai", HttpStatus.BAD_REQUEST);
 
     private final String errorCode;
     private final String errorMessage;

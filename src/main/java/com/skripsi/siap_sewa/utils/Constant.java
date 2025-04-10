@@ -52,4 +52,14 @@ public class Constant {
     public static final String PRODUCT_HAS_TRANSACTIONS_CODE = "PS-05-003";
 
     public static final String REVIEW_NOT_FOUND_CODE = "PS-06-001";
+
+    public static final String CUSTOMER_NOT_FOUND_CODE = "PS-07-001";
+
+    public static final String MAX_QUANTITY_EXCEEDED_CODE = "PS-05-004";
+
+    public static final String MIN_RENT_NOT_MET_CODE = "PS-05-005";
+
+
+
+
 }
