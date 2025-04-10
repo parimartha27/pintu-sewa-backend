@@ -96,4 +96,17 @@ public class CommonUtils {
                 """, shopName
         );
     }
+
+    public static String getRentDurationName(int code) {
+        return switch (code) {
+            case 1 -> "Harian";
+            case 2 -> "Mingguan";
+            case 3 -> "Bulanan";
+            case 4 -> "Harian;Mingguan";
+            case 5 -> "Mingguan;Bulanan";
+            case 6 -> "Harian;Bulanan";
+            case 7 -> "Harian;Mingguan;Bulanan";
+            default -> "Tidak diketahui";
+        };
+    }
 }

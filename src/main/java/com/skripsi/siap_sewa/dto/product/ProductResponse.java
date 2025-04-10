@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 
 @Data
@@ -18,11 +20,9 @@ import java.math.BigDecimal;
 public class ProductResponse {
     private String id;
     private String name;
-    private int rentCategory;
+    private String rentCategory;
     private boolean isRnb;
-    private BigDecimal dailyPrice;
-    private BigDecimal weeklyPrice;
-    private BigDecimal monthlyPrice;
+    private BigDecimal price;
     private String image;
     private String address;
     private Double rating;

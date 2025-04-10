@@ -9,20 +9,23 @@ import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.utils.Constant;
+import java.math.BigDecimal;
 import com.skripsi.siap_sewa.utils.ProductUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -135,18 +138,59 @@ public class ProductService {
         }
     }
 
-    public ResponseEntity<ApiResponse> getProductsByCategory(String category, Pageable pageable) {
+    public ResponseEntity<ApiResponse> getFilteredProducts(ProductFilterRequest filterRequest) {
         try {
-            log.info("Fetching products by category: {}", category);
+            log.info("Fetching products with filters: {}", filterRequest);
 
-            Page<ProductEntity> productPage = productRepository.findByCategory(category, pageable);
+            if (filterRequest.getLocation() != null && !filterRequest.getLocation().isEmpty() &&
+                    filterRequest.getCategory() == null &&
+                    filterRequest.getRentDuration() == null &&
+                    filterRequest.getMinPrice() == null &&
+                    filterRequest.getMaxPrice() == null &&
+                    filterRequest.getIsRnb() == null &&
+                    filterRequest.getMinRating() == null) {
+
+                return getProductsByRegency(filterRequest);
+            }
+
+            Sort sort = Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy());
+            Pageable pageable = PageRequest.of(filterRequest.getPage(), filterRequest.getSize(), sort);
+
+            Page<ProductEntity> productPage = productRepository.findFilteredProducts(
+                    filterRequest.getCategory(),
+                    filterRequest.getRentDuration(),
+                    filterRequest.getMinPrice(),
+                    filterRequest.getMaxPrice(),
+                    filterRequest.getIsRnb(),
+                    filterRequest.getMinRating(),
+                    pageable
+            );
 
             if (productPage.isEmpty()) {
-                log.info("No products found for category: {}", category);
+                log.info("No products found with given filters");
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
-            List<ProductResponse> responseList = productPage.getContent().stream()
+//            Jika lokasi spesifik
+            List<ProductEntity> filteredContent = productPage.getContent();
+            if (filterRequest.getLocation() != null && !filterRequest.getLocation().isEmpty()) {
+                String location = filterRequest.getLocation().toLowerCase();
+                filteredContent = filteredContent.stream()
+                        .filter(product -> {
+                            if (product.getShop() == null || product.getShop().getRegency() == null) {
+                                return false;
+                            }
+                            return product.getShop().getRegency().toLowerCase().contains(location);
+                        })
+                        .toList();
+
+                if (filteredContent.isEmpty()) {
+                    log.info("No products found matching the location filter");
+                    return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+                }
+            }
+
+            List<ProductResponse> responseList = filteredContent.stream()
                     .map(this::buildProductResponse)
                     .toList();
 
@@ -158,13 +202,101 @@ public class ProductService {
                     productPage.getTotalPages()
             );
 
-            log.info("Successfully fetched {} products for category: {}", responseList.size(), category);
+            log.info("Successfully fetched {} products with filters", responseList.size());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
 
         } catch (Exception ex) {
-            log.info("Error fetching products by category {}: {}", category, ex.getMessage(), ex);
+            log.error("Error fetching filtered products: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    private ResponseEntity<ApiResponse> getProductsByRegency(ProductFilterRequest filterRequest) {
+        try {
+            List<ProductEntity> products = productRepository.findByShopRegency(filterRequest.getLocation());
+
+            if (products.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            // Apply sorting
+            Comparator<ProductEntity> comparator;
+            String sortBy = filterRequest.getSortBy();
+            boolean isAscending = filterRequest.getSortDirection() == Sort.Direction.ASC;
+
+            switch (sortBy) {
+                case "dailyPrice":
+                    comparator = Comparator.comparing(ProductEntity::getDailyPrice,
+                            Comparator.nullsLast(BigDecimal::compareTo));
+                    break;
+                case "weeklyPrice":
+                    comparator = Comparator.comparing(ProductEntity::getWeeklyPrice,
+                            Comparator.nullsLast(BigDecimal::compareTo));
+                    break;
+                case "monthlyPrice":
+                    comparator = Comparator.comparing(ProductEntity::getMonthlyPrice,
+                            Comparator.nullsLast(BigDecimal::compareTo));
+                    break;
+                default: // "name"
+                    comparator = Comparator.comparing(ProductEntity::getName,
+                            Comparator.nullsFirst(String::compareTo));
+            }
+
+            if (!isAscending) {
+                comparator = comparator.reversed();
+            }
+
+            products = products.stream()
+                    .sorted(comparator)
+                    .toList();
+
+            // construct pagination
+            int page = filterRequest.getPage();
+            int size = filterRequest.getSize();
+            int totalElements = products.size();
+            int totalPages = (int) Math.ceil((double) totalElements / size);
+
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, totalElements);
+
+            List<ProductEntity> pagedProducts = (fromIndex < totalElements)
+                    ? products.subList(fromIndex, toIndex)
+                    : Collections.emptyList();
+
+            List<ProductResponse> responseList = pagedProducts.stream()
+                    .map(this::buildProductResponse)
+                    .toList();
+
+            PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
+                    responseList,
+                    page,
+                    size,
+                    totalElements,
+                    totalPages
+            );
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
+        } catch (Exception ex) {
+            log.error("Error fetching products by regency: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    private ProductResponse buildProductResponse(ProductEntity product) {
+
+        Double productRating = ProductUtils.calculateWeightedRating(product.getReviews());
+
+        return ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
+                .isRnb(product.isRnb())
+                .image(product.getImage())
+                .address(product.getShop() != null ? product.getShop().getRegency() : "Kabupaten")
+                .rating(productRating)
+                .rentedTimes(ProductUtils.countRentedTimes(product.getTransactions()))
+                .price(getLowestPrice(product))
+                .build();
     }
 
     public ResponseEntity<ApiResponse> getProductDetail(String id) {
@@ -341,20 +473,6 @@ public class ProductService {
         }
     }
 
-    private ProductResponse buildProductResponse(ProductEntity product) {
-        ProductResponse response = modelMapper.map(product, ProductResponse.class);
-
-        response.setAddress(product.getShop() != null ? product.getShop().getRegency() : "Unknown");
-
-        Double productRating = ProductUtils.calculateWeightedRating(product.getReviews());
-        response.setRating(productRating);
-
-        int rentedTimes = ProductUtils.countRentedTimes(product.getTransactions());
-        response.setRentedTimes(rentedTimes);
-
-        return response;
-    }
-
     public ResponseEntity<ApiResponse> getProductByShopId(String shopId) {
         try {
             log.info("Fetching products by shop ID: {}", shopId);
@@ -379,6 +497,13 @@ public class ProductService {
             log.info("Error fetching products by shop ID {}: {}", shopId, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    private BigDecimal getLowestPrice(ProductEntity product) {
+        return Stream.of(product.getDailyPrice(), product.getWeeklyPrice(), product.getMonthlyPrice())
+                .filter(Objects::nonNull)
+                .min(BigDecimal::compareTo)
+                .orElse(null);
     }
 
 

@@ -1,10 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.*;
-import com.skripsi.siap_sewa.dto.product.AddProductRequest;
-import com.skripsi.siap_sewa.dto.product.AddProductResponse;
-import com.skripsi.siap_sewa.dto.product.EditProductRequest;
-import com.skripsi.siap_sewa.dto.product.ProductResponse;
+import com.skripsi.siap_sewa.dto.product.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductService;
 import com.skripsi.siap_sewa.utils.CommonUtils;
@@ -16,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -43,18 +41,42 @@ public class ProductController {
 
 //    =============== for search product by category ==================
 
-    @GetMapping
-    public ResponseEntity<ApiResponse> getProductsByCategory(
-            @RequestParam String category,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "16") int size,
-            @RequestParam(defaultValue = "name,asc") String[] sort) {
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse> getFilteredProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Integer rentDuration,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Boolean isRnb,
+            @RequestParam(required = false) Integer minRating,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "16") int size) {
 
-        Sort.Direction direction = Sort.Direction.fromString(sort[1]);
-        Sort sorting = Sort.by(direction, sort[0]);
+        if (!sortBy.equals("name") &&
+                !sortBy.equals("dailyPrice") &&
+                !sortBy.equals("weeklyPrice") &&
+                !sortBy.equals("monthlyPrice")) {
+            sortBy = "name";
+        }
 
-        Pageable pageable = PageRequest.of(page - 1, size, sorting);
-        return productService.getProductsByCategory(category,pageable);
+        ProductFilterRequest filterRequest = ProductFilterRequest.builder()
+                .category(category)
+                .rentDuration(rentDuration)
+                .location(location)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .isRnb(isRnb)
+                .minRating(minRating)
+                .sortBy(sortBy)
+                .sortDirection(sortDirection)
+                .page(page)
+                .size(size)
+                .build();
+
+        return productService.getFilteredProducts(filterRequest);
     }
 
 //    for prodcut detail page

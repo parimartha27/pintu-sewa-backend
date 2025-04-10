@@ -41,11 +41,9 @@ public class CartService {
 
                 ProductResponse productResponse = ProductResponse.builder()
                         .name(product.getName())
-                        .rentCategory(product.getRentCategory())
+                        .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
                         .isRnb(product.isRnb())
-                        .dailyPrice(product.getDailyPrice())
-                        .weeklyPrice(product.getWeeklyPrice())
-                        .monthlyPrice(product.getMonthlyPrice())
+                        .price(product.getDailyPrice())
                         .image(product.getImage())
                         .build();
 
