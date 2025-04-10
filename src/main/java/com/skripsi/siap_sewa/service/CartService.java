@@ -59,6 +59,8 @@ public class CartService {
                                 .map(cart -> {
                                     ProductEntity product = cart.getProduct();
 
+                                    boolean isAvailable = product.getStock() > 0;
+
                                     return CartResponse.CartInfo.builder()
                                             .productId(product.getId())
                                             .productName(product.getName())
@@ -69,9 +71,10 @@ public class CartService {
                                                     cart.getStartRentDate(),
                                                     cart.getEndRentDate()))
                                             .quantity(cart.getQuantity())
+                                            .isAvailableToRent(isAvailable)
                                             .build();
                                 })
-                                .toList();
+                                .collect(Collectors.toList());
 
                         return CartResponse.builder()
                                 .shopId(shop.getId())

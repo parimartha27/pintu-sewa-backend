@@ -40,5 +40,6 @@ public class CartResponse {
         private String endRentDate;
         private String rentDuration;
         private int quantity;
+        private boolean isAvailableToRent;
     }
 }
