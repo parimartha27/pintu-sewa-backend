@@ -27,4 +27,18 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, String> {
             @Param("rating") Integer rating,
             @Param("reviewTopics") List<String> reviewTopics,
             Pageable pageable);
+
+    @Query("SELECT r FROM ReviewEntity r WHERE " +
+            "r.product.shop.id = :shopId AND " +
+            "(:hasMedia IS NULL OR r.image IS NOT NULL) AND " +
+            "(:rating IS NULL OR r.rating BETWEEN :rating AND :rating + 0.9) AND " +
+            "(:reviewTopics IS NULL OR " +
+            "   (LOWER(r.comment) LIKE '%kondisi barang%' AND 'kondisi barang' IN :reviewTopics) OR " +
+            "   (LOWER(r.comment) LIKE '%durasi pengiriman%' AND 'durasi pengiriman' IN :reviewTopics))")
+    Page<ReviewEntity> findByProduct_Shop_IdWithFilters(
+            @Param("shopId") String shopId,
+            @Param("hasMedia") Boolean hasMedia,
+            @Param("rating") Integer rating,
+            @Param("reviewTopics") List<String> reviewTopics,
+            Pageable pageable);
 }

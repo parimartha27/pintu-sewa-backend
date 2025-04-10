@@ -1,7 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.review.ReviewProductRequest;
+import com.skripsi.siap_sewa.dto.review.ReviewRequest;
 import com.skripsi.siap_sewa.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class ReviewController {
         log.info("Received request to get reviews for product ID: {} with page: {}, size: {}, filters - hasMedia: {}, rating: {}, topics: {}",
                 productId, page, size, hasMedia, rating, reviewTopics);
 
-        ReviewProductRequest request = ReviewProductRequest.builder()
+        ReviewRequest request = ReviewRequest.builder()
                 .page(page)
                 .size(size)
                 .sortBy(sortBy)
@@ -44,6 +44,33 @@ public class ReviewController {
                 .build();
 
         return reviewService.getReviewsByProductId(productId, request);
+    }
+
+    @GetMapping("/shop/{shopId}")
+    public ResponseEntity<ApiResponse> getReviewsByShopId(
+            @PathVariable String shopId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") Sort.Direction sortDirection,
+            @RequestParam(required = false) Boolean hasMedia,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) List<String> reviewTopics) {
+
+        log.info("Fetching reviews for shop ID: {} with filters - hasMedia: {}, rating: {}, topics: {}",
+                shopId, hasMedia, rating, reviewTopics);
+
+        ReviewRequest request = ReviewRequest.builder()
+                .page(page)
+                .size(size)
+                .sortBy(sortBy)
+                .sortDirection(sortDirection)
+                .hasMedia(hasMedia)
+                .rating(rating)
+                .reviewTopics(reviewTopics)
+                .build();
+
+        return reviewService.getReviewsByShopId(shopId, request);
     }
 
 

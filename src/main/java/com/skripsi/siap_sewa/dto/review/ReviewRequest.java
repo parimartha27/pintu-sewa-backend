@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ReviewProductRequest {
+public class ReviewRequest {
     @Builder.Default
     private int page = 0;
 

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ReviewProductResponse {
+public class ProductReviewResponse {
     private String username;
     private String comment;
     private String image;
