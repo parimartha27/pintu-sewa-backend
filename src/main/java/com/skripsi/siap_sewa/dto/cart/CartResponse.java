@@ -33,6 +33,7 @@ public class CartResponse {
     @AllArgsConstructor
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class CartInfo {
+        private String cartId;
         private String productId;
         private String productName;
         private BigDecimal price;

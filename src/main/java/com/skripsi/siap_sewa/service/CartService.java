@@ -67,6 +67,7 @@ public class CartService {
                                     boolean isAvailable = product.getStock() > 0;
 
                                     return CartResponse.CartInfo.builder()
+                                            .cartId(cart.getId())
                                             .productId(product.getId())
                                             .productName(product.getName())
                                             .price(ProductUtils.getLowestPrice(product))
