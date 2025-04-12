@@ -170,6 +170,7 @@ public class CartService {
 
             // 10. Membuat response
             CartResponse.CartInfo cartInfo = buildCartInfo(product, request);
+            cartInfo.setCartId(newCartItem.getId());
 
             return commonUtils.setResponse(
                     ErrorMessageEnum.SUCCESS,
