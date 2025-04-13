@@ -10,6 +10,8 @@ import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.spesification.ProductSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.ProductUtils;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,7 +21,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -68,6 +73,77 @@ public class ProductFilterService {
             log.error("Error fetching filtered products: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    public ResponseEntity<ApiResponse> getProductsByShopId(String shopId, ProductFilterRequest filterRequest, Pageable pageable) {
+        try {
+            log.info("Fetching products for shopId={}, rentDuration={}, minPrice={}, maxPrice={}, minRating={}",
+                    shopId, filterRequest.getRentDuration(), filterRequest.getMinPrice(),
+                    filterRequest.getMaxPrice(), filterRequest.getMinRating());
+
+            // First apply all filters except rating
+            Specification<ProductEntity> spec = withShopAndFilters(
+                    shopId, filterRequest.getRentDuration(), filterRequest.getMinPrice(), filterRequest.getMaxPrice());
+
+            // Get the full filtered list (without rating filter)
+            List<ProductEntity> allFilteredProducts = productRepository.findAll(spec);
+
+            // Then apply rating filter
+            List<ProductEntity> filteredContent = applyRatingFilter(allFilteredProducts, filterRequest);
+
+            // Create pagination response from the fully filtered list
+            PaginationResponse<ProductResponse> paginationResponse = createPaginationResponse(
+                    filteredContent, pageable.getPageNumber(), pageable.getPageSize());
+
+            if (paginationResponse.getContent().isEmpty()) {
+                log.warn("No products found for shopId={} with given filters", shopId);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            log.info("Successfully fetched {} products for shopId={}",
+                    paginationResponse.getContent().size(), shopId);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
+
+        } catch (Exception ex) {
+            log.error("Error fetching products by shopId {}: {}", shopId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    private Specification<ProductEntity> withShopAndFilters(String shopId, Integer rentDuration,
+                                                            BigDecimal minPrice, BigDecimal maxPrice) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filter by shopId
+            if (StringUtils.hasText(shopId)) {
+                Join<Object, Object> shopJoin = root.join("shop");
+                predicates.add(criteriaBuilder.equal(shopJoin.get("id"), shopId));
+            }
+
+            // Rent Duration
+            if (rentDuration != null) {
+                predicates.add(criteriaBuilder.equal(root.get("rentCategory"), rentDuration));
+            }
+
+            // Price range
+            if (minPrice != null) {
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("dailyPrice"), minPrice),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("weeklyPrice"), minPrice),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("monthlyPrice"), minPrice)
+                ));
+            }
+
+            if (maxPrice != null) {
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("dailyPrice"), maxPrice),
+                        criteriaBuilder.lessThanOrEqualTo(root.get("weeklyPrice"), maxPrice),
+                        criteriaBuilder.lessThanOrEqualTo(root.get("monthlyPrice"), maxPrice)
+                ));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     private PaginationResponse<ProductResponse> createPaginationResponse(

@@ -108,8 +108,33 @@ public class ProductController {
         return productService.deleteProduct(id);
     }
 
+    //    find product in shop page
     @GetMapping("/shop/{shopId}")
-    public ResponseEntity<ApiResponse> getProductByShopId(@PathVariable String shopId){
-        return productService.getProductByShopId(shopId);
+    public ResponseEntity<ApiResponse> getProductsByShopId(
+            @PathVariable String shopId,
+            @RequestParam(required = false) Integer rentDuration,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Boolean isRnb,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection) {
+
+        ProductFilterRequest filterRequest = ProductFilterRequest.builder()
+                .rentDuration(rentDuration)
+                .minPrice(minPrice)
+                .maxPrice(maxPrice)
+                .isRnb(isRnb)
+                .minRating(minRating)
+                .sortBy(sortBy)
+                .sortDirection(sortDirection)
+                .page(page-1)
+                .size(size)
+                .build();
+
+        Pageable pageable = PageRequest.of(page-1, size, Sort.by(sortDirection, sortBy));
+        return productFilterService.getProductsByShopId(shopId, filterRequest, pageable);
     }
 }
