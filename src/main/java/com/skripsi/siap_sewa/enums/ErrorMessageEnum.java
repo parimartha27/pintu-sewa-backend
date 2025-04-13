@@ -39,7 +39,10 @@ public enum ErrorMessageEnum {
     CUSTOMER_NOT_FOUND(Constant.CUSTOMER_NOT_FOUND_CODE, "Customer tidak ditemukan", HttpStatus.NOT_FOUND),
     MAX_QUANTITY_EXCEEDED(Constant.MAX_QUANTITY_EXCEEDED_CODE, "Jumlah maximum sewa telah tercapai", HttpStatus.BAD_REQUEST),
     MIN_RENT_NOT_MET(Constant.MIN_RENT_NOT_MET_CODE, "Jumlah minimum sewa belum tercapai", HttpStatus.BAD_REQUEST),
-    UNAUTHORIZED_CART_ACCESS(Constant.UNAUTHORIZED_CART_ACCESS, "Tidak ada akses ke cart" , HttpStatus.UNAUTHORIZED ),;
+    UNAUTHORIZED_CART_ACCESS(Constant.UNAUTHORIZED_CART_ACCESS, "Tidak ada akses ke cart" , HttpStatus.UNAUTHORIZED ),
+    CHECKOUT_VALIDATION_FAILED("PS-08-001", "Validasi checkout gagal", HttpStatus.BAD_REQUEST),
+    PRODUCT_UNAVAILABLE("PS-08-002", "Produk tidak tersedia", HttpStatus.BAD_REQUEST),
+    SHIPPING_CALCULATION_FAILED("PS-08-003", "Gagal menghitung biaya pengiriman", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String errorCode;
     private final String errorMessage;

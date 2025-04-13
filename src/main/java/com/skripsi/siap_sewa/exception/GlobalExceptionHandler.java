@@ -71,4 +71,59 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
         return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
     }
+
+    @ExceptionHandler(CheckoutValidationException.class)
+    public ResponseEntity<ApiResponse> handleCheckoutValidationException(CheckoutValidationException ex) {
+        log.warn("Checkout validation failed: {}", ex.getMessage());
+        return commonUtils.setResponse(
+                ex.getErrorCode(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                null
+        );
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ApiResponse> handleInsufficientStockException(InsufficientStockException ex) {
+        log.warn("Insufficient stock: {}", ex.getMessage());
+        Map<String, Object> details = new HashMap<>();
+        details.put("availableStock", ex.getAvailableStock());
+        details.put("requestedQuantity", ex.getRequestedQuantity());
+
+        return commonUtils.setResponse(
+                ex.getErrorCode(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                details
+        );
+    }
+
+    @ExceptionHandler(MinimumRentNotMetException.class)
+    public ResponseEntity<ApiResponse> handleMinimumRentNotMetException(MinimumRentNotMetException ex) {
+        log.warn("Minimum rent not met: {}", ex.getMessage());
+        Map<String, Object> details = new HashMap<>();
+        details.put("minimumRent", ex.getMinRent());
+        details.put("requestedQuantity", ex.getRequestedQuantity());
+
+        return commonUtils.setResponse(
+                ex.getErrorCode(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                details
+        );
+    }
+
+    @ExceptionHandler(CheckoutProcessingException.class)
+    public ResponseEntity<ApiResponse> handleCheckoutProcessingException(CheckoutProcessingException ex) {
+        log.error("Checkout processing failed for product {}: {}", ex.getProductId(), ex.getMessage());
+        Map<String, Object> details = new HashMap<>();
+        details.put("productId", ex.getProductId());
+
+        return commonUtils.setResponse(
+                ex.getErrorCode(),
+                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                details
+        );
+    }
 }

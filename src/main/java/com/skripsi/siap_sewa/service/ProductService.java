@@ -9,7 +9,7 @@ import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.utils.ProductUtils;
+import com.skripsi.siap_sewa.helper.ProductHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,6 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -144,11 +143,11 @@ public class ProductService {
                     List<String> images = processImageString(product.getImage());
                     log.debug("Processed {} images for product ID: {}", images.size(), id);
 
-                    int[] transactionCounts = ProductUtils.countProductTransactions(product.getTransactions());
+                    int[] transactionCounts = ProductHelper.countProductTransactions(product.getTransactions());
                     log.debug("Transaction counts - rented: {}, bought: {} for ID: {}",
                             transactionCounts[0], transactionCounts[1], id);
 
-                    Double rating = ProductUtils.calculateWeightedRating(product.getReviews());
+                    Double rating = ProductHelper.calculateWeightedRating(product.getReviews());
                     log.debug("Calculated rating: {} for product ID: {}", rating, id);
 
                     ProductDetailResponse response = new ProductDetailResponse(
@@ -380,7 +379,7 @@ public class ProductService {
     }
 
     static ProductResponse getProductResponse(ProductEntity product) {
-        Double productRating = ProductUtils.calculateWeightedRating(product.getReviews());
+        Double productRating = ProductHelper.calculateWeightedRating(product.getReviews());
 
         return ProductResponse.builder()
                 .id(product.getId())
@@ -390,8 +389,8 @@ public class ProductService {
                 .image(product.getImage())
                 .address(product.getShop() != null ? product.getShop().getRegency() : "Kabupaten")
                 .rating(productRating)
-                .rentedTimes(ProductUtils.countRentedTimes(product.getTransactions()))
-                .price(ProductUtils.getLowestPrice(product))
+                .rentedTimes(ProductHelper.countRentedTimes(product.getTransactions()))
+                .price(ProductHelper.getLowestPrice(product))
                 .build();
     }
 

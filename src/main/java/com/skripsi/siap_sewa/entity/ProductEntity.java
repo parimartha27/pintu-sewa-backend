@@ -47,6 +47,10 @@ public class ProductEntity {
     private int minRented;
     private String status;
     private String image;
+    private BigDecimal deposit;
+
+    @Version
+    private Integer version;
 
     @JsonIgnore
     private LocalDateTime createdAt;
@@ -67,6 +71,3 @@ public class ProductEntity {
     @JsonManagedReference
     private List<ReviewEntity> reviews = new ArrayList<>();
 }
-
-
-

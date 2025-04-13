@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.utils;
+package com.skripsi.siap_sewa.helper;
 
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ReviewEntity;
@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class ProductUtils {
+public class ProductHelper {
 
     public static Double calculateWeightedRating(List<ReviewEntity> reviews) {
         if (reviews == null || reviews.isEmpty()) {

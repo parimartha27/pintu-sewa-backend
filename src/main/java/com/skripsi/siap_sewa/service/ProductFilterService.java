@@ -9,7 +9,7 @@ import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.spesification.ProductSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.utils.ProductUtils;
+import com.skripsi.siap_sewa.helper.ProductHelper;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -191,7 +191,7 @@ public class ProductFilterService {
 
         return products.stream()
                 .filter(product -> {
-                    Double rating = ProductUtils.calculateWeightedRating(product.getReviews());
+                    Double rating = ProductHelper.calculateWeightedRating(product.getReviews());
                     return rating != null && rating >= filterRequest.getMinRating();
                 })
                 .toList();

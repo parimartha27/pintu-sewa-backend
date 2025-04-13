@@ -2,8 +2,6 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.product.PaginationResponse;
-import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.dto.shop.*;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
@@ -11,20 +9,17 @@ import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.utils.Constant;
-import com.skripsi.siap_sewa.utils.ProductUtils;
+import com.skripsi.siap_sewa.helper.ProductHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -158,7 +153,7 @@ public class ShopService {
                     .flatMap(p -> p.getReviews().stream())
                     .toList();
 
-            Double shopRating = ProductUtils.calculateWeightedRating(allShopReviews);
+            Double shopRating = ProductHelper.calculateWeightedRating(allShopReviews);
             int totalReview = allShopReviews.size();
 
             ShopByProductResponse response = ShopByProductResponse.builder()

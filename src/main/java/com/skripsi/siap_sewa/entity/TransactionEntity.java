@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,17 +44,20 @@ public class TransactionEntity {
     private Set<ProductEntity> products = new HashSet<>();
 
     private String transactionNumber;
-    private String startDate;
-    private String endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String shippingAddress;
     private int quantity;
-    private Double amount;
-    private String totalAmount;
+    private BigDecimal amount;
+    private BigDecimal totalAmount;
     private String paymentMethod;
     private String status;
     private String isReturn;
     private String shippingCode;
     private String returnCode;
+
+    @Version
+    private Integer version;
 
     @JsonIgnore
     private LocalDateTime createdAt;
@@ -62,4 +67,13 @@ public class TransactionEntity {
 
     @Column(name = "is_selled", columnDefinition = "boolean default false")
     private boolean isSelled;
+
+    private String shopId;
+    private String shopName;
+    private BigDecimal totalDeposit;
+    private boolean isDepositReturned;
+    private LocalDateTime depositReturnedAt;
+    private BigDecimal serviceFee;
+    private String shippingPartner;
+    private BigDecimal shippingPrice;
 }

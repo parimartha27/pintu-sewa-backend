@@ -6,7 +6,6 @@ import com.skripsi.siap_sewa.dto.cart.AddCartRequest;
 import com.skripsi.siap_sewa.dto.cart.CartResponse;
 import com.skripsi.siap_sewa.dto.cart.DeleteCartRequest;
 import com.skripsi.siap_sewa.dto.cart.EditCartRequest;
-import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
@@ -16,11 +15,9 @@ import com.skripsi.siap_sewa.repository.CartRepository;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.utils.ProductUtils;
-import jakarta.validation.Valid;
+import com.skripsi.siap_sewa.helper.ProductHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +27,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,7 +67,7 @@ public class CartService {
                                             .cartId(cart.getId())
                                             .productId(product.getId())
                                             .productName(product.getName())
-                                            .price(ProductUtils.getLowestPrice(product))
+                                            .price(ProductHelper.getLowestPrice(product))
                                             .startRentDate(CommonUtils.formatDate(cart.getStartRentDate()))
                                             .endRentDate(CommonUtils.formatDate(cart.getEndRentDate()))
                                             .rentDuration(CommonUtils.calculateRentDuration(

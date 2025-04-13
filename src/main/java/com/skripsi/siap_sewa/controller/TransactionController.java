@@ -2,10 +2,12 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.product.PaginationResponse;
+import com.skripsi.siap_sewa.dto.checkout.CheckoutRequest;
+
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
-import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
+import com.skripsi.siap_sewa.service.CheckoutService;
 import com.skripsi.siap_sewa.service.TransactionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,7 @@ import java.time.LocalDate;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final CheckoutService checkoutService;
 
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<ApiResponse> getCustomerTransactions(
@@ -43,5 +46,10 @@ public class TransactionController {
                 .build();
 
         return transactionService.getCustomerTransactions(filterRequest);
+    }
+
+    @PostMapping("/checkout")
+    public ResponseEntity<ApiResponse> checkout(@Valid @RequestBody CheckoutRequest request) {
+        return checkoutService.checkout(request);
     }
 }

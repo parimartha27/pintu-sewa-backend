@@ -7,6 +7,7 @@ import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.helper.ProductHelper;
 import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.spesification.TransactionSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
@@ -99,11 +100,11 @@ public class TransactionService {
                                 .id(p.getId())
                                 .name(p.getName())
                                 .quantity(transaction.getQuantity())
-                                .price(p.getDailyPrice()) // Adjust based on your pricing logic
+                                .price(ProductHelper.getLowestPrice(p))
                                 .build())
                         .collect(Collectors.toList()))
                 .totalPrice(transaction.getAmount() != null ?
-                        BigDecimal.valueOf(transaction.getAmount()) : BigDecimal.ZERO)
+                        transaction.getAmount() : BigDecimal.ZERO)
                 .build();
     }
 }
