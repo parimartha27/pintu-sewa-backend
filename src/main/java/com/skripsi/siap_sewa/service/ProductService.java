@@ -321,6 +321,7 @@ public class ProductService {
 
             List<ProductResponse> responseList = products.stream()
                     .map(this::buildProductResponse)
+                    .limit(5)
                     .toList();
 
             log.info("Successfully fetched {} products for shop ID: {}", responseList.size(), shopId);
