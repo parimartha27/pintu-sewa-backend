@@ -75,7 +75,7 @@ public class ProductController {
                 .minRating(minRating)
                 .sortBy(sortBy)
                 .sortDirection(sortDirection)
-                .page(page)
+                .page(page-1)
                 .size(size)
                 .build();
 
