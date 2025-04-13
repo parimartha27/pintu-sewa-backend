@@ -65,6 +65,7 @@ public class ProductController {
 
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
                 .category(category)
+                .name(name)
                 .rentDuration(rentDuration)
                 .location(location)
                 .minPrice(minPrice)
