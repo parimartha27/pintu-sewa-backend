@@ -66,6 +66,7 @@ public class SearchService {
                 .map(shop -> SearchResponse.ShopItem.builder()
                         .id(shop.getId())
                         .name(shop.getName())
+                        .image(shop.getImage())
                         .build())
                 .toList();
 

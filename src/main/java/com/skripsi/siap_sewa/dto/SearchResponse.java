@@ -31,5 +31,6 @@ public class SearchResponse {
     public static class ShopItem {
         private String id;
         private String name;
+        private String image;
     }
 }
