@@ -232,48 +232,77 @@ public class CartService {
                 .build();
     }
 
-    public ResponseEntity<ApiResponse> editProductInCart(@Valid EditCartRequest request) {
+    public ResponseEntity<ApiResponse> editProductInCart(EditCartRequest request) {
         try {
             log.info("Mengedit produk di cart: {}", request);
 
-            Optional<ProductEntity> productToCart = productRepository.findById(request.getProductId());
+            // 1. Cari cart item
+            CartEntity cartItem = cartRepository.findById(request.getCartId())
+                    .orElseThrow(() -> new DataNotFoundException("Item cart tidak ditemukan"));
 
-            if(productToCart.isEmpty()){
-                log.warn("Produk tidak ditemukan: {}", request.getProductId());
-                throw new DataNotFoundException("Product dengan ID: " + request.getProductId() + " tidak ada");
+            ProductEntity product = cartItem.getProduct();
+
+            // 2. Validasi stok produk
+            if (product.getStock() <= 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.INSUFFICIENT_STOCK, null);
             }
 
-            ProductEntity productToEdit = productToCart.get();
-
-            if(request.getQuantity() > productToEdit.getStock()){
-                log.warn("Stok tidak cukup");
+            // 3. Validasi quantity vs stok (maksimal setengah stok)
+            int maxAllowed = product.getStock() / 2;
+            if (request.getQuantity() > maxAllowed) {
                 return commonUtils.setResponse(
-                        ErrorMessageEnum.INSUFFICIENT_STOCK,
-                        null
+                        ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,
+                        Map.of("max_allowed", maxAllowed)
                 );
             }
 
-            Optional<CartEntity> existingCartItem = cartRepository.findByCustomerIdAndProductId(
-                    request.getCustomerId(),
-                    request.getProductId()
-            );
-
-            if (existingCartItem.isEmpty()) {
-                log.warn("Item cart tidak ditemukan");
-                throw new DataNotFoundException("Item tidak ditemukan di keranjang");
+            // 4. Validasi minRented
+            if (request.getQuantity() < product.getMinRented()) {
+                return commonUtils.setResponse(
+                        ErrorMessageEnum.MIN_RENT_NOT_MET,
+                        Map.of("min_rent", product.getMinRented())
+                );
             }
 
-            CartEntity cartItem = existingCartItem.get();
+            // 5. Hitung ulang total amount
+            BigDecimal totalAmount = calculateRentalPrice(
+                    product,
+                    request.getStartRentDate(),
+                    request.getEndRentDate(),
+                    request.getQuantity()
+            );
+
+            // 6. Update cart item
             cartItem.setQuantity(request.getQuantity());
             cartItem.setStartRentDate(request.getStartRentDate());
             cartItem.setEndRentDate(request.getEndRentDate());
-            cartItem.setShippingAddress(request.getShippingAddress());
+            cartItem.setTotalAmount(totalAmount);
 
             cartRepository.save(cartItem);
-            log.info("Berhasil mengupdate cart");
 
-            CartResponse response = objectMapper.convertValue(cartItem, CartResponse.class);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            // 7. Membuat response
+            CartResponse.CartInfo cartInfo = CartResponse.CartInfo.builder()
+                    .cartId(cartItem.getId())
+                    .productId(product.getId())
+                    .productName(product.getName())
+                    .price(product.getDailyPrice())
+                    .startRentDate(CommonUtils.formatDate(request.getStartRentDate()))
+                    .endRentDate(CommonUtils.formatDate(request.getEndRentDate()))
+                    .rentDuration(CommonUtils.calculateRentDuration(
+                            request.getStartRentDate(),
+                            request.getEndRentDate()))
+                    .quantity(request.getQuantity())
+                    .isAvailableToRent(product.getStock() > 0)
+                    .build();
+
+            return commonUtils.setResponse(
+                    ErrorMessageEnum.SUCCESS,
+                    CartResponse.builder()
+                            .shopId(product.getShop().getId())
+                            .shopName(product.getShop().getName())
+                            .carts(List.of(cartInfo))
+                            .build()
+            );
 
         } catch (DataNotFoundException ex) {
             throw ex;
