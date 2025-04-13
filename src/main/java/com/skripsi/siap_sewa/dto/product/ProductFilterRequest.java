@@ -21,7 +21,7 @@ public class ProductFilterRequest {
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
     private Boolean isRnb;
-    private Integer minRating;
+    private Double minRating;
 //    private String deliveryDuration;
     private String sortBy;
     private Sort.Direction sortDirection;

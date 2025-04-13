@@ -138,168 +138,6 @@ public class ProductService {
         }
     }
 
-    public ResponseEntity<ApiResponse> getFilteredProducts(ProductFilterRequest filterRequest) {
-        try {
-            log.info("Fetching products with filters: {}", filterRequest);
-
-            if (!filterRequest.getLocation().isEmpty() &&
-                    filterRequest.getCategory().isEmpty() &&
-                    filterRequest.getName().isEmpty() &&
-                    filterRequest.getRentDuration() == null &&
-                    filterRequest.getMinPrice() == null &&
-                    filterRequest.getMaxPrice() == null &&
-                    filterRequest.getIsRnb() == null &&
-                    filterRequest.getMinRating() == null) {
-
-                return getProductsByRegency(filterRequest);
-            }
-
-            Sort sort;
-            if (filterRequest.getName() != null && !filterRequest.getName().isEmpty()) {
-                sort = Sort.by(Sort.Order.desc("relevance_score"))
-                        .and(Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy()));
-            } else {
-                sort = Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy());
-            }
-            Pageable pageable = PageRequest.of(filterRequest.getPage(), filterRequest.getSize(), sort);
-
-            Page<Object[]> resultPage = productRepository.findFilteredProductsWithRelevance(
-                    filterRequest.getCategory(),
-                    filterRequest.getName(),
-                    filterRequest.getRentDuration(),
-                    filterRequest.getMinPrice(),
-                    filterRequest.getMaxPrice(),
-                    filterRequest.getIsRnb(),
-                    filterRequest.getMinRating(),
-                    pageable
-            );
-
-            if (resultPage.isEmpty()) {
-                // If nothing found with the exact criteria, try a fallback search by just category
-                if (filterRequest.getCategory() != null && filterRequest.getName() != null) {
-                    log.info("No exact matches found, attempting fallback to category-only search");
-                    filterRequest.setName(null); // Clear the name filter
-                    return getFilteredProducts(filterRequest); // Recursive call with modified request
-                }
-
-                log.info("No products found with given filters");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            List<ProductEntity> filteredContent = resultPage.getContent().stream()
-                    .map(arr -> (ProductEntity) arr[0])
-                    .toList();
-
-            // Rest of your existing code to build response
-            List<ProductResponse> responseList = filteredContent.stream()
-                    .map(this::buildProductResponse)
-                    .toList();
-
-            PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
-                    responseList,
-                    resultPage.getNumber(),
-                    resultPage.getSize(),
-                    resultPage.getTotalElements(),
-                    resultPage.getTotalPages()
-            );
-
-            log.info("Successfully fetched {} products with filters", responseList.size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
-
-        } catch (Exception ex) {
-            log.error("Error fetching filtered products: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
-
-    private ResponseEntity<ApiResponse> getProductsByRegency(ProductFilterRequest filterRequest) {
-        try {
-            List<ProductEntity> products = productRepository.findByShopRegency(filterRequest.getLocation());
-
-            if (products.isEmpty()) {
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            // Apply sorting
-            Comparator<ProductEntity> comparator;
-            String sortBy = filterRequest.getSortBy();
-            boolean isAscending = filterRequest.getSortDirection() == Sort.Direction.ASC;
-
-            switch (sortBy) {
-                case "dailyPrice":
-                    comparator = Comparator.comparing(ProductEntity::getDailyPrice,
-                            Comparator.nullsLast(BigDecimal::compareTo));
-                    break;
-                case "weeklyPrice":
-                    comparator = Comparator.comparing(ProductEntity::getWeeklyPrice,
-                            Comparator.nullsLast(BigDecimal::compareTo));
-                    break;
-                case "monthlyPrice":
-                    comparator = Comparator.comparing(ProductEntity::getMonthlyPrice,
-                            Comparator.nullsLast(BigDecimal::compareTo));
-                    break;
-                default: // "name"
-                    comparator = Comparator.comparing(ProductEntity::getName,
-                            Comparator.nullsFirst(String::compareTo));
-            }
-
-            if (!isAscending) {
-                comparator = comparator.reversed();
-            }
-
-            products = products.stream()
-                    .sorted(comparator)
-                    .toList();
-
-            // construct pagination
-            int page = filterRequest.getPage();
-            int size = filterRequest.getSize();
-            int totalElements = products.size();
-            int totalPages = (int) Math.ceil((double) totalElements / size);
-
-            int fromIndex = page * size;
-            int toIndex = Math.min(fromIndex + size, totalElements);
-
-            List<ProductEntity> pagedProducts = (fromIndex < totalElements)
-                    ? products.subList(fromIndex, toIndex)
-                    : Collections.emptyList();
-
-            List<ProductResponse> responseList = pagedProducts.stream()
-                    .map(this::buildProductResponse)
-                    .toList();
-
-            PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
-                    responseList,
-                    page,
-                    size,
-                    totalElements,
-                    totalPages
-            );
-
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
-        } catch (Exception ex) {
-            log.error("Error fetching products by regency: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
-
-    private ProductResponse buildProductResponse(ProductEntity product) {
-
-        Double productRating = ProductUtils.calculateWeightedRating(product.getReviews());
-
-        return ProductResponse.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
-                .isRnb(product.isRnb())
-                .image(product.getImage())
-                .address(product.getShop() != null ? product.getShop().getRegency() : "Kabupaten")
-                .rating(productRating)
-                .rentedTimes(ProductUtils.countRentedTimes(product.getTransactions()))
-                .price(ProductUtils.getLowestPrice(product))
-                .build();
-    }
-
     public ResponseEntity<ApiResponse> getProductDetail(String id) {
         try {
             log.info("Fetching product details for ID: {}", id);
@@ -500,7 +338,25 @@ public class ProductService {
         }
     }
 
+    private ProductResponse buildProductResponse(ProductEntity product) {
+        return getProductResponse(product);
+    }
 
+    static ProductResponse getProductResponse(ProductEntity product) {
+        Double productRating = ProductUtils.calculateWeightedRating(product.getReviews());
+
+        return ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
+                .isRnb(product.isRnb())
+                .image(product.getImage())
+                .address(product.getShop() != null ? product.getShop().getRegency() : "Kabupaten")
+                .rating(productRating)
+                .rentedTimes(ProductUtils.countRentedTimes(product.getTransactions()))
+                .price(ProductUtils.getLowestPrice(product))
+                .build();
+    }
 
 
 }

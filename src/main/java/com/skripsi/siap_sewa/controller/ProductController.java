@@ -3,6 +3,7 @@ package com.skripsi.siap_sewa.controller;
 import com.skripsi.siap_sewa.dto.*;
 import com.skripsi.siap_sewa.dto.product.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.service.ProductFilterService;
 import com.skripsi.siap_sewa.service.ProductService;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
@@ -22,6 +23,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductFilterService productFilterService;
 
 //    =============== for product card in dashboard ==================
     @GetMapping("/most-rented")
@@ -50,10 +52,10 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean isRnb,
-            @RequestParam(required = false) Integer minRating,
+            @RequestParam(required = false) Double minRating,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "16") int size) {
 
 
@@ -79,7 +81,7 @@ public class ProductController {
                 .size(size)
                 .build();
 
-        return productService.getFilteredProducts(filterRequest);
+        return productFilterService.getFilteredProducts(filterRequest);
     }
 
 //    for prodcut detail page
