@@ -144,6 +144,7 @@ public class ProductService {
 
             if (filterRequest.getLocation() != null && !filterRequest.getLocation().isEmpty() &&
                     filterRequest.getCategory() == null &&
+                    filterRequest.getName()== null &&
                     filterRequest.getRentDuration() == null &&
                     filterRequest.getMinPrice() == null &&
                     filterRequest.getMaxPrice() == null &&
@@ -158,6 +159,7 @@ public class ProductService {
 
             Page<ProductEntity> productPage = productRepository.findFilteredProducts(
                     filterRequest.getCategory(),
+                    filterRequest.getName(),
                     filterRequest.getRentDuration(),
                     filterRequest.getMinPrice(),
                     filterRequest.getMaxPrice(),

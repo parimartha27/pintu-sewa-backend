@@ -28,6 +28,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, String> 
             "JOIN p.shop s " +
             "LEFT JOIN p.reviews r " +
             "WHERE (:category IS NULL OR p.category = :category) " +
+            "AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
             "AND (:rentDuration IS NULL OR " +
             "     (:rentDuration = 1 AND p.dailyPrice IS NOT NULL) OR " +
             "     (:rentDuration = 2 AND p.weeklyPrice IS NOT NULL) OR " +
@@ -45,6 +46,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, String> 
             "HAVING (:minRating IS NULL OR COALESCE(AVG(r.rating), 0) >= :minRating)")
     Page<ProductEntity> findFilteredProducts(
             @Param("category") String category,
+            @Param("name") String name,
             @Param("rentDuration") Integer rentDuration,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,

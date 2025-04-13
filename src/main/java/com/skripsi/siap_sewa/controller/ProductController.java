@@ -44,6 +44,7 @@ public class ProductController {
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse> getFilteredProducts(
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) Integer rentDuration,
             @RequestParam(required = false) String location,
             @RequestParam(required = false) BigDecimal minPrice,

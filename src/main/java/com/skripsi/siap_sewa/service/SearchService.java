@@ -57,6 +57,7 @@ public class SearchService {
                 .map(product -> SearchResponse.ProductItem.builder()
                         .id(product.getId())
                         .name(product.getName())
+                        .category(product.getCategory())
                         .build())
                 .toList();
 

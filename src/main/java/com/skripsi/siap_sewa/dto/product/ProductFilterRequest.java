@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ProductFilterRequest {
     private String category;
+    private String name;
     private Integer rentDuration;
     private String location;
     private BigDecimal minPrice;

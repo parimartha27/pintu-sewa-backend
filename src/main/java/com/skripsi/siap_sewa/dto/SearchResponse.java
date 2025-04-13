@@ -23,6 +23,7 @@ public class SearchResponse {
     public static class ProductItem {
         private String id;
         private String name;
+        private String category;
     }
 
     @Data
