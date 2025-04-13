@@ -44,4 +44,9 @@ public class CustomerController {
         return customerService.forgetPassword(request);
     }
 
+    @GetMapping("/address/{customerId}")
+    public ResponseEntity<ApiResponse> getCustomerAddress(@PathVariable String customerId){
+        return customerService.getCustomerAddress(customerId);
+    }
+
 }

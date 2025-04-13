@@ -225,4 +225,30 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
+
+    public ResponseEntity<ApiResponse> getCustomerAddress(String customerId) {
+        try {
+            log.info("Fetching address for customer: {}", customerId);
+
+            CustomerEntity customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new DataNotFoundException("Customer not found"));
+
+            AddressResponse response = AddressResponse.builder()
+                    .customerId(customer.getId())
+                    .street(customer.getStreet())
+                    .district(customer.getDistrict())
+                    .regency(customer.getRegency())
+                    .province(customer.getProvince())
+                    .postCode(customer.getPostCode())
+                    .notes(customer.getNotes())
+                    .build();
+
+            log.info("Successfully fetched address for customer: {}", customerId);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.error("Error fetching customer address: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
 }

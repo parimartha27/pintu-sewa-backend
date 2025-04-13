@@ -97,7 +97,7 @@ public class ProductFilterService {
 
             // Then apply rating filter
             List<ProductEntity> filteredContent = applyRatingFilter(allFilteredProducts.getContent(), filterRequest);
-            
+
             // Create pagination response from the fully filtered list
             PaginationResponse<ProductResponse> paginationResponse = createPaginationResponse(
                     filteredContent,
