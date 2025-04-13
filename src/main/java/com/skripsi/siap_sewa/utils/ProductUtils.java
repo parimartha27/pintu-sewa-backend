@@ -26,12 +26,13 @@ public class ProductUtils {
 
         int numberOfReviews = reviews.size();
 
-        // Bayesian average parameters
-        double minimumVotes = 2.0;       // Minimum votes needed to be listed
-        double globalAverageRating = 3.5; // Assumed average rating across all products
+        double minimumVotes = 2.0;       
+        double globalAverageRating = 3.5; 
 
-        return (numberOfReviews / (numberOfReviews + minimumVotes)) * averageRating +
+        double weightedRating = (numberOfReviews / (numberOfReviews + minimumVotes)) * averageRating +
                 (minimumVotes / (numberOfReviews + minimumVotes)) * globalAverageRating;
+
+        return Math.round(weightedRating * 10) / 10.0;
     }
 
     public static String getTimeAgoInIndonesian(LocalDateTime dateTime) {

@@ -1,18 +1,14 @@
-package com.skripsi.siap_sewa.dto;
+package com.skripsi.siap_sewa.dto.product;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.skripsi.siap_sewa.entity.ReviewEntity;
-import com.skripsi.siap_sewa.entity.ShopEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder

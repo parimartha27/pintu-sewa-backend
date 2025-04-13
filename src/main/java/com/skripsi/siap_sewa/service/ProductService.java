@@ -1,7 +1,7 @@
 package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skripsi.siap_sewa.dto.ProductDetailResponse;
+import com.skripsi.siap_sewa.dto.product.ProductDetailResponse;
 import com.skripsi.siap_sewa.dto.product.*;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.entity.*;
@@ -9,16 +9,11 @@ import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import java.math.BigDecimal;
 import com.skripsi.siap_sewa.utils.ProductUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -149,6 +144,7 @@ public class ProductService {
                     });
 
             ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
+            response.setRating(ProductUtils.calculateWeightedRating(product.getReviews()));
 
             log.info("Successfully fetched product details for ID: {}", id);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
