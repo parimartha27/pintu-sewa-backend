@@ -54,11 +54,18 @@ public class ProductFilterService {
             // Apply rating filter if needed (post-query as it's calculated)
             List<ProductEntity> filteredContent = applyRatingFilter(resultPage.getContent(), filterRequest);
 
+            log.info("resultPage.getSize {}", resultPage.getSize());
+            log.info("resultPage.getTotalElements {}", resultPage.getTotalElements());
+            log.info("resultPage.getTotalPages {}", resultPage.getTotalPages());
+            log.info("filteredContent {}", filteredContent);
+            log.info("resultPage.getNumber :{}", resultPage.getNumber());
+
             // Paginate the filtered results
             PaginationResponse<ProductResponse> paginationResponse = createPaginationResponse(
                     filteredContent,
-                    filterRequest.getPage(),
-                    filterRequest.getSize()
+                    resultPage.getPageable().getPageNumber(),
+                    resultPage.getSize(),
+                    (int) resultPage.getTotalElements()
             );
 
             if (paginationResponse.getContent().isEmpty()) {
@@ -86,14 +93,18 @@ public class ProductFilterService {
                     shopId, filterRequest.getRentDuration(), filterRequest.getMinPrice(), filterRequest.getMaxPrice());
 
             // Get the full filtered list (without rating filter)
-            List<ProductEntity> allFilteredProducts = productRepository.findAll(spec);
+            Page<ProductEntity> allFilteredProducts = productRepository.findAll(spec, pageable);
 
             // Then apply rating filter
-            List<ProductEntity> filteredContent = applyRatingFilter(allFilteredProducts, filterRequest);
-
+            List<ProductEntity> filteredContent = applyRatingFilter(allFilteredProducts.getContent(), filterRequest);
+            
             // Create pagination response from the fully filtered list
             PaginationResponse<ProductResponse> paginationResponse = createPaginationResponse(
-                    filteredContent, pageable.getPageNumber(), pageable.getPageSize());
+                    filteredContent,
+                    allFilteredProducts.getPageable().getPageNumber(),
+                    allFilteredProducts.getSize(),
+                    (int) allFilteredProducts.getTotalElements()
+            );
 
             if (paginationResponse.getContent().isEmpty()) {
                 log.warn("No products found for shopId={} with given filters", shopId);
@@ -147,13 +158,13 @@ public class ProductFilterService {
     }
 
     private PaginationResponse<ProductResponse> createPaginationResponse(
-            List<ProductEntity> products, int page, int size) {
+            List<ProductEntity> products, int page, int size, int totalElement) {
 
-        int totalElements = products.size();
+        int totalElements = totalElement;
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
-        int fromIndex = page * size;
-        int toIndex = Math.min(fromIndex + size, totalElements);
+        int fromIndex = 0;
+        int toIndex = products.size();
 
         List<ProductEntity> pagedProducts = (fromIndex < totalElements)
                 ? products.subList(fromIndex, toIndex)
@@ -165,12 +176,13 @@ public class ProductFilterService {
 
         return new PaginationResponse<>(
                 responseList,
-                page,
+                page + 1, // FE expects 1-based index
                 size,
                 totalElements,
                 totalPages
         );
     }
+
 
     private List<ProductEntity> applyRatingFilter(List<ProductEntity> products, ProductFilterRequest filterRequest) {
         if (filterRequest.getMinRating() == null) {
