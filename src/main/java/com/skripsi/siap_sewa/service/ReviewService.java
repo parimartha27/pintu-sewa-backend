@@ -133,6 +133,7 @@ public class ReviewService {
 
         return ProductReviewResponse.builder()
                 .username(getCustomerUsername(review.getCustomer()))
+                .userProfile(review.getCustomer().getImage())
                 .comment(review.getComment())
                 .images(processImageString(review.getImage()))
                 .rating(review.getRating())
@@ -144,8 +145,10 @@ public class ReviewService {
         log.trace("Mapping review ID {} to shop review response", review.getId());
 
         ProductEntity product = review.getProduct();
+
         return ShopReviewResponse.builder()
                 .username(getCustomerUsername(review.getCustomer()))
+                .userProfile(review.getCustomer().getImage())
                 .comment(review.getComment())
                 .images(processImageString(review.getImage()))
                 .rating(review.getRating())
