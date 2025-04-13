@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.cart.AddCartRequest;
 import com.skripsi.siap_sewa.dto.cart.CartResponse;
+import com.skripsi.siap_sewa.dto.cart.DeleteCartRequest;
 import com.skripsi.siap_sewa.dto.cart.EditCartRequest;
 import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
@@ -309,6 +310,40 @@ public class CartService {
         } catch (Exception ex) {
             log.error("Gagal mengedit cart: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> deleteCartItem(DeleteCartRequest request) {
+        try {
+            // 1. Cari cart item
+            CartEntity cartItem = cartRepository.findById(request.getCartId())
+                    .orElseThrow(() -> new DataNotFoundException("Cart item tidak ditemukan"));
+
+            // 2. Validasi kepemilikan
+            if (!cartItem.getCustomerId().equals(request.getCustomerId())) {
+                return commonUtils.setResponse(
+                        ErrorMessageEnum.UNAUTHORIZED_CART_ACCESS,
+                        null
+                );
+            }
+
+            // 3. Hapus dari database
+            cartRepository.delete(cartItem);
+            log.info("Cart {} berhasil dihapus", request.getCartId());
+
+            return commonUtils.setResponse(
+                    ErrorMessageEnum.SUCCESS,
+                    Map.of("deleted_cart_id", request.getCartId())
+            );
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Gagal menghapus cart: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(
+                    ErrorMessageEnum.INTERNAL_SERVER_ERROR,
+                    null
+            );
         }
     }
 }

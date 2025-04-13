@@ -59,6 +59,8 @@ public class Constant {
 
     public static final String MIN_RENT_NOT_MET_CODE = "PS-05-005";
 
+    public static final String UNAUTHORIZED_CART_ACCESS = "PS-02-006";
+
 
 
 

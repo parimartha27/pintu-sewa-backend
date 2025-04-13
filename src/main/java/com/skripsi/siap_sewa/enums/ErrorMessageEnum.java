@@ -38,7 +38,8 @@ public enum ErrorMessageEnum {
     NO_REVIEWS_FOUND(Constant.REVIEW_NOT_FOUND_CODE, "Review tidak ditemukan", HttpStatus.NOT_FOUND),
     CUSTOMER_NOT_FOUND(Constant.CUSTOMER_NOT_FOUND_CODE, "Customer tidak ditemukan", HttpStatus.NOT_FOUND),
     MAX_QUANTITY_EXCEEDED(Constant.MAX_QUANTITY_EXCEEDED_CODE, "Jumlah maximum sewa telah tercapai", HttpStatus.BAD_REQUEST),
-    MIN_RENT_NOT_MET(Constant.MIN_RENT_NOT_MET_CODE, "Jumlah minimum sewa belum tercapai", HttpStatus.BAD_REQUEST);
+    MIN_RENT_NOT_MET(Constant.MIN_RENT_NOT_MET_CODE, "Jumlah minimum sewa belum tercapai", HttpStatus.BAD_REQUEST),
+    UNAUTHORIZED_CART_ACCESS(Constant.UNAUTHORIZED_CART_ACCESS, "Tidak ada akses ke cart" , HttpStatus.UNAUTHORIZED ),;
 
     private final String errorCode;
     private final String errorMessage;

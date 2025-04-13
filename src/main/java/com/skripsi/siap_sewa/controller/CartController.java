@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.cart.DeleteCartRequest;
 import com.skripsi.siap_sewa.dto.cart.EditCartRequest;
 import com.skripsi.siap_sewa.dto.cart.AddCartRequest;
 import com.skripsi.siap_sewa.service.CartService;
@@ -33,5 +34,12 @@ public class CartController {
     public ResponseEntity<ApiResponse> editProductInCart(@RequestBody @Valid EditCartRequest request) {
         log.info("Edit product in cart request: {}", request);
         return cartService.editProductInCart(request);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<ApiResponse> deleteCartItem(
+            @RequestBody @Valid DeleteCartRequest request) {
+        log.info("Delete cart request: {}", request);
+        return cartService.deleteCartItem(request);
     }
 }
