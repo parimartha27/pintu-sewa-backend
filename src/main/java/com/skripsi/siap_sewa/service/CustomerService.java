@@ -248,7 +248,7 @@ public class CustomerService {
 
         } catch (Exception ex) {
             log.error("Error fetching customer address: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+            return commonUtils.setResponse(ErrorMessageEnum.CUSTOMER_NOT_FOUND, null);
         }
     }
 }
