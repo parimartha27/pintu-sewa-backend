@@ -146,6 +146,10 @@ public class ProductService {
             ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
             response.setRating(ProductUtils.calculateWeightedRating(product.getReviews()));
 
+            int[] rentedBuyedTimes = ProductUtils.countProductTransactions(product.getTransactions());
+            response.setRentedTimes(rentedBuyedTimes[0]);
+            response.setBuyTimes(rentedBuyedTimes[1]);
+
             log.info("Successfully fetched product details for ID: {}", id);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 

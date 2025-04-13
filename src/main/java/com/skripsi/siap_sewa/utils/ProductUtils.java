@@ -69,7 +69,7 @@ public class ProductUtils {
                 .count();
     }
 
-    public static int[] countProductTransactions(List<TransactionEntity> transactions) {
+    public static int[] countProductTransactions(Set<TransactionEntity> transactions) {
         int rentedTimes = 0;
         int buyTimes = 0;
 
