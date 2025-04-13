@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class ProductReviewResponse {
     private String username;
     private String comment;
-    private String image;
+    private List<String> images;
     private Double rating;
     private String createdAt;
 }

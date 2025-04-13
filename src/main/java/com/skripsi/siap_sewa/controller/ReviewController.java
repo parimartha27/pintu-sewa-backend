@@ -30,8 +30,8 @@ public class ReviewController {
             @RequestParam(required = false) Integer rating,
             @RequestParam(required = false) List<String> reviewTopics) {
 
-        log.info("Received request to get reviews for product ID: {} with page: {}, size: {}, filters - hasMedia: {}, rating: {}, topics: {}",
-                productId, page, size, hasMedia, rating, reviewTopics);
+        log.info("Fetching reviews for product ID: {} with params - page: {}, size: {}, sort: {} {}, hasMedia: {}, rating: {}, topics: {}",
+                productId, page, size, sortBy, sortDirection, hasMedia, rating, reviewTopics);
 
         ReviewRequest request = ReviewRequest.builder()
                 .page(page)
@@ -57,8 +57,8 @@ public class ReviewController {
             @RequestParam(required = false) Integer rating,
             @RequestParam(required = false) List<String> reviewTopics) {
 
-        log.info("Fetching reviews for shop ID: {} with filters - hasMedia: {}, rating: {}, topics: {}",
-                shopId, hasMedia, rating, reviewTopics);
+        log.info("Fetching reviews for shop ID: {} with params - page: {}, size: {}, sort: {} {}, hasMedia: {}, rating: {}, topics: {}",
+                shopId, page, size, sortBy, sortDirection, hasMedia, rating, reviewTopics);
 
         ReviewRequest request = ReviewRequest.builder()
                 .page(page)
@@ -72,6 +72,4 @@ public class ReviewController {
 
         return reviewService.getReviewsByShopId(shopId, request);
     }
-
-
 }

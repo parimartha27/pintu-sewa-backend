@@ -21,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -36,16 +38,16 @@ public class ReviewService {
 
     public ResponseEntity<ApiResponse> getReviewsByProductId(String productId, ReviewRequest request) {
         try {
-            log.info("Fetching reviews for product with ID: {}", productId);
-
+            log.debug("Validating product existence for ID: {}", productId);
             if (!productRepository.existsById(productId)) {
-                log.error("Product with ID: {} not found", productId);
+                log.warn("Product not found with ID: {}", productId);
                 return commonUtils.setResponse(ErrorMessageEnum.PRODUCT_NOT_FOUND, null);
             }
 
             Sort sort = Sort.by(request.getSortDirection(), request.getSortBy());
             Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
 
+            log.debug("Fetching reviews from repository with filters");
             Page<ReviewEntity> reviewsPage = reviewRepository.findByProductIdWithFilters(
                     productId,
                     request.getHasMedia(),
@@ -54,15 +56,16 @@ public class ReviewService {
                     pageable);
 
             if (reviewsPage.isEmpty()) {
-                log.info("No reviews found for product with ID: {}", productId);
+                log.info("No reviews found for product ID: {}", productId);
                 return commonUtils.setResponse(ErrorMessageEnum.NO_REVIEWS_FOUND, null);
             }
 
+            log.debug("Mapping {} reviews to response", reviewsPage.getNumberOfElements());
             List<ProductReviewResponse> reviewResponses = reviewsPage.getContent().stream()
-                    .map(this::mapToReviewResponse)
+                    .map(this::mapToProductReviewResponse)
                     .toList();
 
-            PaginationResponse<ProductReviewResponse> paginationResponse = new PaginationResponse<>(
+            var paginationResponse = new PaginationResponse<>(
                     reviewResponses,
                     reviewsPage.getNumber(),
                     reviewsPage.getSize(),
@@ -70,41 +73,27 @@ public class ReviewService {
                     reviewsPage.getTotalPages()
             );
 
-            log.info("Successfully fetched {} reviews for product with ID: {}", reviewResponses.size(), productId);
+            log.info("Successfully retrieved {} reviews for product ID: {}", reviewResponses.size(), productId);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
 
         } catch (Exception e) {
-            log.error("Error fetching reviews for product with ID: {}: {}", productId, e.getMessage(), e);
+            log.error("Error processing reviews for product ID: {} - {}", productId, e.getMessage(), e);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
-    private ProductReviewResponse mapToReviewResponse(ReviewEntity review) {
-        CustomerEntity customer = review.getCustomer();
-        String username = customer != null ? customer.getUsername() : "Unknown User";
-
-        return ProductReviewResponse.builder()
-                .username(username)
-                .comment(review.getComment())
-                .image(review.getImage())
-                .rating(review.getRating())
-                .createdAt(CommonUtils.getRelativeTimeFromNow(review.getCreatedAt()))
-                .build();
-    }
-
     public ResponseEntity<ApiResponse> getReviewsByShopId(String shopId, ReviewRequest request) {
         try {
-            log.info("Fetching reviews for shop ID: {}", shopId);
+            log.debug("Validating shop existence for ID: {}", shopId);
+            if (!shopRepository.existsById(shopId)) {
+                log.warn("Shop not found with ID: {}", shopId);
+                return commonUtils.setResponse(ErrorMessageEnum.SHOP_NOT_FOUND, null);
+            }
 
-             if (!shopRepository.existsById(shopId)) {
-                 return commonUtils.setResponse(ErrorMessageEnum.SHOP_NOT_FOUND, null);
-             }
-
-            // Create pageable
             Sort sort = Sort.by(request.getSortDirection(), request.getSortBy());
             Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
 
-            // Get reviews with filters
+            log.debug("Fetching shop reviews from repository with filters");
             Page<ReviewEntity> reviewsPage = reviewRepository.findByProduct_Shop_IdWithFilters(
                     shopId,
                     request.getHasMedia(),
@@ -113,14 +102,16 @@ public class ReviewService {
                     pageable);
 
             if (reviewsPage.isEmpty()) {
+                log.info("No reviews found for shop ID: {}", shopId);
                 return commonUtils.setResponse(ErrorMessageEnum.NO_REVIEWS_FOUND, null);
             }
 
+            log.debug("Mapping {} shop reviews to response", reviewsPage.getNumberOfElements());
             List<ShopReviewResponse> reviewResponses = reviewsPage.getContent().stream()
                     .map(this::mapToShopReviewResponse)
                     .toList();
 
-            PaginationResponse<ShopReviewResponse> paginationResponse = new PaginationResponse<>(
+            var paginationResponse = new PaginationResponse<>(
                     reviewResponses,
                     reviewsPage.getNumber(),
                     reviewsPage.getSize(),
@@ -128,26 +119,53 @@ public class ReviewService {
                     reviewsPage.getTotalPages()
             );
 
+            log.info("Successfully retrieved {} reviews for shop ID: {}", reviewResponses.size(), shopId);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
 
         } catch (Exception e) {
-            log.error("Error fetching reviews for shop ID: {}", shopId, e);
+            log.error("Error processing reviews for shop ID: {} - {}", shopId, e.getMessage(), e);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
-    private ShopReviewResponse mapToShopReviewResponse(ReviewEntity review) {
-        CustomerEntity customer = review.getCustomer();
-        ProductEntity product = review.getProduct();
+    private ProductReviewResponse mapToProductReviewResponse(ReviewEntity review) {
+        log.trace("Mapping review ID {} to product review response", review.getId());
 
-        return ShopReviewResponse.builder()
-                .username(customer != null ? customer.getUsername() : "Unknown User")
+        return ProductReviewResponse.builder()
+                .username(getCustomerUsername(review.getCustomer()))
                 .comment(review.getComment())
-                .image(review.getImage())
+                .images(processImageString(review.getImage()))
                 .rating(review.getRating())
                 .createdAt(CommonUtils.getRelativeTimeFromNow(review.getCreatedAt()))
-                .productImage(product.getImage())
-                .productName(product.getName())
                 .build();
+    }
+
+    private ShopReviewResponse mapToShopReviewResponse(ReviewEntity review) {
+        log.trace("Mapping review ID {} to shop review response", review.getId());
+
+        ProductEntity product = review.getProduct();
+        return ShopReviewResponse.builder()
+                .username(getCustomerUsername(review.getCustomer()))
+                .comment(review.getComment())
+                .images(processImageString(review.getImage()))
+                .rating(review.getRating())
+                .createdAt(CommonUtils.getRelativeTimeFromNow(review.getCreatedAt()))
+                .productImage(product != null ? processImageString(product.getImage()).get(0) : null)
+                .productName(product != null ? product.getName() : "Unknown Product")
+                .build();
+    }
+
+    private String getCustomerUsername(CustomerEntity customer) {
+        return customer != null ? customer.getUsername() : "Unknown User";
+    }
+
+    private List<String> processImageString(String imageString) {
+        if (!StringUtils.hasText(imageString)) {
+            return List.of();
+        }
+        return Arrays.stream(imageString.split(";"))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .toList();
     }
 }

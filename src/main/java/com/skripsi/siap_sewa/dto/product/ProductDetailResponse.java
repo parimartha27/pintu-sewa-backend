@@ -35,7 +35,7 @@ public class ProductDetailResponse {
     private int stock;
     private int minRented;
     private String status;
-    private List<String> image;
+    private List<String> images;
     private Double rating;
     private int rentedTimes;
     private int buyTimes;
