@@ -43,10 +43,10 @@ public class ProductController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse> getFilteredProducts(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Integer rentDuration,
-            @RequestParam(required = false) String location,
+            @RequestParam(required = false, defaultValue = "") String category,
+            @RequestParam(required = false, defaultValue = "") String name,
+            @RequestParam(required = false, defaultValue = "") Integer rentDuration,
+            @RequestParam(required = false, defaultValue = "") String location,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean isRnb,
@@ -55,6 +55,7 @@ public class ProductController {
             @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "16") int size) {
+
 
         if (!sortBy.equals("name") &&
                 !sortBy.equals("dailyPrice") &&

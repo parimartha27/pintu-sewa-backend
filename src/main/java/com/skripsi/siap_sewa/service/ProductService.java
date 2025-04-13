@@ -142,9 +142,9 @@ public class ProductService {
         try {
             log.info("Fetching products with filters: {}", filterRequest);
 
-            if (filterRequest.getLocation() != null && !filterRequest.getLocation().isEmpty() &&
-                    filterRequest.getCategory() == null &&
-                    filterRequest.getName()== null &&
+            if (!filterRequest.getLocation().isEmpty() &&
+                    filterRequest.getCategory().isEmpty() &&
+                    filterRequest.getName().isEmpty() &&
                     filterRequest.getRentDuration() == null &&
                     filterRequest.getMinPrice() == null &&
                     filterRequest.getMaxPrice() == null &&
@@ -154,10 +154,16 @@ public class ProductService {
                 return getProductsByRegency(filterRequest);
             }
 
-            Sort sort = Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy());
+            Sort sort;
+            if (filterRequest.getName() != null && !filterRequest.getName().isEmpty()) {
+                sort = Sort.by(Sort.Order.desc("relevance_score"))
+                        .and(Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy()));
+            } else {
+                sort = Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy());
+            }
             Pageable pageable = PageRequest.of(filterRequest.getPage(), filterRequest.getSize(), sort);
 
-            Page<ProductEntity> productPage = productRepository.findFilteredProducts(
+            Page<Object[]> resultPage = productRepository.findFilteredProductsWithRelevance(
                     filterRequest.getCategory(),
                     filterRequest.getName(),
                     filterRequest.getRentDuration(),
@@ -168,40 +174,33 @@ public class ProductService {
                     pageable
             );
 
-            if (productPage.isEmpty()) {
+            if (resultPage.isEmpty()) {
+                // If nothing found with the exact criteria, try a fallback search by just category
+                if (filterRequest.getCategory() != null && filterRequest.getName() != null) {
+                    log.info("No exact matches found, attempting fallback to category-only search");
+                    filterRequest.setName(null); // Clear the name filter
+                    return getFilteredProducts(filterRequest); // Recursive call with modified request
+                }
+
                 log.info("No products found with given filters");
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
-//            Jika lokasi spesifik
-            List<ProductEntity> filteredContent = productPage.getContent();
-            if (filterRequest.getLocation() != null && !filterRequest.getLocation().isEmpty()) {
-                String location = filterRequest.getLocation().toLowerCase();
-                filteredContent = filteredContent.stream()
-                        .filter(product -> {
-                            if (product.getShop() == null || product.getShop().getRegency() == null) {
-                                return false;
-                            }
-                            return product.getShop().getRegency().toLowerCase().contains(location);
-                        })
-                        .toList();
+            List<ProductEntity> filteredContent = resultPage.getContent().stream()
+                    .map(arr -> (ProductEntity) arr[0])
+                    .toList();
 
-                if (filteredContent.isEmpty()) {
-                    log.info("No products found matching the location filter");
-                    return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-                }
-            }
-
+            // Rest of your existing code to build response
             List<ProductResponse> responseList = filteredContent.stream()
                     .map(this::buildProductResponse)
                     .toList();
 
             PaginationResponse<ProductResponse> paginationResponse = new PaginationResponse<>(
                     responseList,
-                    productPage.getNumber(),
-                    productPage.getSize(),
-                    productPage.getTotalElements(),
-                    productPage.getTotalPages()
+                    resultPage.getNumber(),
+                    resultPage.getSize(),
+                    resultPage.getTotalElements(),
+                    resultPage.getTotalPages()
             );
 
             log.info("Successfully fetched {} products with filters", responseList.size());
