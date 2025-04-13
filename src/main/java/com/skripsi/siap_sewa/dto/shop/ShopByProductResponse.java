@@ -19,5 +19,6 @@ public class ShopByProductResponse {
     private String name;
     private Double rating;
     private int totalReview;
+    private String image;
     private String regency;
 }

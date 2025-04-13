@@ -164,6 +164,7 @@ public class ShopService {
             ShopByProductResponse response = ShopByProductResponse.builder()
                     .id(shop.getId())
                     .name(shop.getName())
+                    .image(shop.getImage())
                     .rating(shopRating)
                     .totalReview(totalReview)
                     .regency(shop.getRegency())
