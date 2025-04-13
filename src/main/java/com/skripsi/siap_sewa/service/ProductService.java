@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -132,33 +133,68 @@ public class ProductService {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
-
+    
     public ResponseEntity<ApiResponse> getProductDetail(String id) {
-        try {
-            log.info("Fetching product details for ID: {}", id);
+        log.debug("Starting to process product detail request for ID: {}", id);
 
-            ProductEntity product = productRepository.findById(id)
-                    .orElseThrow(() -> {
-                        log.info("Product not found with ID: {} in getProductDetail", id);
-                        return new DataNotFoundException("Product not found in getProductDetail");
-                    });
+        return productRepository.findById(id)
+                .map(product -> {
+                    log.debug("Product found, processing images and ratings for ID: {}", id);
 
-            ProductDetailResponse response = modelMapper.map(product, ProductDetailResponse.class);
-            response.setRating(ProductUtils.calculateWeightedRating(product.getReviews()));
+                    List<String> images = processImageString(product.getImage());
+                    log.debug("Processed {} images for product ID: {}", images.size(), id);
 
-            int[] rentedBuyedTimes = ProductUtils.countProductTransactions(product.getTransactions());
-            response.setRentedTimes(rentedBuyedTimes[0]);
-            response.setBuyTimes(rentedBuyedTimes[1]);
+                    int[] transactionCounts = ProductUtils.countProductTransactions(product.getTransactions());
+                    log.debug("Transaction counts - rented: {}, bought: {} for ID: {}",
+                            transactionCounts[0], transactionCounts[1], id);
 
-            log.info("Successfully fetched product details for ID: {}", id);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+                    Double rating = ProductUtils.calculateWeightedRating(product.getReviews());
+                    log.debug("Calculated rating: {} for product ID: {}", rating, id);
 
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error fetching product details for ID {}: {}", id, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+                    ProductDetailResponse response = new ProductDetailResponse(
+                            product.getId(),
+                            product.getName(),
+                            product.getCategory(),
+                            product.getRentCategory(),
+                            product.isRnb(),
+                            product.getWeight(),
+                            product.getHeight(),
+                            product.getWidth(),
+                            product.getLength(),
+                            product.getDailyPrice(),
+                            product.getWeeklyPrice(),
+                            product.getMonthlyPrice(),
+                            product.getDescription(),
+                            product.getConditionDescription(),
+                            product.getStock(),
+                            product.getMinRented(),
+                            product.getStatus(),
+                            images,
+                            rating,
+                            transactionCounts[0],
+                            transactionCounts[1]
+                    );
+
+                    log.info("Successfully built response for product ID: {}", id);
+                    return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+                })
+                .orElseGet(() -> {
+                    log.warn("Product not found with ID: {}", id);
+                    throw new DataNotFoundException("Product not found with ID: " + id);
+                });
+    }
+
+    private List<String> processImageString(String imageString) {
+        if (!StringUtils.hasText(imageString)) {
+            log.debug("Empty image string received");
+            return List.of();
         }
+
+        return Arrays.stream(imageString.split(";"))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .peek(img -> log.trace("Processing image URL: {}", img))
+                .toList();
     }
 
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {

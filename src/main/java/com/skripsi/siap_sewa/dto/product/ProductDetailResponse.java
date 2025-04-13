@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -34,7 +35,7 @@ public class ProductDetailResponse {
     private int stock;
     private int minRented;
     private String status;
-    private String image;
+    private List<String> image;
     private Double rating;
     private int rentedTimes;
     private int buyTimes;
