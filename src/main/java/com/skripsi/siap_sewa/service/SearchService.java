@@ -53,18 +53,20 @@ public class SearchService {
 
     private SearchResponse mapToResponse(List<ProductEntity> products, List<ShopEntity> shops) {
         List<SearchResponse.ProductItem> productItems = products.stream()
+                .limit(3)
                 .map(product -> SearchResponse.ProductItem.builder()
                         .id(product.getId())
                         .name(product.getName())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         List<SearchResponse.ShopItem> shopItems = shops.stream()
+                .limit(3)
                 .map(shop -> SearchResponse.ShopItem.builder()
                         .id(shop.getId())
                         .name(shop.getName())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         return SearchResponse.builder()
                 .products(productItems)
