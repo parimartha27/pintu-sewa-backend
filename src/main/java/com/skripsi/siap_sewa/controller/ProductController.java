@@ -41,7 +41,7 @@ public class ProductController {
         return productService.getProductNearCustomer(customerId);
     }
 
-    @GetMapping("/top/{shopId}")
+    @GetMapping("/top")
     public ResponseEntity<ApiResponse> getTopProductByShopId(@RequestParam String shopId){
         return productService.getTopProductByShopId(shopId);
     }
