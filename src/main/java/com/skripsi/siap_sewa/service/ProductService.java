@@ -394,7 +394,31 @@ public class ProductService {
                 .build();
     }
 
+    public ResponseEntity<ApiResponse> getTopProductByShopId(String shopId) {
+        try {
+            log.info("Fetching top 5 products from shopId: {}", shopId);
+            List<ProductEntity> products = productRepository.findByShopId(shopId);
 
+            if (products.isEmpty()) {
+                log.info("No product in this shop: {}", shopId);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
 
+            Collections.shuffle(products);
 
+            List<ProductResponse> responseList = products.stream()
+                    .map(this::buildProductResponse)
+                    .limit(10)
+                    .toList();
+
+            log.info("Found top products by shop id {}", shopId);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.info("Error fetching products from shopId {}: {}", shopId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
 }
