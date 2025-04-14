@@ -6,9 +6,6 @@ import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
 import com.skripsi.siap_sewa.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

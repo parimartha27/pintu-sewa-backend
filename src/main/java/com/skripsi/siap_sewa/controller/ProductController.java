@@ -2,10 +2,8 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.*;
 import com.skripsi.siap_sewa.dto.product.*;
-import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductFilterService;
 import com.skripsi.siap_sewa.service.ProductService;
-import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/product")
