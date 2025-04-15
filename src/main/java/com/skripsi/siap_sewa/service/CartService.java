@@ -75,6 +75,8 @@ public class CartService {
                                                     cart.getEndRentDate()))
                                             .quantity(cart.getQuantity())
                                             .isAvailableToRent(isAvailable)
+                                            .image(product.getImage())
+                                            .stock(product.getStock())
                                             .build();
                                 })
                                 .toList();
@@ -226,6 +228,8 @@ public class CartService {
                         request.getEndRentDate()))
                 .quantity(request.getQuantity())
                 .isAvailableToRent(product.getStock() > 0)
+                .image(product.getImage())
+                .stock(product.getStock())
                 .build();
     }
 

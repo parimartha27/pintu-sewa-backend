@@ -36,5 +36,7 @@ public class CartResponse {
         private String rentDuration;
         private int quantity;
         private boolean isAvailableToRent;
+        private String image;
+        private int stock;
     }
 }
