@@ -51,7 +51,7 @@ public class TransactionService {
             // Convert to response DTO
             List<TransactionResponse> responseList = transactions.stream()
                     .map(this::buildTransactionResponse)
-                    .collect(Collectors.toList());
+                    .toList();
 
             if (responseList.isEmpty()) {
                 log.info("No transactions found for customer {} with given filters",
@@ -87,6 +87,7 @@ public class TransactionService {
                         .map(p -> TransactionResponse.ProductInfo.builder()
                                 .id(p.getId())
                                 .name(p.getName())
+                                .image(p.getImage())
                                 .quantity(transaction.getQuantity())
                                 .price(ProductHelper.getLowestPrice(p))
                                 .build())

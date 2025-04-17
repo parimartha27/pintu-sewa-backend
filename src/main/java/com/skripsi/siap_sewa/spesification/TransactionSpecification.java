@@ -1,22 +1,16 @@
-// TransactionSpecification.java
 package com.skripsi.siap_sewa.spesification;
 
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionSpecification {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
 
     public static Specification<TransactionEntity> withFilters(TransactionFilterRequest filterRequest) {
         return (root, query, criteriaBuilder) -> {
