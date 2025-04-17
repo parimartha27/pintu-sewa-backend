@@ -12,17 +12,31 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class EditCustomerRequest {
-
+public class EditBiodataRequest {
     @NotBlank(message = "ID tidak boleh kosong")
     private String id;
+
+    @NotBlank(message = "Username tidak boleh kosong")
+    @Size(min = 3, max = 50, message = "Username harus 3-50 karakter")
+    private String username;
+
+    @NotBlank(message = "Nama lengkap tidak boleh kosong")
+    @Size(min = 3, max = 100, message = "Nama lengkap harus 3-100 karakter")
+    private String name;
+
+    @NotBlank(message = "Email tidak boleh kosong")
+    @Email(message = "Email harus valid")
+    private String email;
+
+    @NotBlank(message = "Nomor telepon tidak boleh kosong")
+    @Pattern(regexp = "^[0-9]+$", message = "Nomor telepon harus angka")
+    private String phoneNumber;
 
     @NotBlank(message = "Jenis kelamin tidak boleh kosong")
     @Pattern(regexp = "^(Laki-laki|Perempuan)$", message = "Jenis kelamin harus 'Laki-laki' atau 'Perempuan'")
@@ -33,25 +47,4 @@ public class EditCustomerRequest {
     private LocalDate birthDate;
 
     private String image;
-
-    @NotBlank(message = "Jalan tidak boleh kosong")
-    @Size(min = 5, max = 255, message = "Jalan harus terdiri dari 5 hingga 255 karakter")
-    private String street;
-
-    @NotBlank(message = "Kecamatan tidak boleh kosong")
-    private String district;
-
-    @NotBlank(message = "Kota tidak boleh kosong")
-    private String regency;
-
-    @NotBlank(message = "Provinsi tidak boleh kosong")
-    private String province;
-
-    @NotBlank(message = "Kode pos tidak boleh kosong")
-    @Pattern(regexp = "^[0-9]{5}$", message = "Kode pos harus terdiri dari 5 angka")
-    private String postCode;
-
-    private String password;
-
-    private String note;
 }

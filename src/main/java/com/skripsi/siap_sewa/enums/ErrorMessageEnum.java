@@ -42,7 +42,9 @@ public enum ErrorMessageEnum {
     UNAUTHORIZED_CART_ACCESS(Constant.UNAUTHORIZED_CART_ACCESS, "Tidak ada akses ke cart" , HttpStatus.UNAUTHORIZED ),
     CHECKOUT_VALIDATION_FAILED("PS-08-001", "Validasi checkout gagal", HttpStatus.BAD_REQUEST),
     PRODUCT_UNAVAILABLE("PS-08-002", "Produk tidak tersedia", HttpStatus.BAD_REQUEST),
-    SHIPPING_CALCULATION_FAILED("PS-08-003", "Gagal menghitung biaya pengiriman", HttpStatus.INTERNAL_SERVER_ERROR);
+    SHIPPING_CALCULATION_FAILED("PS-08-003", "Gagal menghitung biaya pengiriman", HttpStatus.INTERNAL_SERVER_ERROR),
+    EMAIL_EDIT_EXPIRED("PS-07-002", "Email hanya bisa diubah dalam 30 hari pertama", HttpStatus.BAD_REQUEST),
+    USERNAME_EDIT_EXPIRED("PS-07-003", "Username hanya bisa diubah dalam 30 hari sejak terakhir update", HttpStatus.BAD_REQUEST),;
 
     private final String errorCode;
     private final String errorMessage;

@@ -1,6 +1,9 @@
 package com.skripsi.siap_sewa.repository;
 
 import com.skripsi.siap_sewa.entity.CustomerEntity;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -21,4 +24,8 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
     boolean existsByUsername(String username);
 
     boolean existsByPhoneNumberOrEmail(String phoneNumber, String email);
+
+    boolean existsByEmailAndIdNot(@NotBlank(message = "Email tidak boleh kosong") @Email(message = "Email harus valid") String email, @NotBlank(message = "ID tidak boleh kosong") String id);
+
+    boolean existsByUsernameAndIdNot(@NotBlank(message = "Username tidak boleh kosong") @Size(min = 3, max = 50, message = "Username harus 3-50 karakter") String username, @NotBlank(message = "ID tidak boleh kosong") String id);
 }

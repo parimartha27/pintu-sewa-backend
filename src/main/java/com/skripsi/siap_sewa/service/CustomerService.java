@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -39,7 +40,7 @@ public class CustomerService {
 
             Optional<CustomerEntity> customerEntity = customerRepository.findById(id);
             if(customerEntity.isEmpty()){
-                log.warn("Customer tidak ditemukan dengan ID: {}", id);
+                log.info("Customer tidak ditemukan dengan ID: {}", id);
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -51,7 +52,7 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
-            log.error("Gagal mengambil detail customer: {}", ex.getMessage(), ex);
+            log.info("Gagal mengambil detail customer: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -62,7 +63,7 @@ public class CustomerService {
 
             Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
             if (customerEntity.isEmpty()) {
-                log.warn("Customer tidak ditemukan dengan ID: {}", request.getId());
+                log.info("Customer tidak ditemukan dengan ID: {}", request.getId());
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
@@ -70,20 +71,20 @@ public class CustomerService {
 
 
             if (customerRepository.existsByUsername(request.getUsername())) {
-                log.warn("Username sudah digunakan: {}", request.getUsername());
+                log.info("Username sudah digunakan: {}", request.getUsername());
                 throw new UsernameExistException("Username sudah digunakan");
             }
 
             if (request.getEmail() != null && !request.getEmail().equals(inputCustomerData.getEmail())) {
                 if (customerRepository.existsByEmail(request.getEmail())) {
-                    log.warn("Email sudah digunakan: {}", request.getEmail());
+                    log.info("Email sudah digunakan: {}", request.getEmail());
                     throw new EmailExistException("Email sudah digunakan");
                 }
             }
 
             if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(inputCustomerData.getPhoneNumber())) {
                 if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-                    log.warn("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
+                    log.info("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
                     throw new PhoneNumberExistException("Nomor telepon sudah digunakan");
                 }
             }
@@ -130,51 +131,125 @@ public class CustomerService {
         } catch (UsernameExistException | EmailExistException | PhoneNumberExistException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Gagal memproses input data customer: {}", ex.getMessage(), ex);
+            log.info("Gagal memproses input data customer: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 
-    public ResponseEntity<ApiResponse> editCustomerData(EditCustomerRequest request) {
+    public ResponseEntity<ApiResponse> editBiodata(EditBiodataRequest request) {
         try {
-            log.info("Memproses edit data customer dengan ID: {}", request.getId());
+            log.info("Memproses edit biodata customer dengan ID: {}", request.getId());
 
-            Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
-            if (customerEntity.isEmpty()) {
-                log.warn("Customer tidak ditemukan dengan ID: {}", request.getId());
+            Optional<CustomerEntity> customerOpt = customerRepository.findById(request.getId());
+            if (customerOpt.isEmpty()) {
+                log.info("Customer tidak ditemukan dengan ID: {}", request.getId());
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
-            CustomerEntity editedCustomerData = customerEntity.get();
+            CustomerEntity customer = customerOpt.get();
 
-            // Personal Information
-            editedCustomerData.setGender(request.getGender());
-            editedCustomerData.setBirthDate(request.getBirthDate());
-            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-                editedCustomerData.setPassword(encoder.encode(request.getPassword()));
+            // Validasi username
+            if (!customer.getUsername().equals(request.getUsername())) {
+                // Cek unik (kecuali milik sendiri)
+                if (customerRepository.existsByUsernameAndIdNot(request.getUsername(), request.getId())) {
+                    log.info("Username {} sudah digunakan", request.getUsername());
+                    return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EXIST, null);
+                }
+
+                // Cek apakah sudah lewat 30 hari sejak terakhir update
+                if (customer.getLastUpdateAt() != null &&
+                        LocalDateTime.now().isAfter(customer.getLastUpdateAt().plusDays(30))) {
+                    log.info("Username tidak bisa diubah setelah 30 hari dari terakhir update");
+                    return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EDIT_EXPIRED, null);
+                }
             }
 
-            // Address
-            editedCustomerData.setStreet(request.getStreet());
-            editedCustomerData.setDistrict(request.getDistrict());
-            editedCustomerData.setRegency(request.getRegency());
-            editedCustomerData.setProvince(request.getProvince());
-            editedCustomerData.setPostCode(request.getPostCode());
-            editedCustomerData.setLastUpdateAt(LocalDateTime.now());
+            // Validasi email unik (kecuali milik user ini)
+            if (!customer.getEmail().equals(request.getEmail())) {
+                if (customerRepository.existsByEmailAndIdNot(request.getEmail(), request.getId())) {
+                    log.info("Email {} sudah digunakan", request.getEmail());
+                        return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
+                }
 
-            customerRepository.save(editedCustomerData);
-            log.info("Berhasil mengupdate data customer dengan ID: {}", request.getId());
+                // Validasi edit email dalam 30 hari pertama
+                LocalDateTime firstEditDate = customer.getFirstEditAt() != null ?
+                        customer.getFirstEditAt() : customer.getCreatedAt();
 
-            CreateNewCustomerResponse response = objectMapper.convertValue(editedCustomerData, CreateNewCustomerResponse.class);
-            response.setEmail(editedCustomerData.getEmail());
-            response.setPhoneNumber(editedCustomerData.getPhoneNumber());
+                if (LocalDateTime.now().isAfter(firstEditDate.plusDays(30))) {
+                    log.info("Email tidak bisa diubah setelah 30 hari pertama");
+                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EDIT_EXPIRED, null);
+                }
+            }
 
+            // Update semua field biodata
+            customer.setUsername(request.getUsername());
+            customer.setName(request.getName());
+            customer.setEmail(request.getEmail());
+            customer.setPhoneNumber(request.getPhoneNumber());
+            customer.setGender(request.getGender());
+            customer.setBirthDate(request.getBirthDate());
+            customer.setImage(request.getImage());
+            customer.setLastUpdateAt(LocalDateTime.now());
+
+            customerRepository.save(customer);
+
+            CustomerDetailResponse response = buildCustomerResponse(customer);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
-            log.error("Gagal mengedit data customer: {}", ex.getMessage(), ex);
+            log.info("Gagal mengedit biodata customer: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    public ResponseEntity<ApiResponse> editAddress(EditAddressRequest request) {
+        try {
+            log.info("Memproses edit alamat customer dengan ID: {}", request.getId());
+
+            Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+            if (customerEntity.isEmpty()) {
+                log.info("Customer tidak ditemukan dengan ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            CustomerEntity customer = customerEntity.get();
+            
+            customer.setStreet(request.getStreet());
+            customer.setDistrict(request.getDistrict());
+            customer.setRegency(request.getRegency());
+            customer.setProvince(request.getProvince());
+            customer.setPostCode(request.getPostCode());
+            customer.setNotes(request.getNotes());
+            customer.setLastUpdateAt(LocalDateTime.now());
+
+            customerRepository.save(customer);
+
+            CustomerDetailResponse response = buildCustomerResponse(customer);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.info("Gagal mengedit alamat customer: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    private CustomerDetailResponse buildCustomerResponse(CustomerEntity customer) {
+        return CustomerDetailResponse.builder()
+                .id(customer.getId())
+                .username(customer.getUsername())
+                .name(customer.getName())
+                .email(customer.getEmail())
+                .phoneNumber(customer.getPhoneNumber())
+                .gender(customer.getGender())
+                .birthDate(customer.getBirthDate())
+                .image(customer.getImage())
+                .street(customer.getStreet())
+                .district(customer.getDistrict())
+                .regency(customer.getRegency())
+                .province(customer.getProvince())
+                .postCode(customer.getPostCode())
+                .notes(customer.getNotes())
+                .build();
     }
 
     public ResponseEntity<ApiResponse> validateCredential(@Valid ValidateCredentialRequest request) {
@@ -183,7 +258,7 @@ public class CustomerService {
 
             boolean isCustomerValid = customerRepository.existsByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
             if(!isCustomerValid) {
-                log.warn("Kredensial tidak valid untuk email/telepon: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
+                log.info("Kredensial tidak valid untuk email/telepon: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "User tidak ditemukan");
             }
 
@@ -196,7 +271,7 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
-            log.error("Gagal validasi kredensial: {}", ex.getMessage(), ex);
+            log.info("Gagal validasi kredensial: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -207,7 +282,7 @@ public class CustomerService {
 
             Optional<CustomerEntity> optionalCustomer = customerRepository.findById(request.getCustomerId());
             if(optionalCustomer.isEmpty()){
-                log.warn("Customer tidak ditemukan dengan ID: {}", request.getCustomerId());
+                log.info("Customer tidak ditemukan dengan ID: {}", request.getCustomerId());
                 throw new DataNotFoundException("Customer dengan ID: " + request.getCustomerId() + " tidak ditemukan");
             }
 
@@ -221,7 +296,7 @@ public class CustomerService {
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {
-            log.error("Gagal reset password: {}", ex.getMessage(), ex);
+            log.info("Gagal reset password: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -247,7 +322,7 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
-            log.error("Error fetching customer address: {}", ex.getMessage(), ex);
+            log.info("Error fetching customer address: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.CUSTOMER_NOT_FOUND, null);
         }
     }

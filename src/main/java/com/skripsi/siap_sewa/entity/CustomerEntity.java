@@ -65,6 +65,7 @@ public class CustomerEntity {
 
     private LocalDateTime lastLogin;
     private BigDecimal walletAmount;
+    private LocalDateTime firstEditAt;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference
