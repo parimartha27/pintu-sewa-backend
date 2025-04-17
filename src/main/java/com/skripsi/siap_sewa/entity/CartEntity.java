@@ -34,17 +34,20 @@ public class CartEntity {
     @Column(nullable = false)
     private int quantity;
 
-    @Column(name = "total_amount", precision = 19, scale = 2)
+    @Column(precision = 19, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(name = "start_rent_date")
     private LocalDate startRentDate;
 
-    @Column(name = "end_rent_date")
     private LocalDate endRentDate;
 
-    @Column(name = "shipping_address", length = 500)
+    @Column(length = 500)
     private String shippingAddress;
+
+    private String shippingPartner;
+
+    @Column(columnDefinition="BOOLEAN DEFAULT false")
+    private boolean isDeleted;
 
     @JsonIgnore
     private LocalDateTime createdAt;

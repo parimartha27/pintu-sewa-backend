@@ -5,7 +5,6 @@ import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
-import com.skripsi.siap_sewa.helper.ProductHelper;
 import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.spesification.TransactionSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
@@ -17,8 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,25 +37,25 @@ public class TransactionService {
             log.info("Fetching transactions for customer {} with filters: {}",
                     filterRequest.getCustomerId(), filterRequest);
 
-            // Build specification from filters
+            // 1. Get all transactions matching filters
             Specification<TransactionEntity> spec = TransactionSpecification.withFilters(filterRequest);
-
-            // Execute query - get all results without pagination
             List<TransactionEntity> transactions = transactionRepository.findAll(spec);
 
-            // Convert to response DTO
-            List<TransactionResponse> responseList = transactions.stream()
-                    .map(this::buildTransactionResponse)
-                    .toList();
-
-            if (responseList.isEmpty()) {
-                log.info("No transactions found for customer {} with given filters",
-                        filterRequest.getCustomerId());
+            if (transactions.isEmpty()) {
+                log.info("No transactions found for customer {}", filterRequest.getCustomerId());
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
-            log.info("Successfully fetched {} transactions for customer {}",
-                    responseList.size(), filterRequest.getCustomerId());
+            // 2. Group transactions by referenceNumber
+            Map<String, List<TransactionEntity>> groupedTransactions = transactions.stream()
+                    .collect(Collectors.groupingBy(TransactionEntity::getTransactionNumber));
+
+            // 3. Build response
+            List<TransactionResponse> responseList = groupedTransactions.entrySet().stream()
+                    .map(entry -> buildGroupedTransactionResponse(entry.getKey(), entry.getValue()))
+                    .toList();
+
+            log.info("Found {} transaction groups for customer {}", responseList.size(), filterRequest.getCustomerId());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
 
         } catch (Exception ex) {
@@ -63,33 +64,64 @@ public class TransactionService {
         }
     }
 
-    private TransactionResponse buildTransactionResponse(TransactionEntity transaction) {
-        // Get first product (assuming one product per transaction for simplicity)
-        // Adjust if you need to handle multiple products
-        var product = transaction.getProducts().stream().findFirst().orElse(null);
+    private TransactionResponse buildGroupedTransactionResponse(
+            String referenceNumber,
+            List<TransactionEntity> transactions
+    ) {
+        // All transactions in this group share the same referenceNumber
+        TransactionEntity firstTransaction = transactions.get(0);
 
         return TransactionResponse.builder()
-                .orderId(transaction.getId())
-                .status(transaction.getStatus())
-                .transactionDate(transaction.getCreatedAt().format(DATE_FORMATTER))
-                .referenceNumber(transaction.getTransactionNumber())
-                .shop(product != null ? TransactionResponse.ShopInfo.builder()
+                .referenceNumber(referenceNumber)
+                .status(firstTransaction.getStatus())
+                .transactionDate(firstTransaction.getCreatedAt().format(DATE_FORMATTER))
+                .shop(buildShopInfo(firstTransaction))
+                .products(buildProductInfoList(transactions))
+                .totalPrice(calculateTotalPrice(transactions))
+                .totalDeposit(calculateTotalDeposit(transactions))
+                .shippingPartner(firstTransaction.getShippingPartner())
+                .shippingPrice(firstTransaction.getShippingPrice())
+                .build();
+    }
+
+    private TransactionResponse.ShopInfo buildShopInfo(TransactionEntity transaction) {
+        return transaction.getProducts().stream()
+                .findFirst()
+                .map(product -> TransactionResponse.ShopInfo.builder()
                         .id(product.getShop().getId())
                         .name(product.getShop().getName())
-                        .build() : null)
-                .products(transaction.getProducts().stream()
-                        .map(p -> TransactionResponse.ProductInfo.builder()
-                                .id(p.getId())
-                                .name(p.getName())
-                                .image(p.getImage())
+                        .build())
+                .orElse(null);
+    }
+
+    private List<TransactionResponse.ProductInfo> buildProductInfoList(List<TransactionEntity> transactions) {
+        return transactions.stream()
+                .flatMap(transaction -> transaction.getProducts().stream()
+                        .map(product -> TransactionResponse.ProductInfo.builder()
+                                .orderId(transaction.getId())  // Unique transaction ID
+                                .productId(product.getId())
+                                .productName(product.getName())
+                                .image(product.getImage())
                                 .quantity(transaction.getQuantity())
-                                .price(ProductHelper.getLowestPrice(p))
-                                .subTotal(transaction.getTotalAmount())
-                                .startDate(transaction.getCreatedAt().format(DATE_FORMATTER))
-                                .endDate(transaction.getCreatedAt().format(DATE_FORMATTER))
-                                .build())
-                        .collect(Collectors.toList()))
-                .totalPrice(transaction.getTotalAmount())
-                .build();
+                                .price(transaction.getAmount().divide(
+                                        BigDecimal.valueOf(transaction.getQuantity()),
+                                        RoundingMode.HALF_UP))
+                                .subTotal(transaction.getAmount())
+                                .startDate(transaction.getStartDate().format(DATE_FORMATTER))
+                                .endDate(transaction.getEndDate().format(DATE_FORMATTER))
+                                .build()))
+                .toList();
+    }
+
+    private BigDecimal calculateTotalPrice(List<TransactionEntity> transactions) {
+        return transactions.stream()
+                .map(TransactionEntity::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal calculateTotalDeposit(List<TransactionEntity> transactions) {
+        return transactions.stream()
+                .map(TransactionEntity::getTotalDeposit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

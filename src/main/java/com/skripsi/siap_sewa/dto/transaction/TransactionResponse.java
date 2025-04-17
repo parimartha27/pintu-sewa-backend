@@ -1,13 +1,9 @@
-// TransactionResponse.java
 package com.skripsi.siap_sewa.dto.transaction;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,13 +15,15 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TransactionResponse {
-    private String orderId;
+    private String referenceNumber;
     private String status;
     private String transactionDate;
-    private String referenceNumber;
     private ShopInfo shop;
     private List<ProductInfo> products;
     private BigDecimal totalPrice;
+    private BigDecimal totalDeposit;
+    private String shippingPartner;
+    private BigDecimal shippingPrice;
 
     @Data
     @Builder
@@ -41,8 +39,9 @@ public class TransactionResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ProductInfo {
-        private String id;
-        private String name;
+        private String orderId;  // Transaction ID (unique per product)
+        private String productId;
+        private String productName;
         private String image;
         private Integer quantity;
         private BigDecimal price;

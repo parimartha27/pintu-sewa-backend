@@ -9,6 +9,7 @@ import com.skripsi.siap_sewa.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,8 @@ public class TransactionController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse> checkout(@Valid @RequestBody CheckoutRequest request) {
+    public ResponseEntity<ApiResponse> checkout(@Valid @RequestBody CheckoutRequest request) throws BadRequestException {
+        log.info("Checkout type: {}", request.isCartCheckout() ? "CART" : "PRODUCT_DETAIL");
         return checkoutService.checkout(request);
     }
 

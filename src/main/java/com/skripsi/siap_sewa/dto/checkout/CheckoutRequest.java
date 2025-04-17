@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.lang.Nullable;
 import java.time.LocalDate;
 
@@ -18,21 +15,31 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CheckoutRequest {
+
     @NotBlank
     private String customerId;
 
-    @NotBlank
+    @Nullable
     private String productId;
 
-    @NotNull
+    @Nullable
     private LocalDate startDate;
 
-    @NotNull
+    @Nullable
     private LocalDate endDate;
 
+    @Nullable
     @Min(1)
-    private int quantity;
+    private Integer quantity;
 
     @Nullable
     private String cartId;
+
+    public boolean isCartCheckout() {
+        return cartId != null;
+    }
+
+    public boolean isProductDetailCheckout() {
+        return productId != null && startDate != null && endDate != null && quantity != null;
+    }
 }
