@@ -33,9 +33,6 @@ public class AddCartRequest {
     @FutureOrPresent(message = "End rent date harus di masa depan atau saat ini")
     private LocalDate endRentDate;
 
-    @NotBlank(message = "Shipping address tidak boleh kosong")
-    private String shippingAddress;
-
     @AssertTrue(message = "End rent date harus setelah start rent date")
     public boolean isValidRentalPeriod() {
         return startRentDate != null && endRentDate != null && endRentDate.isAfter(startRentDate);

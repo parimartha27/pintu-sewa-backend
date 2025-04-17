@@ -1,12 +1,12 @@
 package com.skripsi.siap_sewa.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.cart.AddCartRequest;
 import com.skripsi.siap_sewa.dto.cart.CartResponse;
 import com.skripsi.siap_sewa.dto.cart.DeleteCartRequest;
 import com.skripsi.siap_sewa.dto.cart.EditCartRequest;
 import com.skripsi.siap_sewa.entity.CartEntity;
+import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CartService {
     private final CartRepository cartRepository;
-    private final ObjectMapper objectMapper;
     private final CommonUtils commonUtils;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
@@ -154,6 +153,19 @@ public class CartService {
                     request.getQuantity()
             );
 
+            CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> new DataNotFoundException("Product tidak ditemukan"));
+
+            String customerAddress = customer.getStreet() +
+                    "," +
+                    customer.getDistrict() +
+                    "," +
+                    customer.getRegency() +
+                    "," +
+                    customer.getProvince() +
+                    "," +
+                    customer.getPostCode();
+
             // 9. Buat cart item
             CartEntity newCartItem = CartEntity.builder()
                     .customerId(request.getCustomerId())
@@ -162,22 +174,27 @@ public class CartService {
                     .totalAmount(totalAmount)
                     .startRentDate(request.getStartRentDate())
                     .endRentDate(request.getEndRentDate())
-                    .shippingAddress(request.getShippingAddress())
+                    .shippingAddress(customerAddress)
                     .build();
 
             cartRepository.save(newCartItem);
 
-            // 10. Membuat response
-            CartResponse.CartInfo cartInfo = buildCartInfo(product, request);
-            cartInfo.setCartId(newCartItem.getId());
+//            // 10. Membuat response
+//            CartResponse.CartInfo cartInfo = buildCartInfo(product, request);
+//            cartInfo.setCartId(newCartItem.getId());
+
+//            return commonUtils.setResponse(
+//                    ErrorMessageEnum.SUCCESS,
+//                    CartResponse.builder()
+//                            .shopId(product.getShop().getId())
+//                            .shopName(product.getShop().getName())
+//                            .carts(List.of(cartInfo))
+//                            .build()
+//            );
 
             return commonUtils.setResponse(
                     ErrorMessageEnum.SUCCESS,
-                    CartResponse.builder()
-                            .shopId(product.getShop().getId())
-                            .shopName(product.getShop().getName())
-                            .carts(List.of(cartInfo))
-                            .build()
+                    null
             );
 
         } catch (DataNotFoundException ex) {
