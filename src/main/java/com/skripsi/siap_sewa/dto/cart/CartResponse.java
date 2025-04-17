@@ -38,5 +38,6 @@ public class CartResponse {
         private boolean isAvailableToRent;
         private String image;
         private int stock;
+        private BigDecimal deposit;
     }
 }

@@ -42,15 +42,18 @@ public class CartService {
 
     public ResponseEntity<ApiResponse> getAllCartProductByCustomerId(String customerId) {
         try {
-            log.info("Mengambil semua produk cart untuk customer: {}", customerId);
-            List<CartEntity> listCart = cartRepository.findByCustomerId(customerId);
+            log.info("Fetching active cart products for customer: {}", customerId);
 
-            if (listCart.isEmpty()) {
+            // Only get non-deleted carts
+            List<CartEntity> activeCarts = cartRepository.findByCustomerIdAndIsDeletedFalse(customerId);
+
+            if (activeCarts.isEmpty()) {
+                log.info("No active carts found for customer: {}", customerId);
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, Collections.emptyList());
             }
 
             // Group by shop
-            Map<ShopEntity, List<CartEntity>> cartsByShop = listCart.stream()
+            Map<ShopEntity, List<CartEntity>> cartsByShop = activeCarts.stream()
                     .collect(Collectors.groupingBy(cart -> cart.getProduct().getShop()));
 
             List<CartResponse> cartResponses = cartsByShop.entrySet().stream()
@@ -59,27 +62,7 @@ public class CartService {
                         List<CartEntity> shopCarts = entry.getValue();
 
                         List<CartResponse.CartInfo> cartInfos = shopCarts.stream()
-                                .map(cart -> {
-                                    ProductEntity product = cart.getProduct();
-
-                                    boolean isAvailable = product.getStock() > 0;
-
-                                    return CartResponse.CartInfo.builder()
-                                            .cartId(cart.getId())
-                                            .productId(product.getId())
-                                            .productName(product.getName())
-                                            .price(ProductHelper.getLowestPrice(product))
-                                            .startRentDate(CommonUtils.formatDate(cart.getStartRentDate()))
-                                            .endRentDate(CommonUtils.formatDate(cart.getEndRentDate()))
-                                            .rentDuration(CommonUtils.calculateRentDuration(
-                                                    cart.getStartRentDate(),
-                                                    cart.getEndRentDate()))
-                                            .quantity(cart.getQuantity())
-                                            .isAvailableToRent(isAvailable)
-                                            .image(product.getImage())
-                                            .stock(product.getStock())
-                                            .build();
-                                })
+                                .map(this::buildCartInfo)  // Now using the correct method
                                 .toList();
 
                         return CartResponse.builder()
@@ -90,12 +73,12 @@ public class CartService {
                     })
                     .toList();
 
-            log.info("Berhasil mengambil {} toko dengan total {} item cart",
-                    cartResponses.size(), listCart.size());
+            log.info("Successfully fetched {} shops with {} active cart items",
+                    cartResponses.size(), activeCarts.size());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, cartResponses);
 
         } catch (Exception ex) {
-            log.error("Gagal mengambil cart: {}", ex.getMessage(), ex);
+            log.error("Failed to fetch cart: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
@@ -250,20 +233,25 @@ public class CartService {
         return totalPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
-    private CartResponse.CartInfo buildCartInfo(ProductEntity product, AddCartRequest request) {
+    private CartResponse.CartInfo buildCartInfo(CartEntity cart) {
+        ProductEntity product = cart.getProduct();
+        boolean isAvailable = product.getStock() >= cart.getQuantity();
+
         return CartResponse.CartInfo.builder()
+                .cartId(cart.getId())
                 .productId(product.getId())
                 .productName(product.getName())
-                .price(product.getDailyPrice())
-                .startRentDate(CommonUtils.formatDate(request.getStartRentDate()))
-                .endRentDate(CommonUtils.formatDate(request.getEndRentDate()))
+                .price(ProductHelper.getLowestPrice(product))
+                .startRentDate(CommonUtils.formatDate(cart.getStartRentDate()))
+                .endRentDate(CommonUtils.formatDate(cart.getEndRentDate()))
                 .rentDuration(CommonUtils.calculateRentDuration(
-                        request.getStartRentDate(),
-                        request.getEndRentDate()))
-                .quantity(request.getQuantity())
-                .isAvailableToRent(product.getStock() > 0)
+                        cart.getStartRentDate(),
+                        cart.getEndRentDate()))
+                .quantity(cart.getQuantity())
+                .isAvailableToRent(isAvailable)
                 .image(product.getImage())
                 .stock(product.getStock())
+                .deposit(product.getDeposit())
                 .build();
     }
 

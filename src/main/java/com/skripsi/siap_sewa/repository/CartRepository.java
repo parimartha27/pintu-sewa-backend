@@ -17,5 +17,7 @@ public interface CartRepository extends JpaRepository<CartEntity, String> {
             String productId,
             LocalDate startRentDate,
             LocalDate endRentDate);
+
+    List<CartEntity> findByCustomerIdAndIsDeletedFalse(String customerId);
 }
 
