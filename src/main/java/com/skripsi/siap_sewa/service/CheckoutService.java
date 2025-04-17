@@ -79,10 +79,10 @@ public class CheckoutService {
     }
 
     private void validateCheckoutRequest(CheckoutRequest request) {
-        if (request.getCartId() == null && request.getProductId() == null) {
+        if (request.getCartId() == null && request.getCustomerId() == null) {
             throw new CheckoutValidationException(
                     ErrorMessageEnum.BAD_REQUEST,
-                    "Product ID atau Cart ID harus diisi");
+                    "Customer ID atau Cart ID harus diisi");
         }
         if (request.getStartDate() == null || request.getEndDate() == null) {
             throw new CheckoutValidationException(
@@ -111,12 +111,12 @@ public class CheckoutService {
 
         try {
             if (request.getCartId() != null) {
-                log.debug("Processing checkout from cart: {}", request.getCartId());
+                log.info("Processing checkout from cart: {}", request.getCartId());
                 CartEntity cart = cartRepository.findById(request.getCartId())
                         .orElseThrow(() -> new DataNotFoundException("Keranjang tidak ditemukan"));
                 products.add(cart.getProduct());
             } else {
-                log.debug("Processing direct checkout for product: {}", request.getProductId());
+                log.info("Processing direct checkout for product: {}", request.getProductId());
                 ProductEntity product = productRepository.findById(request.getProductId())
                         .orElseThrow(() -> new DataNotFoundException("Produk tidak ditemukan"));
                 products.add(product);
@@ -150,7 +150,7 @@ public class CheckoutService {
             ShopEntity shop = entry.getKey();
             List<ProductEntity> shopProducts = entry.getValue();
 
-            log.debug("Processing checkout for shop: {} with {} products",
+            log.info("Processing checkout for shop: {} with {} products",
                     shop.getName(), shopProducts.size());
 
             CheckoutResponse.TransactionGroup transactionGroup = processShopProducts(
@@ -169,7 +169,7 @@ public class CheckoutService {
                 .multiply(BigDecimal.valueOf(0.05))
                 .setScale(0, RoundingMode.HALF_UP);
         response.setServiceFee(serviceFee);
-        log.debug("Service fee calculated: {}", serviceFee);
+        log.info("Service fee calculated: {}", serviceFee);
 
         // Calculate grand total
         BigDecimal grandTotal = response.getSubTotalProductPrice()
@@ -177,7 +177,7 @@ public class CheckoutService {
                 .add(response.getSubTotalDeposit())
                 .add(response.getServiceFee());
         response.setGrandTotalPayment(grandTotal);
-        log.debug("Grand total calculated: {}", grandTotal);
+        log.info("Grand total calculated: {}", grandTotal);
 
         return response;
     }
@@ -213,7 +213,7 @@ public class CheckoutService {
                 totalWeight = totalWeight.add(productWeight);
                 successfulProducts.add(product);
 
-                log.debug("Product validated successfully: {} (Weight: {}kg)",
+                log.info("Product validated successfully: {} (Weight: {}kg)",
                         product.getName(), productWeight);
             } catch (InsufficientStockException ex) {
                 log.warn("Insufficient stock for product {}: Available {} < Requested {}",
@@ -364,7 +364,7 @@ public class CheckoutService {
         // Update product stock
         product.setStock(product.getStock() - request.getQuantity());
         productRepository.save(product);
-        log.debug("Product stock updated: {} (new stock: {})",
+        log.info("Product stock updated: {} (new stock: {})",
                 product.getName(), product.getStock());
 
         return transactionRepository.save(transaction);

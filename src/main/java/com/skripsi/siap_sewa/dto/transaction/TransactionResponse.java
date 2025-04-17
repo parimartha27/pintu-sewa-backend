@@ -46,5 +46,8 @@ public class TransactionResponse {
         private String image;
         private Integer quantity;
         private BigDecimal price;
+        private BigDecimal subTotal;
+        private String startDate;
+        private String endDate;
     }
 }

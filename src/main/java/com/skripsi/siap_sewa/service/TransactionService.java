@@ -1,8 +1,6 @@
-// TransactionService.java
 package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
@@ -14,15 +12,11 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,10 +84,12 @@ public class TransactionService {
                                 .image(p.getImage())
                                 .quantity(transaction.getQuantity())
                                 .price(ProductHelper.getLowestPrice(p))
+                                .subTotal(transaction.getTotalAmount())
+                                .startDate(transaction.getCreatedAt().format(DATE_FORMATTER))
+                                .endDate(transaction.getCreatedAt().format(DATE_FORMATTER))
                                 .build())
                         .collect(Collectors.toList()))
-                .totalPrice(transaction.getAmount() != null ?
-                        transaction.getAmount() : BigDecimal.ZERO)
+                .totalPrice(transaction.getTotalAmount())
                 .build();
     }
 }
