@@ -45,25 +45,13 @@ public class TransactionService {
             // Build specification from filters
             Specification<TransactionEntity> spec = TransactionSpecification.withFilters(filterRequest);
 
-            // Get pageable from request
-            Pageable pageable = filterRequest.getPageable();
-
-            // Execute query
-            Page<TransactionEntity> resultPage = transactionRepository.findAll(spec, pageable);
+            // Execute query - get all results without pagination
+            List<TransactionEntity> transactions = transactionRepository.findAll(spec);
 
             // Convert to response DTO
-            List<TransactionResponse> responseList = resultPage.getContent().stream()
+            List<TransactionResponse> responseList = transactions.stream()
                     .map(this::buildTransactionResponse)
                     .collect(Collectors.toList());
-
-            // Create pagination response
-            PaginationResponse<TransactionResponse> paginationResponse = new PaginationResponse<>(
-                    responseList,
-                    resultPage.getNumber(),
-                    resultPage.getSize(),
-                    resultPage.getTotalElements(),
-                    resultPage.getTotalPages()
-            );
 
             if (responseList.isEmpty()) {
                 log.info("No transactions found for customer {} with given filters",
@@ -73,7 +61,7 @@ public class TransactionService {
 
             log.info("Successfully fetched {} transactions for customer {}",
                     responseList.size(), filterRequest.getCustomerId());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
 
         } catch (Exception ex) {
             log.error("Error fetching transactions: {}", ex.getMessage(), ex);

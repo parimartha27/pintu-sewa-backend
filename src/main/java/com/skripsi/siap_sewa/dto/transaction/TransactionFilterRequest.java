@@ -21,5 +21,4 @@ public class TransactionFilterRequest {
     private String searchQuery;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Pageable pageable;
 }
