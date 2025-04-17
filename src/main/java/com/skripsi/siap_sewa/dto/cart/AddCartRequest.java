@@ -35,6 +35,7 @@ public class AddCartRequest {
 
     @AssertTrue(message = "End rent date harus setelah start rent date")
     public boolean isValidRentalPeriod() {
-        return startRentDate != null && endRentDate != null && endRentDate.isAfter(startRentDate);
+        return startRentDate != null && endRentDate != null &&
+                (endRentDate.isAfter(startRentDate) || endRentDate.isEqual(startRentDate));
     }
 }

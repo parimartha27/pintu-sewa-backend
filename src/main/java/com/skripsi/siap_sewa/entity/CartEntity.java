@@ -1,10 +1,12 @@
 package com.skripsi.siap_sewa.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "CART")
@@ -43,4 +45,10 @@ public class CartEntity {
 
     @Column(name = "shipping_address", length = 500)
     private String shippingAddress;
+
+    @JsonIgnore
+    private LocalDateTime createdAt;
+
+    @JsonIgnore
+    private LocalDateTime lastUpdateAt;
 }

@@ -23,10 +23,12 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -121,81 +123,96 @@ public class CartService {
                 return commonUtils.setResponse(ErrorMessageEnum.INSUFFICIENT_STOCK, null);
             }
 
-            // 5. Validasi quantity vs stock (maksimal setengah stok)
-            int maxAllowed = product.getStock() / 2;
-            if (request.getQuantity() > maxAllowed) {
-                return commonUtils.setResponse(
-                        ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,
-                        Map.of("max_allowed", maxAllowed)
-                );
-            }
-
-            // 6. Validasi minRented
-            if (request.getQuantity() < product.getMinRented()) {
-                return commonUtils.setResponse(
-                        ErrorMessageEnum.MIN_RENT_NOT_MET,
-                        Map.of("min_rent", product.getMinRented())
-                );
-            }
-
-            // 7. Validasi produk sudah ada di cart
-            if (cartRepository.existsByCustomerIdAndProductId(
+            // 5. Cari cart item yang sudah ada dengan tanggal yang sama
+            Optional<CartEntity> existingCartItem = cartRepository.findByCustomerIdAndProductIdAndStartRentDateAndEndRentDate(
                     request.getCustomerId(),
-                    request.getProductId())) {
-                return commonUtils.setResponse(ErrorMessageEnum.CART_ITEM_EXISTS, null);
+                    request.getProductId(),
+                    request.getStartRentDate(),
+                    request.getEndRentDate());
+
+            if (existingCartItem.isPresent()) {
+                // Jika sudah ada dengan tanggal yang sama, update quantity
+                CartEntity cartItem = existingCartItem.get();
+                int newQuantity = cartItem.getQuantity() + request.getQuantity();
+
+                // Validasi quantity baru
+                int maxAllowed = product.getStock() / 2;
+                if (newQuantity > maxAllowed) {
+                    return commonUtils.setResponse(
+                            ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,
+                            Map.of("max_allowed", maxAllowed)
+                    );
+                }
+
+                if (newQuantity < product.getMinRented()) {
+                    return commonUtils.setResponse(
+                            ErrorMessageEnum.MIN_RENT_NOT_MET,
+                            Map.of("min_rent", product.getMinRented())
+                    );
+                }
+
+                // Update quantity dan total amount
+                cartItem.setQuantity(newQuantity);
+                cartItem.setTotalAmount(calculateRentalPrice(
+                        product,
+                        request.getStartRentDate(),
+                        request.getEndRentDate(),
+                        newQuantity
+                ));
+
+                cartItem.setLastUpdateAt(LocalDateTime.now());
+
+                cartRepository.save(cartItem);
+            } else {
+                // Jika tidak ada dengan tanggal yang sama, buat baru
+                // Validasi quantity
+                if (request.getQuantity() > product.getStock()) {
+                    return commonUtils.setResponse(
+                            ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,null
+                    );
+                }
+
+                if (request.getQuantity() < product.getMinRented()) {
+                    return commonUtils.setResponse(
+                            ErrorMessageEnum.MIN_RENT_NOT_MET,
+                            Map.of("min_rent", product.getMinRented())
+                    );
+                }
+
+                // Hitung total amount
+                BigDecimal totalAmount = calculateRentalPrice(
+                        product,
+                        request.getStartRentDate(),
+                        request.getEndRentDate(),
+                        request.getQuantity()
+                );
+
+                CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                        .orElseThrow(() -> new DataNotFoundException("Customer tidak ditemukan"));
+
+                String customerAddress = customer.getStreet() + "," +
+                        customer.getDistrict() + "," +
+                        customer.getRegency() + "," +
+                        customer.getProvince() + "," +
+                        customer.getPostCode();
+
+                // Buat cart item baru
+                CartEntity newCartItem = CartEntity.builder()
+                        .customerId(request.getCustomerId())
+                        .product(product)
+                        .quantity(request.getQuantity())
+                        .totalAmount(totalAmount)
+                        .startRentDate(request.getStartRentDate())
+                        .endRentDate(request.getEndRentDate())
+                        .shippingAddress(customerAddress)
+                        .createdAt(LocalDateTime.now())
+                        .lastUpdateAt(LocalDateTime.now())
+                        .build();
+
+                cartRepository.save(newCartItem);
             }
 
-            // 8. Hitung total amount
-            BigDecimal totalAmount = calculateRentalPrice(
-                    product,
-                    request.getStartRentDate(),
-                    request.getEndRentDate(),
-                    request.getQuantity()
-            );
-
-            CustomerEntity customer = customerRepository.findById(request.getCustomerId())
-                    .orElseThrow(() -> new DataNotFoundException("Product tidak ditemukan"));
-
-            String customerAddress = customer.getStreet() +
-                    "," +
-                    customer.getDistrict() +
-                    "," +
-                    customer.getRegency() +
-                    "," +
-                    customer.getProvince() +
-                    "," +
-                    customer.getPostCode();
-
-            // 9. Buat cart item
-            CartEntity newCartItem = CartEntity.builder()
-                    .customerId(request.getCustomerId())
-                    .product(product)
-                    .quantity(request.getQuantity())
-                    .totalAmount(totalAmount)
-                    .startRentDate(request.getStartRentDate())
-                    .endRentDate(request.getEndRentDate())
-                    .shippingAddress(customerAddress)
-                    .build();
-
-            cartRepository.save(newCartItem);
-
-//            // 10. Membuat response
-//            CartResponse.CartInfo cartInfo = buildCartInfo(product, request);
-//            cartInfo.setCartId(newCartItem.getId());
-
-//            return commonUtils.setResponse(
-//                    ErrorMessageEnum.SUCCESS,
-//                    CartResponse.builder()
-//                            .shopId(product.getShop().getId())
-//                            .shopName(product.getShop().getName())
-//                            .carts(List.of(cartInfo))
-//                            .build()
-//            );
-
-            return commonUtils.setResponse(
-                    ErrorMessageEnum.SUCCESS,
-                    null
-            );
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
 
         } catch (DataNotFoundException ex) {
             throw ex;
