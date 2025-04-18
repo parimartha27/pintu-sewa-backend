@@ -1,7 +1,8 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.checkout.CheckoutRequest;
+import com.skripsi.siap_sewa.dto.checkout.CartCheckoutRequest;
+import com.skripsi.siap_sewa.dto.checkout.ProductCheckoutRequest;
 
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.service.CheckoutService;
@@ -44,10 +45,16 @@ public class TransactionController {
         return transactionService.getCustomerTransactions(filterRequest);
     }
 
-    @PostMapping("/checkout")
-    public ResponseEntity<ApiResponse> checkout(@Valid @RequestBody CheckoutRequest request) throws BadRequestException {
-        log.info("Checkout type: {}", request.isCartCheckout() ? "CART" : "PRODUCT_DETAIL");
-        return checkoutService.checkout(request);
+    @PostMapping("/product")
+    public ResponseEntity<ApiResponse> checkoutProduct(
+            @Valid @RequestBody ProductCheckoutRequest request) throws BadRequestException {
+        return checkoutService.processProductCheckout(request);
+    }
+
+    @PostMapping("/cart")
+    public ResponseEntity<ApiResponse> checkoutCart(
+            @Valid @RequestBody CartCheckoutRequest request) throws BadRequestException {
+        return checkoutService.processCartCheckout(request);
     }
 
 

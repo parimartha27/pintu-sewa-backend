@@ -1,8 +1,9 @@
 package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.checkout.CheckoutRequest;
+import com.skripsi.siap_sewa.dto.checkout.CartCheckoutRequest;
 import com.skripsi.siap_sewa.dto.checkout.CheckoutResponse;
+import com.skripsi.siap_sewa.dto.checkout.ProductCheckoutRequest;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.*;
@@ -19,11 +20,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,143 +41,197 @@ public class CheckoutService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(Constant.DATE_FORMAT);
 
     @Transactional
-    public ResponseEntity<ApiResponse> checkout(CheckoutRequest request) throws BadRequestException {
+    public ResponseEntity<ApiResponse> processProductCheckout(ProductCheckoutRequest request) throws BadRequestException {
         try {
-            log.info("Processing {} checkout for customer: {}",
-                    request.isCartCheckout() ? "CART" : "PRODUCT_DETAIL",
-                    request.getCustomerId());
+            log.info("Processing product checkout for customer: {}", request.getCustomerId());
 
-            if (request.isCartCheckout()) {
-                return processCartCheckout(request);
-            } else if (request.isProductDetailCheckout()) {
-                return processProductDetailCheckout(request);
-            } else {
-                throw new BadRequestException("Invalid request: Provide either cartId or product details");
-            }
+            // Validate request
+            validateCheckoutDates(request.getStartDate(), request.getEndDate());
 
+            // Process checkout
+            ProductEntity product = productRepository.findById(request.getProductId())
+                    .orElseThrow(() -> new DataNotFoundException("Product not found"));
+
+            CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> new DataNotFoundException("Customer not found"));
+
+            CheckoutResponse response = processCheckout(
+                    customer,
+                    List.of(product),
+                    request.getQuantity(),
+                    request.getStartDate(),
+                    request.getEndDate()
+            );
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         } catch (Exception ex) {
-            log.error("Checkout failed for customer: {} | Type: {} | Error: {}",
-                    request.getCustomerId(),
-                    request.isCartCheckout() ? "CART" : "PRODUCT_DETAIL",
-                    ex.getMessage());
+            log.error("Product checkout failed: {}", ex.getMessage(), ex);
             throw ex;
         }
     }
 
-    private ResponseEntity<ApiResponse> processCartCheckout(CheckoutRequest request) throws BadRequestException {
-        // 1. Validate cart exists
-        CartEntity cart = cartRepository.findById(request.getCartId())
-                .orElseThrow(() -> new DataNotFoundException("Cart not found"));
+    @Transactional
+    public ResponseEntity<ApiResponse> processCartCheckout(CartCheckoutRequest request) throws BadRequestException {
+        try {
+            log.info("Processing cart checkout for {} carts, customer: {}",
+                    request.getCartIds().size(), request.getCustomerId());
 
-        // 2. Validate dates (if not set in cart)
-        if (cart.getStartRentDate() == null || cart.getEndRentDate() == null) {
-            throw new BadRequestException("Rental dates must be set in cart");
-        }
+            // Fetch and validate carts
+            List<CartEntity> carts = cartRepository.findAllById(request.getCartIds());
+            validateCarts(carts, request.getCustomerId());
 
-        // 3. Process checkout (single cart item)
-        ProductEntity product = cart.getProduct();
-        CustomerEntity customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new DataNotFoundException("Customer not found"));
+            // Extract products from carts
+            List<ProductEntity> products = carts.stream()
+                    .map(CartEntity::getProduct)
+                    .toList();
 
-        // 4. Calculate shipping (if not already set in cart)
-        if (cart.getShippingPartner() == null) {
-            ShippingCalculator.ShippingInfo shippingInfo = ShippingCalculator.calculateShipping(
-                    product.getWeight().multiply(BigDecimal.valueOf(cart.getQuantity())),
-                    product.getShop(),
-                    customer
+            CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> new DataNotFoundException("Customer not found"));
+
+            // Process checkout (using first cart's dates and quantities)
+            CartEntity firstCart = carts.get(0);
+            CheckoutResponse response = processCheckout(
+                    customer,
+                    products,
+                    firstCart.getQuantity(),
+                    firstCart.getStartRentDate(),
+                    firstCart.getEndRentDate()
             );
-            cart.setShippingPartner(shippingInfo.partnerName());
-            cartRepository.save(cart);
+
+            // Mark carts as deleted
+            carts.forEach(cart -> {
+                cart.setDeleted(true);
+                cartRepository.save(cart);
+            });
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        } catch (Exception ex) {
+            log.error("Cart checkout failed: {}", ex.getMessage(), ex);
+            throw ex;
         }
-
-        // 5. Create transaction
-        TransactionEntity transaction = createTransaction(
-                product,
-                customer,
-                product.getShop(),
-                cart.getQuantity(),
-                cart.getStartRentDate(),
-                cart.getEndRentDate(),
-                cart.getShippingPartner()
-        );
-
-        // 6. Soft delete cart
-        cart.setDeleted(true);
-        cartRepository.save(cart);
-
-        // 7. Build response
-        CheckoutResponse response = CheckoutResponse.builder()
-                .transactions(List.of(
-                        CheckoutResponse.TransactionGroup.builder()
-                                .shopId(product.getShop().getId())
-                                .shopName(product.getShop().getName())
-                                .rentedItems(List.of(createSuccessRentedItem(transaction, product)))
-                                .deposit(transaction.getTotalDeposit())
-                                .shippingPartner(transaction.getShippingPartner())
-                                .shippingPrice(transaction.getShippingPrice())
-                                .totalRentedProduct(transaction.getQuantity())
-                                .totalPrice(transaction.getAmount())
-                                .build()
-                ))
-                .subTotalProductPrice(transaction.getAmount())
-                .subTotalShippingCost(transaction.getShippingPrice())
-                .subTotalDeposit(transaction.getTotalDeposit())
-                .serviceFee(transaction.getServiceFee())
-                .grandTotalPayment(transaction.getTotalAmount())
-                .build();
-
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
-    private ResponseEntity<ApiResponse> processProductDetailCheckout(CheckoutRequest request) {
-        // 1. Validate product exists
-        ProductEntity product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new DataNotFoundException("Product not found"));
+    private CheckoutResponse processCheckout(
+            CustomerEntity customer,
+            List<ProductEntity> products,
+            int quantity,
+            LocalDate startDate,
+            LocalDate endDate) {
 
-        // 2. Validate customer exists
-        CustomerEntity customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new DataNotFoundException("Customer not found"));
+        // Group products by shop
+        Map<ShopEntity, List<ProductEntity>> productsByShop = products.stream()
+                .collect(Collectors.groupingBy(ProductEntity::getShop));
 
-        // 3. Calculate shipping
-        ShippingCalculator.ShippingInfo shippingInfo = ShippingCalculator.calculateShipping(
-                product.getWeight().multiply(BigDecimal.valueOf(request.getQuantity())),
-                product.getShop(),
-                customer
-        );
+        List<CheckoutResponse.TransactionGroup> transactionGroups = new ArrayList<>();
+        BigDecimal grandTotal = BigDecimal.ZERO;
+        BigDecimal totalDeposit = BigDecimal.ZERO;
+        BigDecimal totalShipping = BigDecimal.ZERO;
 
-        // 4. Create transaction
-        TransactionEntity transaction = createTransaction(
-                product,
-                customer,
-                product.getShop(),
-                request.getQuantity(),
-                request.getStartDate(),
-                request.getEndDate(),
-                shippingInfo.partnerName()
-        );
+        for (Map.Entry<ShopEntity, List<ProductEntity>> entry : productsByShop.entrySet()) {
+            ShopEntity shop = entry.getKey();
+            List<ProductEntity> shopProducts = entry.getValue();
 
-        // 5. Build response
-        CheckoutResponse response = CheckoutResponse.builder()
-                .transactions(List.of(
-                        CheckoutResponse.TransactionGroup.builder()
-                                .shopId(product.getShop().getId())
-                                .shopName(product.getShop().getName())
-                                .rentedItems(List.of(createSuccessRentedItem(transaction, product)))
-                                .deposit(transaction.getTotalDeposit())
-                                .shippingPartner(transaction.getShippingPartner())
-                                .shippingPrice(transaction.getShippingPrice())
-                                .totalRentedProduct(transaction.getQuantity())
-                                .totalPrice(transaction.getAmount())
-                                .build()
-                ))
-                .subTotalProductPrice(transaction.getAmount())
-                .subTotalShippingCost(transaction.getShippingPrice())
-                .subTotalDeposit(transaction.getTotalDeposit())
-                .serviceFee(transaction.getServiceFee())
-                .grandTotalPayment(transaction.getTotalAmount())
+            // Calculate total weight for shipping
+            BigDecimal totalWeight = shopProducts.stream()
+                    .map(p -> p.getWeight().multiply(BigDecimal.valueOf(quantity)))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Get shipping info
+            ShippingCalculator.ShippingInfo shippingInfo = ShippingCalculator.calculateShipping(
+                    totalWeight, shop, customer);
+
+            // Process each product in the shop
+            List<CheckoutResponse.RentedItem> rentedItems = new ArrayList<>();
+            BigDecimal shopTotal = BigDecimal.ZERO;
+            BigDecimal shopDeposit = BigDecimal.ZERO;
+
+            for (ProductEntity product : shopProducts) {
+                TransactionEntity transaction = createTransaction(
+                        product,
+                        customer,
+                        shop,
+                        quantity,
+                        startDate,
+                        endDate,
+                        shippingInfo.partnerName()
+                );
+
+                rentedItems.add(createRentedItem(transaction, product));
+                shopTotal = shopTotal.add(transaction.getAmount());
+                shopDeposit = shopDeposit.add(transaction.getTotalDeposit());
+
+                // Update product stock
+                product.setStock(product.getStock() - quantity);
+                productRepository.save(product);
+            }
+
+            transactionGroups.add(CheckoutResponse.TransactionGroup.builder()
+                    .shopId(shop.getId())
+                    .shopName(shop.getName())
+                    .rentedItems(rentedItems)
+                    .deposit(shopDeposit)
+                    .shippingPartner(shippingInfo.partnerName())
+                    .shippingPrice(shippingInfo.shippingPrice())
+                    .totalRentedProduct(shopProducts.size())
+                    .totalPrice(shopTotal)
+                    .build());
+
+            grandTotal = grandTotal.add(shopTotal);
+            totalDeposit = totalDeposit.add(shopDeposit);
+            totalShipping = totalShipping.add(shippingInfo.shippingPrice());
+        }
+
+        return CheckoutResponse.builder()
+                .transactions(transactionGroups)
+                .subTotalProductPrice(grandTotal)
+                .subTotalShippingCost(totalShipping)
+                .subTotalDeposit(totalDeposit)
+                .serviceFee(calculateServiceFee(grandTotal))
+                .grandTotalPayment(grandTotal.add(totalShipping).add(totalDeposit)
+                        .add(calculateServiceFee(grandTotal)))
                 .build();
+    }
 
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    private CheckoutResponse.RentedItem createRentedItem(TransactionEntity transaction, ProductEntity product) {
+        return CheckoutResponse.RentedItem.builder()
+                .transactionId(transaction.getId())
+                .productId(product.getId())
+                .productName(product.getName())
+                .price(transaction.getAmount())
+                .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
+                .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
+                .rentDuration(CommonUtils.calculateRentDuration(
+                        transaction.getStartDate(),
+                        transaction.getEndDate()))
+                .quantity(transaction.getQuantity())
+                .availableToRent(true)
+                .build();
+    }
+
+    private BigDecimal calculateServiceFee(BigDecimal subtotal) {
+        return subtotal.multiply(BigDecimal.valueOf(0.05))
+                .setScale(0, RoundingMode.HALF_UP);
+    }
+
+    private void validateCheckoutDates(LocalDate startDate, LocalDate endDate) throws BadRequestException {
+        if (startDate.isBefore(LocalDate.now())) {
+            throw new BadRequestException("Start date cannot be in the past");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new BadRequestException("End date must be after start date");
+        }
+    }
+
+    private void validateCarts(List<CartEntity> carts, String customerId) throws BadRequestException {
+        if (carts.isEmpty()) {
+            throw new DataNotFoundException("No carts found");
+        }
+        if (carts.stream().anyMatch(c -> !c.getCustomerId().equals(customerId))) {
+            throw new BadRequestException("Some carts don't belong to this customer");
+        }
+        if (carts.stream().anyMatch(CartEntity::isDeleted)) {
+            throw new BadRequestException("Cannot checkout deleted carts");
+        }
     }
 
     private TransactionEntity createTransaction(
@@ -224,10 +280,6 @@ public class CheckoutService {
                 ).shippingPrice())
                 .build();
 
-        // 4. Update product stock
-        product.setStock(product.getStock() - quantity);
-        productRepository.save(product);
-
         return transactionRepository.save(transaction);
     }
 
@@ -236,19 +288,5 @@ public class CheckoutService {
         String timestamp = LocalDateTime.now().format(formatter);
         int random = new Random().nextInt(900) + 100; // 100-999
         return "PS" + timestamp + random;
-    }
-
-    private CheckoutResponse.RentedItem createSuccessRentedItem(TransactionEntity transaction, ProductEntity product) {
-        return CheckoutResponse.RentedItem.builder()
-                .transactionId(transaction.getId())
-                .productId(product.getId())
-                .productName(product.getName())
-                .price(transaction.getAmount())
-                .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
-                .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
-                .rentDuration(CommonUtils.calculateRentDuration(transaction.getStartDate(), transaction.getEndDate()))
-                .quantity(transaction.getQuantity())
-                .availableToRent(true)
-                .build();
     }
 }
