@@ -300,6 +300,7 @@ public class CartService {
             cartItem.setStartRentDate(request.getStartRentDate());
             cartItem.setEndRentDate(request.getEndRentDate());
             cartItem.setTotalAmount(totalAmount);
+            cartItem.setLastUpdateAt(LocalDateTime.now());
 
             cartRepository.save(cartItem);
 
@@ -350,7 +351,9 @@ public class CartService {
             }
 
             // 3. Hapus dari database
-            cartRepository.delete(cartItem);
+            cartItem.setDeleted(true);
+            cartItem.setLastUpdateAt(LocalDateTime.now());
+            cartRepository.save(cartItem);
             log.info("Cart {} berhasil dihapus", request.getCartId());
 
             return commonUtils.setResponse(
