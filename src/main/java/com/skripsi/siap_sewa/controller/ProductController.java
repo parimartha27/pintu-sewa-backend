@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/product")
@@ -47,19 +48,18 @@ public class ProductController {
 
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse> getFilteredProducts(
-            @RequestParam(required = false, defaultValue = "") String category,
+            @RequestParam(required = false) List<String> categories,
             @RequestParam(required = false, defaultValue = "") String name,
-            @RequestParam(required = false, defaultValue = "") Integer rentDuration,
-            @RequestParam(required = false, defaultValue = "") String location,
+            @RequestParam(required = false) List<Integer> rentDurations,
+            @RequestParam(required = false) List<String> locations,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(required = false) Boolean isRnb,
-            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) List<Boolean> isRnbOptions,
+            @RequestParam(required = false) List<Double> minRatings,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "16") int size) {
-
 
         if (!sortBy.equals("name") &&
                 !sortBy.equals("dailyPrice") &&
@@ -69,14 +69,14 @@ public class ProductController {
         }
 
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
-                .category(category)
+                .categories(categories)
                 .name(name)
-                .rentDuration(rentDuration)
-                .location(location)
+                .rentDurations(rentDurations)
+                .locations(locations)
                 .minPrice(minPrice)
                 .maxPrice(maxPrice)
-                .isRnb(isRnb)
-                .minRating(minRating)
+                .isRnbOptions(isRnbOptions)
+                .minRatings(minRatings)
                 .sortBy(sortBy)
                 .sortDirection(sortDirection)
                 .page(page-1)
@@ -114,29 +114,36 @@ public class ProductController {
     @GetMapping("/shop/{shopId}")
     public ResponseEntity<ApiResponse> getProductsByShopId(
             @PathVariable String shopId,
-            @RequestParam(required = false) Integer rentDuration,
+            @RequestParam(required = false) List<String> categories,
+            @RequestParam(required = false, defaultValue = "") String name,
+            @RequestParam(required = false) List<Integer> rentDurations,
+            @RequestParam(required = false) List<String> locations,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
-            @RequestParam(required = false) Double minRating,
-            @RequestParam(required = false) Boolean isRnb,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) List<Boolean> isRnbOptions,
+            @RequestParam(required = false) List<Double> minRatings,
             @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection) {
+            @RequestParam(defaultValue = "ASC") Sort.Direction sortDirection,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "16") int size) {
 
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
-                .rentDuration(rentDuration)
+                .shopId(shopId) // Tambahan properti ini di DTO
+                .categories(categories)
+                .name(name)
+                .rentDurations(rentDurations)
+                .locations(locations)
                 .minPrice(minPrice)
                 .maxPrice(maxPrice)
-                .isRnb(isRnb)
-                .minRating(minRating)
+                .isRnbOptions(isRnbOptions)
+                .minRatings(minRatings)
                 .sortBy(sortBy)
                 .sortDirection(sortDirection)
-                .page(page-1)
+                .page(page - 1)
                 .size(size)
                 .build();
 
-        Pageable pageable = PageRequest.of(page-1, size, Sort.by(sortDirection, sortBy));
-        return productFilterService.getProductsByShopId(shopId, filterRequest, pageable);
+        return productFilterService.getFilteredProducts(filterRequest);
     }
+
 }

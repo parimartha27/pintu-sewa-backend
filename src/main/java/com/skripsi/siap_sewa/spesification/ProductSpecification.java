@@ -8,12 +8,18 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ProductSpecification {
 
     public static Specification<ProductEntity> withFilters(ProductFilterRequest filterRequest) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            if (StringUtils.hasText(filterRequest.getShopId())) {
+                Join<Object, Object> shopJoin = root.join("shop");
+                predicates.add(criteriaBuilder.equal(shopJoin.get("id"), filterRequest.getShopId()));
+            }
 
             // Name filter (case insensitive contains)
             if (StringUtils.hasText(filterRequest.getName())) {
@@ -23,29 +29,28 @@ public class ProductSpecification {
                 ));
             }
 
-            // Category filter
-            if (StringUtils.hasText(filterRequest.getCategory())) {
-                predicates.add(criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("category")),
-                        filterRequest.getCategory().toLowerCase()
+            // Category filter (multiple values)
+            if (filterRequest.getCategories() != null && !filterRequest.getCategories().isEmpty()) {
+                predicates.add(root.get("category").in(
+                        filterRequest.getCategories().stream()
+                                .map(String::toLowerCase)
+                                .collect(Collectors.toList())
                 ));
             }
 
-            // Location/regency filter
-            if (StringUtils.hasText(filterRequest.getLocation())) {
+            // Location/regency filter (multiple values)
+            if (filterRequest.getLocations() != null && !filterRequest.getLocations().isEmpty()) {
                 Join<ProductEntity, Object> shopJoin = root.join("shop");
-                predicates.add(criteriaBuilder.equal(
-                        criteriaBuilder.lower(shopJoin.get("regency")),
-                        filterRequest.getLocation().toLowerCase()
+                predicates.add(shopJoin.get("regency").in(
+                        filterRequest.getLocations().stream()
+                                .map(String::toLowerCase)
+                                .collect(Collectors.toList())
                 ));
             }
 
-            // Rent duration filter
-            if (filterRequest.getRentDuration() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("rentCategory"),
-                        filterRequest.getRentDuration()
-                ));
+            // Rent duration filter (multiple values)
+            if (filterRequest.getRentDurations() != null && !filterRequest.getRentDurations().isEmpty()) {
+                predicates.add(root.get("rentCategory").in(filterRequest.getRentDurations()));
             }
 
             // Price range filters
@@ -65,15 +70,11 @@ public class ProductSpecification {
                 ));
             }
 
-            // isRnb filter
-            if (filterRequest.getIsRnb() != null) {
-                predicates.add(criteriaBuilder.equal(
-                        root.get("isRnb"),
-                        filterRequest.getIsRnb()
-                ));
+            // isRnb filter (multiple values)
+            if (filterRequest.getIsRnbOptions() != null && !filterRequest.getIsRnbOptions().isEmpty()) {
+                predicates.add(root.get("isRnb").in(filterRequest.getIsRnbOptions()));
             }
 
-            // Combine all predicates with AND
             return predicates.isEmpty() ? null : criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }

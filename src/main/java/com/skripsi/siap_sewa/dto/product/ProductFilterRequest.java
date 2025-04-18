@@ -8,25 +8,27 @@ import lombok.Data;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ProductFilterRequest {
-    private String category;
+    private List<String> categories; // Ganti dari String category
     private String name;
-    private Integer rentDuration;
-    private String location;
+    private List<Integer> rentDurations; // Ganti dari Integer rentDuration
+    private List<String> locations; // Ganti dari String location
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    private Boolean isRnb;
-    private Double minRating;
-//    private String deliveryDuration;
+    private List<Boolean> isRnbOptions; // Ganti dari Boolean isRnb
+    private List<Double> minRatings; // Ganti dari Double minRating
     private String sortBy;
     private Sort.Direction sortDirection;
     private int page;
     private int size;
+    private String shopId;
+
 
     public ProductFilterRequest() {
         this.sortBy = "name";
