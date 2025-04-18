@@ -20,6 +20,7 @@ public class CartResponse {
     private String shopId;
     private String shopName;
     private List<CartInfo> carts;
+    private int totalProductCart;
 
     @Data
     @Builder

@@ -69,6 +69,7 @@ public class CartService {
                                 .shopId(shop.getId())
                                 .shopName(shop.getName())
                                 .carts(cartInfos)
+                                .totalProductCart(cartInfos.size())
                                 .build();
                     })
                     .toList();
