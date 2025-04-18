@@ -16,11 +16,19 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CartResponse {
+    private int totalProductCart;  // Total count of all cart items
+    private List<ShopInfo> shops;  // List of shops with their cart items
 
-    private String shopId;
-    private String shopName;
-    private List<CartInfo> carts;
-    private int totalProductCart;
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public static class ShopInfo {
+        private String shopId;
+        private String shopName;
+        private List<CartInfo> carts;
+    }
 
     @Data
     @Builder

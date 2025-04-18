@@ -25,10 +25,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -49,39 +46,75 @@ public class CartService {
 
             if (activeCarts.isEmpty()) {
                 log.info("No active carts found for customer: {}", customerId);
-                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, Collections.emptyList());
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,
+                        CartResponse.builder()
+                                .totalProductCart(0)
+                                .shops(Collections.emptyList())
+                                .build()
+                );
             }
 
             // Group by shop
             Map<ShopEntity, List<CartEntity>> cartsByShop = activeCarts.stream()
                     .collect(Collectors.groupingBy(cart -> cart.getProduct().getShop()));
 
-            List<CartResponse> cartResponses = cartsByShop.entrySet().stream()
-                    .map(entry -> {
-                        ShopEntity shop = entry.getKey();
-                        List<CartEntity> shopCarts = entry.getValue();
+            // Build shop responses and calculate total count
+            List<CartResponse.ShopInfo> shopResponses = new ArrayList<>();
+            int totalCartItems = 0;
 
-                        List<CartResponse.CartInfo> cartInfos = shopCarts.stream()
-                                .map(this::buildCartInfo)  // Now using the correct method
-                                .toList();
+            for (Map.Entry<ShopEntity, List<CartEntity>> entry : cartsByShop.entrySet()) {
+                ShopEntity shop = entry.getKey();
+                List<CartEntity> shopCarts = entry.getValue();
 
-                        return CartResponse.builder()
-                                .shopId(shop.getId())
-                                .shopName(shop.getName())
-                                .carts(cartInfos)
-                                .totalProductCart(cartInfos.size())
-                                .build();
-                    })
-                    .toList();
+                List<CartResponse.CartInfo> cartInfos = shopCarts.stream()
+                        .map(this::buildCartInfo)
+                        .toList();
+
+                shopResponses.add(CartResponse.ShopInfo.builder()
+                        .shopId(shop.getId())
+                        .shopName(shop.getName())
+                        .carts(cartInfos)
+                        .build());
+
+                totalCartItems += shopCarts.size();
+            }
+
+            // Build final response
+            CartResponse response = CartResponse.builder()
+                    .totalProductCart(totalCartItems)
+                    .shops(shopResponses)
+                    .build();
 
             log.info("Successfully fetched {} shops with {} active cart items",
-                    cartResponses.size(), activeCarts.size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, cartResponses);
+                    shopResponses.size(), totalCartItems);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
             log.error("Failed to fetch cart: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    private CartResponse.CartInfo buildCartInfo(CartEntity cart) {
+        ProductEntity product = cart.getProduct();
+        boolean isAvailable = product.getStock() >= cart.getQuantity();
+
+        return CartResponse.CartInfo.builder()
+                .cartId(cart.getId())
+                .productId(product.getId())
+                .productName(product.getName())
+                .price(ProductHelper.getLowestPrice(product))
+                .startRentDate(CommonUtils.formatDate(cart.getStartRentDate()))
+                .endRentDate(CommonUtils.formatDate(cart.getEndRentDate()))
+                .rentDuration(CommonUtils.calculateRentDuration(
+                        cart.getStartRentDate(),
+                        cart.getEndRentDate()))
+                .quantity(cart.getQuantity())
+                .isAvailableToRent(isAvailable)
+                .image(product.getImage())
+                .stock(product.getStock())
+                .deposit(product.getDeposit())
+                .build();
     }
 
     public ResponseEntity<ApiResponse> addProductToCart(AddCartRequest request) {
@@ -232,28 +265,6 @@ public class CartService {
         }
 
         return totalPrice.multiply(BigDecimal.valueOf(quantity));
-    }
-
-    private CartResponse.CartInfo buildCartInfo(CartEntity cart) {
-        ProductEntity product = cart.getProduct();
-        boolean isAvailable = product.getStock() >= cart.getQuantity();
-
-        return CartResponse.CartInfo.builder()
-                .cartId(cart.getId())
-                .productId(product.getId())
-                .productName(product.getName())
-                .price(ProductHelper.getLowestPrice(product))
-                .startRentDate(CommonUtils.formatDate(cart.getStartRentDate()))
-                .endRentDate(CommonUtils.formatDate(cart.getEndRentDate()))
-                .rentDuration(CommonUtils.calculateRentDuration(
-                        cart.getStartRentDate(),
-                        cart.getEndRentDate()))
-                .quantity(cart.getQuantity())
-                .isAvailableToRent(isAvailable)
-                .image(product.getImage())
-                .stock(product.getStock())
-                .deposit(product.getDeposit())
-                .build();
     }
 
     public ResponseEntity<ApiResponse> editProductInCart(EditCartRequest request) {
