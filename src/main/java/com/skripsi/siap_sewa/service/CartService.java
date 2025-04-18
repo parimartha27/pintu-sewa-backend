@@ -272,11 +272,10 @@ public class CartService {
             }
 
             // 3. Validasi quantity vs stok (maksimal setengah stok)
-            int maxAllowed = product.getStock() / 2;
-            if (request.getQuantity() > maxAllowed) {
+            if (request.getQuantity() > product.getStock()) {
                 return commonUtils.setResponse(
                         ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,
-                        Map.of("max_allowed", maxAllowed)
+                       null
                 );
             }
 
@@ -305,28 +304,29 @@ public class CartService {
 
             cartRepository.save(cartItem);
 
-            // 7. Membuat response
-            CartResponse.CartInfo cartInfo = CartResponse.CartInfo.builder()
-                    .cartId(cartItem.getId())
-                    .productId(product.getId())
-                    .productName(product.getName())
-                    .price(product.getDailyPrice())
-                    .startRentDate(CommonUtils.formatDate(request.getStartRentDate()))
-                    .endRentDate(CommonUtils.formatDate(request.getEndRentDate()))
-                    .rentDuration(CommonUtils.calculateRentDuration(
-                            request.getStartRentDate(),
-                            request.getEndRentDate()))
-                    .quantity(request.getQuantity())
-                    .isAvailableToRent(product.getStock() > 0)
-                    .build();
+//            // 7. Membuat response
+//            CartResponse.CartInfo cartInfo = CartResponse.CartInfo.builder()
+//                    .cartId(cartItem.getId())
+//                    .productId(product.getId())
+//                    .productName(product.getName())
+//                    .price(product.getDailyPrice())
+//                    .startRentDate(CommonUtils.formatDate(request.getStartRentDate()))
+//                    .endRentDate(CommonUtils.formatDate(request.getEndRentDate()))
+//                    .rentDuration(CommonUtils.calculateRentDuration(
+//                            request.getStartRentDate(),
+//                            request.getEndRentDate()))
+//                    .quantity(request.getQuantity())
+//                    .isAvailableToRent(product.getStock() > 0)
+//                    .build();
 
             return commonUtils.setResponse(
                     ErrorMessageEnum.SUCCESS,
-                    CartResponse.builder()
-                            .shopId(product.getShop().getId())
-                            .shopName(product.getShop().getName())
-                            .carts(List.of(cartInfo))
-                            .build()
+//                    CartResponse.builder()
+//                            .shopId(product.getShop().getId())
+//                            .shopName(product.getShop().getName())
+//                            .carts(List.of(cartInfo))
+//                            .build()
+                    null
             );
 
         } catch (DataNotFoundException ex) {
@@ -359,7 +359,7 @@ public class CartService {
 
             return commonUtils.setResponse(
                     ErrorMessageEnum.SUCCESS,
-                    Map.of("deleted_cart_id", request.getCartId())
+                   null
             );
 
         } catch (DataNotFoundException ex) {
