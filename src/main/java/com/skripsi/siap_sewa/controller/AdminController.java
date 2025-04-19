@@ -25,8 +25,14 @@ public class AdminController {
         return adminService.loginAdmin(request);
     }
 
-    @GetMapping("/manage-user/{page}")
-    public ResponseEntity<ApiResponse> getAllUsers(@PathVariable int page) {
+    @PostMapping("/dashboard")
+    public ResponseEntity<ApiResponse> viewDashboard() {
+        log.info("Get All Counts Data");
+        return adminService.viewDashboard();
+    }
+
+    @GetMapping("/manage-customer/{page}")
+    public ResponseEntity<ApiResponse> getAllCustomers(@PathVariable int page) {
         log.info("Get All Customer Data Page : {}", page);
         return adminService.getAllCustomers(page);
     }

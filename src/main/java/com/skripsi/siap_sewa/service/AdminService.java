@@ -3,10 +3,12 @@ package com.skripsi.siap_sewa.service;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
 import com.skripsi.siap_sewa.dto.admin.CustomerListResponse;
+import com.skripsi.siap_sewa.dto.admin.DashboardResponse;
 import com.skripsi.siap_sewa.dto.admin.ShopListResponse;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
+import com.skripsi.siap_sewa.repository.ChatRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +42,7 @@ public class AdminService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
+    private final ChatRepository chatRepository;
 
     public ResponseEntity<ApiResponse> loginAdmin(@Valid AdminLoginRequest request) {
         List<CustomerEntity> customerEntity =
@@ -58,6 +61,23 @@ public class AdminService {
             return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Failed to login");
         }
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customerEntity.getFirst().getUsername());
+    }
+
+    public ResponseEntity<ApiResponse> viewDashboard() {
+        try{
+            log.info("Get Count Of All Data");
+            DashboardResponse dashboardResponse = DashboardResponse.builder()
+                    .customersCount((int) customerRepository.count())
+                    .shopsCount((int) shopRepository.count())
+                    .reportsCount((int) chatRepository.count())
+                    .build();
+
+            log.info("Dashboard Data Fetched: {}", dashboardResponse);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, dashboardResponse);
+        } catch (Exception ex) {
+            log.error("Fetching Dashboard Data Failed : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
     }
 
     public ResponseEntity<ApiResponse> getAllCustomers(int page) {
@@ -146,7 +166,7 @@ public class AdminService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
 
         } catch (Exception ex) {
-            log.info("Error fetching all Customers Data : {}", ex.getMessage(), ex);
+            log.info("Error fetching all Shops Data : {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
