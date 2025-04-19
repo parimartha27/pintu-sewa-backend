@@ -31,4 +31,10 @@ public class AdminController {
         log.info("Login Admin attempt for username: {}", request.getUsername());
         return adminService.loginAdmin(request);
     }
+
+    @GetMapping("/manage-user/{page}")
+    public ResponseEntity<ApiResponse> getAllUsers(@PathVariable int page) {
+        log.info("Get All Customer Data Page : {}", page);
+        return adminService.getAllCustomers(page);
+    }
 }
