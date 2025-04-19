@@ -1,21 +1,14 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.admin.AdminRequest;
-import com.skripsi.siap_sewa.dto.authentication.login.LoginRequest;
+import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
 import com.skripsi.siap_sewa.service.AdminService;
-import com.skripsi.siap_sewa.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.BadRequestException;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.beans.Encoder;
-import java.time.LocalDate;
 
 @Slf4j
 @RestController
@@ -27,7 +20,7 @@ public class AdminController {
     private final AdminService adminService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> loginAdmin(@RequestBody @Valid AdminRequest request) {
+    public ResponseEntity<ApiResponse> loginAdmin(@RequestBody @Valid AdminLoginRequest request) {
         log.info("Login Admin attempt for username: {}", request.getUsername());
         return adminService.loginAdmin(request);
     }
@@ -36,5 +29,17 @@ public class AdminController {
     public ResponseEntity<ApiResponse> getAllUsers(@PathVariable int page) {
         log.info("Get All Customer Data Page : {}", page);
         return adminService.getAllCustomers(page);
+    }
+
+    @GetMapping("/manage-shop/{page}")
+    public ResponseEntity<ApiResponse> getAllShops(@PathVariable int page) {
+        log.info("Get All Shops Data Page : {}", page);
+        return adminService.getAllShops(page);
+    }
+
+    @GetMapping("/manage-report")
+    public ResponseEntity<ApiResponse> getAllReport() {
+        log.info("Get All Reports Data");
+        return adminService.getAllReports();
     }
 }

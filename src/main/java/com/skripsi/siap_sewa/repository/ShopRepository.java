@@ -1,6 +1,9 @@
 package com.skripsi.siap_sewa.repository;
 
+import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +22,6 @@ public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
 
     @Query("SELECT s FROM ShopEntity s WHERE LOWER(s.name) LIKE LOWER(concat('%', :shopName, '%')) ORDER BY s.name ASC")
     List<ShopEntity> findSimilarShopsByName(@Param("shopName") String shopName);
+
+    Page<ShopEntity> findAll(Pageable pageable);
 }
