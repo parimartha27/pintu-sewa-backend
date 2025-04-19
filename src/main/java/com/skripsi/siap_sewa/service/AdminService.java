@@ -5,6 +5,7 @@ import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
 import com.skripsi.siap_sewa.dto.admin.CustomerListResponse;
 import com.skripsi.siap_sewa.dto.admin.ShopListResponse;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
+import com.skripsi.siap_sewa.entity.CartEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.repository.ShopRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
@@ -26,7 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -148,44 +151,19 @@ public class AdminService {
         }
     }
 
-    public ResponseEntity<ApiResponse> getAllReports() {
+    public ResponseEntity<ApiResponse> adminLogout(String id) {
         try {
+            CustomerEntity adminData =
+                    customerRepository.findById(id)
+                                      .orElseThrow(() -> new DataNotFoundException("Data Admin Not Found"));
+            adminData.setLastLogin(LocalDateTime.now());
+            customerRepository.save(adminData);
 
-            log.info("Admin Fetching All Reports");
-
-            Page<ShopEntity> allShops = shopRepository.findAll(pageable);
-
-//          Condition If Customers is Empty
-            if (allShops.isEmpty()) {
-                log.info("There is No Shops found in database");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-//          Mapping CustomerEntity into CustomerResponse
-            List<ShopListResponse> shopResponses = allShops.getContent().stream()
-                    .map(entity -> ShopListResponse.builder()
-                            .id(entity.getId())
-                            .name(entity.getName())
-                            .description(entity.getDescription())
-                            .street(entity.getStreet())
-                            .regency(entity.getRegency())
-                            .shopStatus(entity.getShopStatus())
-                            .build())
-                    .toList();
-
-            PaginationResponse<ShopListResponse> paginationResponse = createPaginationResponse(
-                    shopResponses,
-                    page,
-                    5,
-                    (int) allShops.getTotalElements(),
-                    allShops.getTotalPages()
-            );
-
-            log.info("Successfully fetched {} Customers Data", allShops.getTotalElements());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
-
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
+        } catch (DataNotFoundException ex) {
+            throw ex;
         } catch (Exception ex) {
-            log.info("Error fetching all Customers Data : {}", ex.getMessage(), ex);
+            log.error("Logout Admin Failed : {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }

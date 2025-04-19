@@ -37,9 +37,9 @@ public class AdminController {
         return adminService.getAllShops(page);
     }
 
-    @GetMapping("/manage-report")
-    public ResponseEntity<ApiResponse> getAllReport() {
-        log.info("Get All Reports Data");
-        return adminService.getAllReports();
+    @PatchMapping("/logout/{id}")
+    public ResponseEntity<ApiResponse> adminLogout(@PathVariable String id) {
+        log.info("Update Admin Logout : {} ", id);
+        return adminService.adminLogout(id);
     }
 }
