@@ -60,6 +60,7 @@ public class AdminService {
             log.warn("Authentication Failed for Admin ");
             return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Failed to login");
         }
+
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customerEntity.getFirst().getUsername());
     }
 
@@ -142,11 +143,13 @@ public class AdminService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
+
 //          Mapping CustomerEntity into CustomerResponse
             List<ShopListResponse> shopResponses = allShops.getContent().stream()
                     .map(entity -> ShopListResponse.builder()
                             .id(entity.getId())
                             .name(entity.getName())
+                            .customerName(entity.getCustomer().getUsername())
                             .description(entity.getDescription())
                             .street(entity.getStreet())
                             .regency(entity.getRegency())

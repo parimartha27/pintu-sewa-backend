@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.dto.admin;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class ShopListResponse {
 
     private String id;
     private String name;
+    private String customerName;
     private String description;
     private String street;
     private String district;

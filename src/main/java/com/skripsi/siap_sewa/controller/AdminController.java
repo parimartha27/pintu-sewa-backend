@@ -25,7 +25,7 @@ public class AdminController {
         return adminService.loginAdmin(request);
     }
 
-    @PostMapping("/dashboard")
+    @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse> viewDashboard() {
         log.info("Get All Counts Data");
         return adminService.viewDashboard();
