@@ -309,13 +309,14 @@ public class CustomerService {
                     .orElseThrow(() -> new DataNotFoundException("Customer not found"));
 
             AddressResponse response = AddressResponse.builder()
-                    .customerId(customer.getId())
+                    .fullName(customer.getName())
                     .street(customer.getStreet())
                     .district(customer.getDistrict())
                     .regency(customer.getRegency())
                     .province(customer.getProvince())
                     .postCode(customer.getPostCode())
                     .notes(customer.getNotes())
+                    .phoneNumber(customer.getPhoneNumber())
                     .build();
 
             log.info("Successfully fetched address for customer: {}", customerId);
