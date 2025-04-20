@@ -9,6 +9,8 @@ import com.skripsi.siap_sewa.dto.customer.CustomerDetailResponse;
 import com.skripsi.siap_sewa.dto.customer.EditBiodataRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
+import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
+import com.skripsi.siap_sewa.dto.shop.EditShopResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
@@ -286,6 +288,29 @@ public class AdminService {
             log.info("Error fetching all Shops Data : {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    public ResponseEntity<ApiResponse> editShop(@Valid EditShopRequest request) {
+        Optional<ShopEntity> shopEntity = shopRepository.findById(request.getId());
+
+        if(shopEntity.isPresent()) {
+            ShopEntity shop = shopEntity.get();
+
+            shop.setName(request.getName());
+            shop.setDescription(request.getDescription());
+            shop.setImage(request.getImage());
+            shop.setStreet(request.getStreet());
+            shop.setDistrict(request.getDistrict());
+            shop.setRegency(request.getRegency());
+            shop.setProvince(request.getProvince());
+            shop.setPostCode(request.getPostCode());
+
+            shopRepository.save(shop);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, shop.getId());
+        }
+
+        return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
     }
 
     public ResponseEntity<ApiResponse> deactiveShop(String id) {

@@ -2,8 +2,8 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
-import com.skripsi.siap_sewa.dto.customer.EditBiodataRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
+import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
 import com.skripsi.siap_sewa.service.AdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +58,11 @@ public class AdminController {
     public ResponseEntity<ApiResponse> getAllShops(@PathVariable int page) {
         log.info("Get All Shops Data Page : {}", page);
         return adminService.getAllShops(page);
+    }
+
+    @PutMapping("/manage-customer/edit-biodata")
+    public ResponseEntity<ApiResponse> editBiodata(@RequestBody @Valid EditShopRequest request) {
+        return adminService.editShop(request);
     }
 
     @PatchMapping("/manage-shop/deactive/{id}")
