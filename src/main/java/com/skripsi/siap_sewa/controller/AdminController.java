@@ -60,8 +60,8 @@ public class AdminController {
         return adminService.getAllShops(page);
     }
 
-    @PutMapping("/manage-customer/edit-biodata")
-    public ResponseEntity<ApiResponse> editBiodata(@RequestBody @Valid EditShopRequest request) {
+    @PutMapping("/manage-customer/edit-shop-biodata")
+    public ResponseEntity<ApiResponse> editShopBiodata(@RequestBody @Valid EditShopRequest request) {
         return adminService.editShop(request);
     }
 
