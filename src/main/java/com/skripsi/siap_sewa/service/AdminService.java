@@ -5,11 +5,17 @@ import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
 import com.skripsi.siap_sewa.dto.admin.CustomerListResponse;
 import com.skripsi.siap_sewa.dto.admin.DashboardResponse;
 import com.skripsi.siap_sewa.dto.admin.ShopListResponse;
+import com.skripsi.siap_sewa.dto.customer.CustomerDetailResponse;
+import com.skripsi.siap_sewa.dto.customer.EditBiodataRequest;
+import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
+import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
+import com.skripsi.siap_sewa.exception.PhoneNumberExistException;
 import com.skripsi.siap_sewa.repository.ChatRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
+import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,6 +49,7 @@ public class AdminService {
     private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
     private final ChatRepository chatRepository;
+    private final TransactionRepository transactionRepository;
 
     public ResponseEntity<ApiResponse> loginAdmin(@Valid AdminLoginRequest request) {
         List<CustomerEntity> customerEntity =
@@ -122,6 +129,88 @@ public class AdminService {
 
         } catch (Exception ex) {
             log.info("Error fetching all Customers Data : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> editBiodata(EditCustomerRequest request) {
+        try {
+            log.info("Process Admin Edit Biodata Customer dengan ID: {}", request.getId());
+
+            Optional<CustomerEntity> customerOpt = customerRepository.findById(request.getId());
+            if (customerOpt.isEmpty()) {
+                log.info("Customer tidak ditemukan dengan ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            CustomerEntity customer = customerOpt.get();
+
+            // Validasi username
+            if (!customer.getUsername().equals(request.getUsername())) {
+                // Cek unik (kecuali milik sendiri)
+                if (customerRepository.existsByUsernameAndIdNot(request.getUsername(), request.getId())) {
+                    log.info("Username {} sudah digunakan", request.getUsername());
+                    return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EXIST, null);
+                }
+            }
+
+            // Validasi email unik (kecuali milik user ini)
+            if (!customer.getEmail().equals(request.getEmail())) {
+                if (customerRepository.existsByEmailAndIdNot(request.getEmail(), request.getId())) {
+                    log.info("Email {} sudah digunakan", request.getEmail());
+                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
+                }
+            }
+
+            if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(customer.getPhoneNumber())) {
+                if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                    log.info("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
+                    throw new PhoneNumberExistException("Nomor telepon sudah digunakan");
+                }
+            }
+
+            // Update semua field biodata
+            customer.setUsername(request.getUsername());
+            customer.setName(request.getName());
+            customer.setEmail(request.getEmail());
+            customer.setPhoneNumber(request.getPhoneNumber());
+            customer.setGender(request.getGender());
+            customer.setBirthDate(request.getBirthDate());
+            customer.setImage(request.getImage());
+            customer.setLastUpdateAt(LocalDateTime.now());
+
+            customerRepository.save(customer);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customer.getId());
+
+        } catch (Exception ex) {
+            log.info("Admin Gagal mengedit biodata customer: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> suspendCustomereCustomer(String id) {
+        try {
+            log.info("Admin Attempting to Suspend Custmer with ID: {}", id);
+
+            CustomerEntity customer = customerRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", id);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+
+            customer.setStatus("SUSPENDED");
+            customerRepository.save(customer);
+
+            log.info("Successfully Suspend customer with ID: {}", id);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Customer Suspend successfully");
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.info("Error Suspend Customer with ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
