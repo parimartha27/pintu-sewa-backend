@@ -188,7 +188,7 @@ public class AdminService {
 
     public ResponseEntity<ApiResponse> suspendCustomer(String id) {
         try {
-            log.info("Admin Attempting to Suspend Custmer with ID: {}", id);
+            log.info("Admin Attempting to Suspend Customer with ID: {}", id);
 
             CustomerEntity customer = customerRepository.findById(id)
                     .orElseThrow(() -> {
@@ -215,7 +215,7 @@ public class AdminService {
 
     public ResponseEntity<ApiResponse> unSuspendCustomer(String id) {
         try {
-            log.info("Admin Attempting to Suspend Custmer with ID: {}", id);
+            log.info("Admin Attempting to Suspend Customer with ID: {}", id);
 
             CustomerEntity customer = customerRepository.findById(id)
                     .orElseThrow(() -> {
@@ -284,6 +284,60 @@ public class AdminService {
 
         } catch (Exception ex) {
             log.info("Error fetching all Shops Data : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> deactiveShop(String id) {
+        try {
+            log.info("Admin Attempting to Deactive Shop with ID: {}", id);
+
+            ShopEntity shop = shopRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.info("Shop not found with ID: {}", id);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+
+            shop.setShopStatus("DEACTIVE");
+            shop.setLastUpdateAt(LocalDateTime.now());
+            shopRepository.save(shop);
+
+            log.info("Successfully Deactive Shop with ID: {}", id);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Deactive Shop successfully");
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.info("Error Deactive Shop with ID {}: {}", id, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> activeShop(String id) {
+        try {
+            log.info("Admin Attempting to Activate Shop with ID: {}", id);
+
+            ShopEntity shop = shopRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.info("Shop not found with ID: {}", id);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+
+            shop.setShopStatus("ACTIVE");
+            shop.setLastUpdateAt(LocalDateTime.now());
+            shopRepository.save(shop);
+
+            log.info("Successfully Activate Shop with ID: {}", id);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Activate Shop successfully");
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.info("Error Activate Shop with ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }

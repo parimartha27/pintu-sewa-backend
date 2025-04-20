@@ -60,6 +60,16 @@ public class AdminController {
         return adminService.getAllShops(page);
     }
 
+    @PatchMapping("/manage-shop/deactive/{id}")
+    public ResponseEntity<ApiResponse> deactiveShop(@PathVariable String id){
+        return adminService.deactiveShop(id);
+    }
+
+    @PatchMapping("/manage-shop/activate/{id}")
+    public ResponseEntity<ApiResponse> activeShop(@PathVariable String id){
+        return adminService.activeShop(id);
+    }
+
     @PatchMapping("/logout/{id}")
     public ResponseEntity<ApiResponse> adminLogout(@PathVariable String id) {
         log.info("Update Admin Logout : {} ", id);
