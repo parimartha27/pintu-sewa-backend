@@ -68,4 +68,5 @@ public class Constant {
             Map.of("id", "5", "name", "GoSend"),
             Map.of("id", "6", "name", "GrabExpress")
     );
+    public static final String DEFAULT_EKSPEDISI = "JNE";
 }

@@ -15,14 +15,14 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class ProductFilterRequest {
-    private List<String> categories; // Ganti dari String category
+    private List<String> categories; 
     private String name;
-    private List<Integer> rentDurations; // Ganti dari Integer rentDuration
-    private List<String> locations; // Ganti dari String location
+    private List<Integer> rentDurations; 
+    private List<String> locations; 
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    private List<Boolean> isRnbOptions; // Ganti dari Boolean isRnb
-    private List<Double> minRatings; // Ganti dari Double minRating
+    private List<Boolean> isRnbOptions; 
+    private List<Double> minRatings; 
     private String sortBy;
     private Sort.Direction sortDirection;
     private int page;
@@ -37,16 +37,16 @@ public class ProductFilterRequest {
         this.size = 16;
     }
 
-    // Validate sortBy to ensure it only accepts valid fields
+    
     public String getSortBy() {
-        // Only allow sorting by name or price fields
+        
         if (sortBy != null && (sortBy.equals("name") ||
                 sortBy.equals("dailyPrice") ||
                 sortBy.equals("weeklyPrice") ||
                 sortBy.equals("monthlyPrice"))) {
             return sortBy;
         }
-        // Default to name if invalid sort field is provided
+        
         return "name";
     }
 }

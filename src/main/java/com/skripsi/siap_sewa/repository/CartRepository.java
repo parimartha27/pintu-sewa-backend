@@ -1,7 +1,6 @@
 package com.skripsi.siap_sewa.repository;
 
 import com.skripsi.siap_sewa.entity.CartEntity;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

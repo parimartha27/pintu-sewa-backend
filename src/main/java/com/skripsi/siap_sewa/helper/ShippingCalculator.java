@@ -2,58 +2,46 @@ package com.skripsi.siap_sewa.helper;
 
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 public class ShippingCalculator {
 
-    private static final List<String> SHIPPING_PARTNERS = Arrays.asList(
-            "JNE", "TIKI", "SiCepat", "J&T", "GoSend", "GrabExpress"
+    private static final List<ShippingPartner> SHIPPING_PARTNERS = List.of(
+            new ShippingPartner("1", "JNE", new BigDecimal("15000"), new BigDecimal("2000")),
+            new ShippingPartner("2", "TIKI", new BigDecimal("20000"), new BigDecimal("2500")),
+            new ShippingPartner("3", "SiCepat", new BigDecimal("10000"), new BigDecimal("1500")),
+            new ShippingPartner("4", "J&T", new BigDecimal("12000"), new BigDecimal("1800")),
+            new ShippingPartner("5", "GoSend", new BigDecimal("25000"), new BigDecimal("3000")),
+            new ShippingPartner("6", "GrabExpress", new BigDecimal("30000"), new BigDecimal("3500"))
     );
 
-    private static final List<BigDecimal> BASE_PRICES = Arrays.asList(
-            BigDecimal.valueOf(15000), // JNE
-            BigDecimal.valueOf(20000), // TIKI
-            BigDecimal.valueOf(10000), // SiCepat
-            BigDecimal.valueOf(12000), // J&T
-            BigDecimal.valueOf(25000),  // GoSend
-            BigDecimal.valueOf(30000)   // GrabExpress
-    );
+    public static ShippingInfo calculateShipping(BigDecimal totalWeight,
+                                                 ShopEntity shop, CustomerEntity customer, String shippingPartnerName) {
 
-    private static final List<BigDecimal> PRICE_PER_KG = Arrays.asList(
-            BigDecimal.valueOf(2000), // JNE
-            BigDecimal.valueOf(2500), // TIKI
-            BigDecimal.valueOf(1500), // SiCepat
-            BigDecimal.valueOf(1800), // J&T
-            BigDecimal.valueOf(3000), // GoSend
-            BigDecimal.valueOf(3500)  // GrabExpress
-    );
-
-    public static ShippingInfo calculateShipping(BigDecimal totalWeight, ShopEntity shop, CustomerEntity customer) {
-        Random random = new Random();
-        int partnerIndex = random.nextInt(SHIPPING_PARTNERS.size());
-
-        String partner = SHIPPING_PARTNERS.get(partnerIndex);
-        BigDecimal basePrice = BASE_PRICES.get(partnerIndex);
-        BigDecimal pricePerKg = PRICE_PER_KG.get(partnerIndex);
+        ShippingPartner partner = SHIPPING_PARTNERS.stream()
+                .filter(p -> p.getName().equals(shippingPartnerName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Shipping partner not found"));
 
         // Calculate distance factor
         BigDecimal distanceFactor = calculateDistanceFactor(shop, customer);
 
         // Calculate shipping price
-        BigDecimal weightPrice = pricePerKg.multiply(totalWeight);
-        BigDecimal shippingPrice = basePrice.add(weightPrice).multiply(distanceFactor);
+        BigDecimal weightPrice = partner.getPricePerKg().multiply(totalWeight);
+        BigDecimal shippingPrice = partner.getBasePrice().add(weightPrice).multiply(distanceFactor);
 
         // Calculate estimated time
         String estimatedTime = calculateEstimatedTime(distanceFactor);
 
         return new ShippingInfo(
-                partner,
+                partner.getName(),
                 shippingPrice.setScale(0, RoundingMode.HALF_UP),
                 estimatedTime
         );
@@ -91,4 +79,13 @@ public class ShippingCalculator {
             BigDecimal shippingPrice,
             String estimatedTime
     ) {}
+
+    @Getter
+    @AllArgsConstructor
+    private static class ShippingPartner {
+        private String id;
+        private String name;
+        private BigDecimal basePrice;
+        private BigDecimal pricePerKg;
+    }
 }

@@ -13,4 +13,5 @@ public class CheckoutProcessingException extends RuntimeException {
         this.errorCode = errorMessage.getErrorCode();
         this.productId = productId;
     }
+
 }
