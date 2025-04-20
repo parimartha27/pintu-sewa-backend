@@ -50,5 +50,8 @@ public class CartResponse {
         private BigDecimal deposit;
         private int minRented;
         private String rentCategory;
+        private BigDecimal dailyPrice;
+        private BigDecimal weeklyPrice;
+        private BigDecimal monthlyPrice;
     }
 }

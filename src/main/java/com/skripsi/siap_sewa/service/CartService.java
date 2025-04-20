@@ -116,6 +116,9 @@ public class CartService {
                 .deposit(product.getDeposit())
                 .minRented(product.getMinRented())
                 .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
+                .dailyPrice(product.getDailyPrice())
+                .weeklyPrice(product.getWeeklyPrice())
+                .monthlyPrice(product.getMonthlyPrice())
                 .build();
     }
 
