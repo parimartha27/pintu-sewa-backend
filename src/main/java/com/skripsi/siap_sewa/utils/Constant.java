@@ -2,6 +2,9 @@ package com.skripsi.siap_sewa.utils;
 
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+import java.util.Map;
+
 public class Constant {
 
 //    Email Subject
@@ -56,4 +59,13 @@ public class Constant {
     public static final String UNAUTHORIZED_CART_ACCESS = "PS-02-006";
     public static final String DATE_FORMAT = "dd MMMM yyyy";
     public static final String TRANSACTION_NUMBER_FORMAT = "yyyyMMddHHmmss";
+
+    public static final List<Map<String, String>> SHIPPING_PARTNERS = List.of(
+            Map.of("id", "1", "name", "JNE"),
+            Map.of("id", "2", "name", "TIKI"),
+            Map.of("id", "3", "name", "SiCepat"),
+            Map.of("id", "4", "name", "J&T"),
+            Map.of("id", "5", "name", "GoSend"),
+            Map.of("id", "6", "name", "GrabExpress")
+    );
 }
