@@ -114,6 +114,8 @@ public class CartService {
                 .image(product.getImage())
                 .stock(product.getStock())
                 .deposit(product.getDeposit())
+                .minRented(product.getMinRented())
+                .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
                 .build();
     }
 

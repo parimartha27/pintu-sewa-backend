@@ -48,5 +48,7 @@ public class CartResponse {
         private String image;
         private int stock;
         private BigDecimal deposit;
+        private int minRented;
+        private String rentCategory;
     }
 }
