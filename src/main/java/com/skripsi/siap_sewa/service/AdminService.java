@@ -45,11 +45,9 @@ import java.util.Optional;
 public class AdminService {
     private final CommonUtils commonUtils;
     private final AuthenticationManager authManager;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
     private final ChatRepository chatRepository;
-    private final TransactionRepository transactionRepository;
 
     public ResponseEntity<ApiResponse> loginAdmin(@Valid AdminLoginRequest request) {
         List<CustomerEntity> customerEntity =
@@ -178,7 +176,6 @@ public class AdminService {
             customer.setBirthDate(request.getBirthDate());
             customer.setImage(request.getImage());
             customer.setLastUpdateAt(LocalDateTime.now());
-
             customerRepository.save(customer);
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customer.getId());
@@ -189,7 +186,7 @@ public class AdminService {
         }
     }
 
-    public ResponseEntity<ApiResponse> suspendCustomereCustomer(String id) {
+    public ResponseEntity<ApiResponse> suspendCustomer(String id) {
         try {
             log.info("Admin Attempting to Suspend Custmer with ID: {}", id);
 
@@ -201,6 +198,34 @@ public class AdminService {
 
 
             customer.setStatus("SUSPENDED");
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+            log.info("Successfully Suspend customer with ID: {}", id);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Customer Suspend successfully");
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.info("Error Suspend Customer with ID {}: {}", id, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> unSuspendCustomer(String id) {
+        try {
+            log.info("Admin Attempting to Suspend Custmer with ID: {}", id);
+
+            CustomerEntity customer = customerRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", id);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+
+            customer.setStatus("ACTIVE");
+            customer.setLastUpdateAt(LocalDateTime.now());
             customerRepository.save(customer);
 
             log.info("Successfully Suspend customer with ID: {}", id);

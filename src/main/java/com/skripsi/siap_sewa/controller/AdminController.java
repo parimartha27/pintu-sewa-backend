@@ -44,9 +44,14 @@ public class AdminController {
         return adminService.editBiodata(request);
     }
 
-    @PutMapping("/manage-customer/suspend/{id}")
+    @PatchMapping("/manage-customer/suspend/{id}")
     public ResponseEntity<ApiResponse> suspendCustomer(@PathVariable String id){
-        return adminService.suspendCustomereCustomer(id);
+        return adminService.suspendCustomer(id);
+    }
+
+    @PatchMapping("/manage-customer/unsuspend/{id}")
+    public ResponseEntity<ApiResponse> unSuspendCustomer(@PathVariable String id){
+        return adminService.unSuspendCustomer(id);
     }
 
     @GetMapping("/manage-shop/{page}")
