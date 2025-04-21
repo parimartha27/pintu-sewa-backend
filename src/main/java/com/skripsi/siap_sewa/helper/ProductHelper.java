@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.helper;
 
+import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ReviewEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import static com.skripsi.siap_sewa.utils.CommonUtils.getRentDurationName;
 
 public class ProductHelper {
 
@@ -99,4 +102,21 @@ public class ProductHelper {
                 .min(BigDecimal::compareTo)
                 .orElse(null);
     }
+
+    public static ProductResponse convertToResponse(ProductEntity product) {
+        return ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+//                .category(product.getCategory())
+                .rentCategory(getRentDurationName(product.getRentCategory()))
+                .isRnb(product.isRnb())
+                .image(product.getImage())
+                .address(product.getShop() != null ? product.getShop().getRegency() : null)
+                .rating(calculateWeightedRating(product.getReviews()))
+                .rentedTimes(countRentedTimes(product.getTransactions()))
+                .price(getLowestPrice(product))
+                .build();
+    }
+
+
 }

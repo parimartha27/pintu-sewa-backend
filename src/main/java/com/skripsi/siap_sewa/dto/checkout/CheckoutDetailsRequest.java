@@ -17,6 +17,5 @@ import java.util.List;
 public class CheckoutDetailsRequest {
 
     private List<String> transactionIds;
-    // Optional: If provided via path variable
     private String customerId;
 }
