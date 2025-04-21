@@ -16,8 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CartResponse {
-    private int totalProductCart;  // Total count of all cart items
-    private List<ShopInfo> shops;  // List of shops with their cart items
+    private int totalProductCart;
+    private List<ShopInfo> shops;
 
     @Data
     @Builder

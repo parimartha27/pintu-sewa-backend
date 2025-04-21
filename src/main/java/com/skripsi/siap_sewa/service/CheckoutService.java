@@ -2,7 +2,9 @@ package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.checkout.CartCheckoutRequest;
+import com.skripsi.siap_sewa.dto.checkout.CheckoutDetailsRequest;
 import com.skripsi.siap_sewa.dto.checkout.CheckoutResponse;
+import com.skripsi.siap_sewa.dto.checkout.CheckoutResultResponse;
 import com.skripsi.siap_sewa.dto.checkout.ProductCheckoutRequest;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
@@ -55,15 +57,28 @@ public class CheckoutService {
             CustomerEntity customer = customerRepository.findById(request.getCustomerId())
                     .orElseThrow(() -> new DataNotFoundException("Customer not found"));
 
-            CheckoutResponse response = processCheckout(
+            // Validate stock
+            if (product.getStock() < request.getQuantity()) {
+                throw new BadRequestException("Insufficient stock for product: " + product.getName());
+            }
+
+            String shippingPartnerId = request.getShippingPartnerId() != null ?
+                    request.getShippingPartnerId() : Constant.DEFAULT_EKSPEDISI;
+
+            List<String> transactionIds = processCheckoutAndGetTransactionIds(
                     customer,
-                    List.of(product),
-                    request.getQuantity(),
-                    request.getStartDate(),
-                    request.getEndDate()
+                    Collections.singletonList(new CartCheckoutItem(
+                            product,
+                            request.getQuantity(),
+                            request.getStartDate(),
+                            request.getEndDate()
+                    )),
+                    shippingPartnerId
             );
 
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,
+                    CheckoutResultResponse.builder().transactionIds(transactionIds).build());
+
         } catch (Exception ex) {
             log.error("Product checkout failed: {}", ex.getMessage(), ex);
             throw ex;
@@ -80,22 +95,35 @@ public class CheckoutService {
             List<CartEntity> carts = cartRepository.findAllById(request.getCartIds());
             validateCarts(carts, request.getCustomerId());
 
-            // Extract products from carts
-            List<ProductEntity> products = carts.stream()
-                    .map(CartEntity::getProduct)
-                    .toList();
-
             CustomerEntity customer = customerRepository.findById(request.getCustomerId())
                     .orElseThrow(() -> new DataNotFoundException("Customer not found"));
 
-            // Process checkout (using first cart's dates and quantities)
-            CartEntity firstCart = carts.get(0);
-            CheckoutResponse response = processCheckout(
+            // Convert carts to checkout items with their individual properties
+            List<CartCheckoutItem> checkoutItems = carts.stream()
+                    .map(cart -> {
+                        // Validate stock for each cart item
+                        if (cart.getProduct().getStock() < cart.getQuantity()) {
+                            throw new InsufficientStockException(cart.getProduct().getStock(), cart.getQuantity());
+                        }
+
+                        // Create checkout item
+                        return new CartCheckoutItem(
+                                cart.getProduct(),
+                                cart.getQuantity(),
+                                cart.getStartRentDate(),
+                                cart.getEndRentDate()
+                        );
+                    })
+                    .toList();
+
+            String shippingPartnerId = request.getShippingPartnerId() != null ?
+                    request.getShippingPartnerId() : Constant.DEFAULT_EKSPEDISI;
+
+            // Process checkout using cart-specific data
+            List<String> transactionIds = processCheckoutAndGetTransactionIds(
                     customer,
-                    products,
-                    firstCart.getQuantity(),
-                    firstCart.getStartRentDate(),
-                    firstCart.getEndRentDate()
+                    checkoutItems,
+                    shippingPartnerId
             );
 
             // Mark carts as deleted
@@ -104,81 +132,92 @@ public class CheckoutService {
                 cartRepository.save(cart);
             });
 
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,
+                    CheckoutResultResponse.builder().transactionIds(transactionIds).build());
+
         } catch (Exception ex) {
             log.error("Cart checkout failed: {}", ex.getMessage(), ex);
             throw ex;
         }
     }
 
-    private CheckoutResponse processCheckout(
-            CustomerEntity customer,
-            List<ProductEntity> products,
-            int quantity,
-            LocalDate startDate,
-            LocalDate endDate) {
+    public ResponseEntity<ApiResponse> getCheckoutDetails(CheckoutDetailsRequest request) {
+        try {
+            log.info("Fetching checkout details for {} transactions", request.getTransactionIds().size());
 
-        // Group products by shop
-        Map<ShopEntity, List<ProductEntity>> productsByShop = products.stream()
-                .collect(Collectors.groupingBy(ProductEntity::getShop));
+            List<TransactionEntity> transactions = transactionRepository.findAllById(request.getTransactionIds());
+
+            if (transactions.isEmpty()) {
+                log.info("No transactions found for the provided IDs");
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            // If customerId is provided, validate that all transactions belong to this customer
+            if (request.getCustomerId() != null && !request.getCustomerId().isEmpty()) {
+                boolean allTransactionsBelongToCustomer = transactions.stream()
+                        .allMatch(t -> t.getCustomer().getId().equals(request.getCustomerId()));
+
+                if (!allTransactionsBelongToCustomer) {
+                    log.warn("Some transactions don't belong to customer: {}", request.getCustomerId());
+                    return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+                }
+            }
+
+            CheckoutResponse response = buildCheckoutResponseFromTransactions(transactions);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.error("Error fetching checkout details: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    private CheckoutResponse buildCheckoutResponseFromTransactions(List<TransactionEntity> transactions) {
+        // Group transactions by shop and transaction number
+        Map<String, List<TransactionEntity>> transactionsByShop = transactions.stream()
+                .collect(Collectors.groupingBy(TransactionEntity::getShopId));
 
         List<CheckoutResponse.TransactionGroup> transactionGroups = new ArrayList<>();
         BigDecimal grandTotal = BigDecimal.ZERO;
         BigDecimal totalDeposit = BigDecimal.ZERO;
         BigDecimal totalShipping = BigDecimal.ZERO;
+        BigDecimal totalServiceFee = BigDecimal.ZERO;
 
-        for (Map.Entry<ShopEntity, List<ProductEntity>> entry : productsByShop.entrySet()) {
-            ShopEntity shop = entry.getKey();
-            List<ProductEntity> shopProducts = entry.getValue();
+        for (Map.Entry<String, List<TransactionEntity>> entry : transactionsByShop.entrySet()) {
+            String shopId = entry.getKey();
+            List<TransactionEntity> shopTransactions = entry.getValue();
+            TransactionEntity firstTransaction = shopTransactions.get(0);
 
-            // Calculate total weight for shipping
-            BigDecimal totalWeight = shopProducts.stream()
-                    .map(p -> p.getWeight().multiply(BigDecimal.valueOf(quantity)))
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // Get shipping info
-            ShippingCalculator.ShippingInfo shippingInfo = ShippingCalculator.calculateShipping(
-                    totalWeight, shop, customer);
-
-            // Process each product in the shop
+            // Process each transaction in the shop
             List<CheckoutResponse.RentedItem> rentedItems = new ArrayList<>();
             BigDecimal shopTotal = BigDecimal.ZERO;
             BigDecimal shopDeposit = BigDecimal.ZERO;
+            BigDecimal shopShipping = firstTransaction.getShippingPrice(); // Assuming same shipping for shop
 
-            for (ProductEntity product : shopProducts) {
-                TransactionEntity transaction = createTransaction(
-                        product,
-                        customer,
-                        shop,
-                        quantity,
-                        startDate,
-                        endDate,
-                        shippingInfo.partnerName()
-                );
+            for (TransactionEntity transaction : shopTransactions) {
+                ProductEntity product = transaction.getProducts().iterator().next();
 
                 rentedItems.add(createRentedItem(transaction, product));
                 shopTotal = shopTotal.add(transaction.getAmount());
                 shopDeposit = shopDeposit.add(transaction.getTotalDeposit());
 
-                // Update product stock
-                product.setStock(product.getStock() - quantity);
-                productRepository.save(product);
+                totalServiceFee = totalServiceFee.add(transaction.getServiceFee());
             }
 
             transactionGroups.add(CheckoutResponse.TransactionGroup.builder()
-                    .shopId(shop.getId())
-                    .shopName(shop.getName())
+                    .shopId(shopId)
+                    .shopName(firstTransaction.getShopName())
                     .rentedItems(rentedItems)
                     .deposit(shopDeposit)
-                    .shippingPartner(shippingInfo.partnerName())
-                    .shippingPrice(shippingInfo.shippingPrice())
-                    .totalRentedProduct(shopProducts.size())
+                    .shippingPartner(firstTransaction.getShippingPartner())
+                    .shippingPrice(shopShipping)
+                    .totalRentedProduct(shopTransactions.size())
                     .totalPrice(shopTotal)
                     .build());
 
             grandTotal = grandTotal.add(shopTotal);
             totalDeposit = totalDeposit.add(shopDeposit);
-            totalShipping = totalShipping.add(shippingInfo.shippingPrice());
+            totalShipping = totalShipping.add(shopShipping);
         }
 
         return CheckoutResponse.builder()
@@ -186,9 +225,8 @@ public class CheckoutService {
                 .subTotalProductPrice(grandTotal)
                 .subTotalShippingCost(totalShipping)
                 .subTotalDeposit(totalDeposit)
-                .serviceFee(calculateServiceFee(grandTotal))
-                .grandTotalPayment(grandTotal.add(totalShipping).add(totalDeposit)
-                        .add(calculateServiceFee(grandTotal)))
+                .serviceFee(totalServiceFee)
+                .grandTotalPayment(grandTotal.add(totalShipping).add(totalDeposit).add(totalServiceFee))
                 .build();
     }
 
@@ -232,6 +270,11 @@ public class CheckoutService {
         if (carts.stream().anyMatch(CartEntity::isDeleted)) {
             throw new BadRequestException("Cannot checkout deleted carts");
         }
+
+        // Validate all cart dates
+        for (CartEntity cart : carts) {
+            validateCheckoutDates(cart.getStartRentDate(), cart.getEndRentDate());
+        }
     }
 
     private TransactionEntity createTransaction(
@@ -241,7 +284,8 @@ public class CheckoutService {
             int quantity,
             LocalDate startDate,
             LocalDate endDate,
-            String shippingPartner
+            String shippingPartner,
+            String transactionNumber
     ) {
         // 1. Calculate rental price
         PriceCalculator.RentalPrice rentalPrice = PriceCalculator.calculateRentalPrice(
@@ -250,17 +294,29 @@ public class CheckoutService {
         // 2. Calculate deposit
         BigDecimal deposit = product.getDeposit().multiply(BigDecimal.valueOf(quantity));
 
-        // 3. Create transaction
+        // 3. Calculate service fee
+        BigDecimal serviceFee = rentalPrice.totalPrice().multiply(BigDecimal.valueOf(0.05))
+                .setScale(0, RoundingMode.HALF_UP);
+
+        // 4. Calculate shipping price
+        BigDecimal shippingPrice = ShippingCalculator.calculateShipping(
+                product.getWeight().multiply(BigDecimal.valueOf(quantity)),
+                shop,
+                customer,
+                shippingPartner
+        ).shippingPrice();
+
+        // 5. Create transaction
         TransactionEntity transaction = TransactionEntity.builder()
                 .customer(customer)
                 .products(Set.of(product))
-                .transactionNumber(generateTransactionNumber())
+                .transactionNumber(transactionNumber)
                 .startDate(startDate)
                 .endDate(endDate)
                 .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
                 .quantity(quantity)
                 .amount(rentalPrice.totalPrice())
-                .totalAmount(rentalPrice.totalPrice().add(deposit).add(rentalPrice.totalPrice().multiply(BigDecimal.valueOf(0.05))))
+                .totalAmount(rentalPrice.totalPrice().add(deposit).add(serviceFee).add(shippingPrice))
                 .paymentMethod("UNPAID")
                 .status("Belum Dibayar")
                 .isReturn("NOT_RETURNED")
@@ -271,22 +327,121 @@ public class CheckoutService {
                 .shopName(shop.getName())
                 .totalDeposit(deposit)
                 .isDepositReturned(false)
-                .serviceFee(rentalPrice.totalPrice().multiply(BigDecimal.valueOf(0.05)))
+                .serviceFee(serviceFee)
                 .shippingPartner(shippingPartner)
-                .shippingPrice(ShippingCalculator.calculateShipping(
-                        product.getWeight().multiply(BigDecimal.valueOf(quantity)),
-                        shop,
-                        customer
-                ).shippingPrice())
+                .shippingPrice(shippingPrice)
                 .build();
 
         return transactionRepository.save(transaction);
     }
 
-    private String generateTransactionNumber() {
+    private String generateTransactionNumber(String shopId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyyHHmmss");
         String timestamp = LocalDateTime.now().format(formatter);
         int random = new Random().nextInt(900) + 100; // 100-999
-        return "PS" + timestamp + random;
+        return shopId + "-PS" + timestamp + random;
+    }
+
+    @Transactional
+    public List<String> processCheckoutAndGetTransactionIds(
+            CustomerEntity customer,
+            List<CartCheckoutItem> checkoutItems,
+            String shippingPartnerId) {
+
+        Map<ShopEntity, List<CartCheckoutItem>> itemsByShop = checkoutItems.stream()
+                .collect(Collectors.groupingBy(item -> item.product.getShop()));
+
+        List<String> transactionIds = new ArrayList<>();
+        List<String> processedShopIds = new ArrayList<>();
+
+        for (Map.Entry<ShopEntity, List<CartCheckoutItem>> entry : itemsByShop.entrySet()) {
+            ShopEntity shop = entry.getKey();
+            List<CartCheckoutItem> shopItems = entry.getValue();
+
+            try {
+                // Generate a single transaction number for all items from this shop
+                String transactionNumber = generateTransactionNumber(shop.getId());
+
+                for (CartCheckoutItem item : shopItems) {
+                    // Validate dates for each item
+                    validateCheckoutDates(item.startDate, item.endDate);
+
+                    // Calculate shipping info for each item
+                    ShippingCalculator.ShippingInfo shippingInfo = ShippingCalculator.calculateShipping(
+                            item.product.getWeight().multiply(BigDecimal.valueOf(item.quantity)),
+                            shop,
+                            customer,
+                            shippingPartnerId);
+
+                    // Create transaction with cart-specific data
+                    TransactionEntity transaction = createTransaction(
+                            item.product,
+                            customer,
+                            shop,
+                            item.quantity,
+                            item.startDate,
+                            item.endDate,
+                            shippingInfo.partnerName(),
+                            transactionNumber
+                    );
+
+                    transactionIds.add(transaction.getId());
+
+                    // Update product stock
+                    item.product.setStock(item.product.getStock() - item.quantity);
+                    productRepository.save(item.product);
+                }
+
+                // Mark shop as successfully processed
+                processedShopIds.add(shop.getId());
+
+            } catch (Exception e) {
+                log.error("Failed to process items from shop {}: {}", shop.getName(), e.getMessage());
+
+                // Rollback stock updates for this shop's items that might have been processed
+                for (CartCheckoutItem item : shopItems) {
+                    try {
+                        ProductEntity product = productRepository.findById(item.product.getId()).orElse(null);
+                        if (product != null) {
+                            // Add back quantity for any products that might have been decremented
+                            product.setStock(product.getStock() + item.quantity);
+                            productRepository.save(product);
+                        }
+                    } catch (Exception ex) {
+                        log.error("Error reverting stock for product {}: {}", item.product.getId(), ex.getMessage());
+                    }
+                }
+
+                // Rollback transactions for this shop
+                if (!processedShopIds.contains(shop.getId())) {
+                    List<TransactionEntity> shopTransactions = transactionRepository.findByShopId(shop.getId());
+                    for (TransactionEntity transaction : shopTransactions) {
+                        if (transaction.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(5))) {
+                            transactionRepository.delete(transaction);
+                        }
+                    }
+                }
+
+                // Re-throw to fail the entire transaction from this shop
+                throw new CheckoutProcessingException(ErrorMessageEnum.FAILED,"", "");
+            }
+        }
+
+        return transactionIds;
+    }
+
+    // Helper class to hold checkout item details
+    private static class CartCheckoutItem {
+        private final ProductEntity product;
+        private final int quantity;
+        private final LocalDate startDate;
+        private final LocalDate endDate;
+
+        public CartCheckoutItem(ProductEntity product, int quantity, LocalDate startDate, LocalDate endDate) {
+            this.product = product;
+            this.quantity = quantity;
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
     }
 }

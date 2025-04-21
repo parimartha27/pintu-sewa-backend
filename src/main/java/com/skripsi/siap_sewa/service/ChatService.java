@@ -5,7 +5,6 @@ import com.skripsi.siap_sewa.dto.chat.UnreadCountResponse;
 import com.skripsi.siap_sewa.dto.chat.ChatMessageDto;
 import com.skripsi.siap_sewa.entity.ChatEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
-import com.skripsi.siap_sewa.exception.ChatException;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.ChatRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;

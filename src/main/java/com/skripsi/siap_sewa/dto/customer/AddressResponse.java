@@ -13,11 +13,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AddressResponse {
-    private String customerId;
+    private String fullName;
     private String street;
     private String district;
     private String regency;
     private String province;
     private String postCode;
     private String notes;
+    private String phoneNumber;
 }

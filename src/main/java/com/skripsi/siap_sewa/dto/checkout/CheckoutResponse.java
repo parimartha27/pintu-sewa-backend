@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.dto.checkout;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CheckoutResponse {
+
     private List<TransactionGroup> transactions;
     private BigDecimal subTotalProductPrice;
     private BigDecimal subTotalShippingCost;
@@ -25,6 +27,9 @@ public class CheckoutResponse {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class TransactionGroup {
         private String shopId;
         private String shopName;
@@ -38,6 +43,9 @@ public class CheckoutResponse {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class RentedItem {
         private String transactionId;
         private String productId;

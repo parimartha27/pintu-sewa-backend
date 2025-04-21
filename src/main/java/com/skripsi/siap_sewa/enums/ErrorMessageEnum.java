@@ -44,7 +44,8 @@ public enum ErrorMessageEnum {
     PRODUCT_UNAVAILABLE("PS-08-002", "Produk tidak tersedia", HttpStatus.BAD_REQUEST),
     SHIPPING_CALCULATION_FAILED("PS-08-003", "Gagal menghitung biaya pengiriman", HttpStatus.INTERNAL_SERVER_ERROR),
     EMAIL_EDIT_EXPIRED("PS-07-002", "Email hanya bisa diubah dalam 30 hari pertama", HttpStatus.BAD_REQUEST),
-    USERNAME_EDIT_EXPIRED("PS-07-003", "Username hanya bisa diubah dalam 30 hari sejak terakhir update", HttpStatus.BAD_REQUEST),;
+    USERNAME_EDIT_EXPIRED("PS-07-003", "Username hanya bisa diubah dalam 30 hari sejak terakhir update", HttpStatus.BAD_REQUEST),
+    TRANSACTION_NOT_FOUND("PS-09-001", "Transaction tidak ditemukan" , HttpStatus.NOT_FOUND ),;
 
     private final String errorCode;
     private final String errorMessage;

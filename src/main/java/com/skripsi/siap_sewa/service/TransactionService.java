@@ -5,6 +5,7 @@ import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.spesification.TransactionSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
@@ -14,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +30,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CommonUtils commonUtils;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+    private final ProductRepository productRepository;
 
     @Transactional
     public ResponseEntity<ApiResponse> getCustomerTransactions(TransactionFilterRequest filterRequest) {
