@@ -13,5 +13,6 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
 
     @Query("SELECT t FROM TransactionEntity t JOIN t.products p WHERE p.id = :productId")
     List<TransactionEntity> findByProductId(@Param("productId") String productId);
+    List<TransactionEntity> findByShopId(String shopId);
 }
 

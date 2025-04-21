@@ -2,12 +2,13 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.*;
 import com.skripsi.siap_sewa.dto.product.*;
+import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.ProductFilterService;
 import com.skripsi.siap_sewa.service.ProductService;
+import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/product")
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class ProductController {
 
     private final ProductService productService;
     private final ProductFilterService productFilterService;
+    private final CommonUtils commonUtils;
 
 //    =============== for product card in dashboard ==================
     @GetMapping("/most-rented")
@@ -49,7 +52,7 @@ public class ProductController {
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse> getFilteredProducts(
             @RequestParam(required = false) List<String> categories,
-            @RequestParam(required = false, defaultValue = "") String name,
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) List<Integer> rentDurations,
             @RequestParam(required = false) List<String> locations,
             @RequestParam(required = false) BigDecimal minPrice,
@@ -61,29 +64,42 @@ public class ProductController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "16") int size) {
 
-        if (!sortBy.equals("name") &&
-                !sortBy.equals("dailyPrice") &&
-                !sortBy.equals("weeklyPrice") &&
-                !sortBy.equals("monthlyPrice")) {
-            sortBy = "name";
+        try {
+            // Validate sort field
+            List<String> validSortFields = List.of("name", "dailyPrice", "weeklyPrice",
+                    "monthlyPrice", "rating", "rentedTimes");
+
+            if (!validSortFields.contains(sortBy)) {
+                log.warn("Invalid sort field: {}. Defaulting to 'name'", sortBy);
+                sortBy = "name";
+            }
+
+            ProductFilterRequest filterRequest = ProductFilterRequest.builder()
+                    .categories(categories)
+                    .name(name)
+                    .rentDurations(rentDurations)
+                    .provinces(locations)
+                    .minPrice(minPrice)
+                    .maxPrice(maxPrice)
+                    .isRnbOptions(isRnbOptions)
+                    .minRatings(minRatings)
+                    .sortBy(sortBy)
+                    .sortDirection(sortDirection)
+                    .page(page)
+                    .size(size)
+                    .build();
+
+            log.info("Incoming filter request: {}", filterRequest);
+
+            filterRequest.validate();
+            return productFilterService.getFilteredProducts(filterRequest);
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error in filter request: {}", e.getMessage());
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error processing filter request", e);
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, null);
         }
-
-        ProductFilterRequest filterRequest = ProductFilterRequest.builder()
-                .categories(categories)
-                .name(name)
-                .rentDurations(rentDurations)
-                .locations(locations)
-                .minPrice(minPrice)
-                .maxPrice(maxPrice)
-                .isRnbOptions(isRnbOptions)
-                .minRatings(minRatings)
-                .sortBy(sortBy)
-                .sortDirection(sortDirection)
-                .page(page-1)
-                .size(size)
-                .build();
-
-        return productFilterService.getFilteredProducts(filterRequest);
     }
 
 //    for prodcut detail page
@@ -114,10 +130,7 @@ public class ProductController {
     @GetMapping("/shop/{shopId}")
     public ResponseEntity<ApiResponse> getProductsByShopId(
             @PathVariable String shopId,
-            @RequestParam(required = false) List<String> categories,
-            @RequestParam(required = false, defaultValue = "") String name,
             @RequestParam(required = false) List<Integer> rentDurations,
-            @RequestParam(required = false) List<String> locations,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) List<Boolean> isRnbOptions,
@@ -128,22 +141,18 @@ public class ProductController {
             @RequestParam(defaultValue = "16") int size) {
 
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
-                .shopId(shopId) // Tambahan properti ini di DTO
-                .categories(categories)
-                .name(name)
+                .shopId(shopId)
                 .rentDurations(rentDurations)
-                .locations(locations)
                 .minPrice(minPrice)
                 .maxPrice(maxPrice)
                 .isRnbOptions(isRnbOptions)
                 .minRatings(minRatings)
                 .sortBy(sortBy)
                 .sortDirection(sortDirection)
-                .page(page - 1)
+                .page(page)
                 .size(size)
                 .build();
 
         return productFilterService.getFilteredProducts(filterRequest);
     }
-
 }

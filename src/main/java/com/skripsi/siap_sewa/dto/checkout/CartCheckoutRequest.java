@@ -22,4 +22,6 @@ public class CartCheckoutRequest {
 
     @NotEmpty
     private List<String> cartIds;
+
+    private String shippingPartnerId;
 }

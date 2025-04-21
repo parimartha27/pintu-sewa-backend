@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -309,13 +308,14 @@ public class CustomerService {
                     .orElseThrow(() -> new DataNotFoundException("Customer not found"));
 
             AddressResponse response = AddressResponse.builder()
-                    .customerId(customer.getId())
+                    .fullName(customer.getName())
                     .street(customer.getStreet())
                     .district(customer.getDistrict())
                     .regency(customer.getRegency())
                     .province(customer.getProvince())
                     .postCode(customer.getPostCode())
                     .notes(customer.getNotes())
+                    .phoneNumber(customer.getPhoneNumber())
                     .build();
 
             log.info("Successfully fetched address for customer: {}", customerId);

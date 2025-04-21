@@ -32,4 +32,6 @@ public class ProductCheckoutRequest {
 
     @Min(1)
     private int quantity;
+
+    private String shippingPartnerId;
 }

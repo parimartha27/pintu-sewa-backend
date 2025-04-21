@@ -12,6 +12,7 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.helper.ProductHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,72 +33,54 @@ import static com.skripsi.siap_sewa.service.ProductService.getProductResponse;
 public class ProductFilterService {
     private final ProductRepository productRepository;
     private final CommonUtils commonUtils;
-
+    
     public ResponseEntity<ApiResponse> getFilteredProducts(ProductFilterRequest filterRequest) {
         try {
-            log.info("Fetching products with filters: {}", filterRequest);
+            log.info("Processing product filter request: {}", filterRequest);
 
-            // Build specification from filters
+            // Build specification and pageable
             Specification<ProductEntity> spec = ProductSpecification.withFilters(filterRequest);
-
-            // Create pageable with sorting
-            Sort sort = Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy());
-            Pageable pageable = PageRequest.of(filterRequest.getPage(), filterRequest.getSize(), sort);
-
-            // Execute query
-            Page<ProductEntity> resultPage = productRepository.findAll(spec, pageable);
-
-            // Apply rating filter if needed (post-query as it's calculated)
-            List<ProductEntity> filteredContent = applyRatingFilter(resultPage.getContent(), filterRequest);
-
-            // Paginate the filtered results
-            PaginationResponse<ProductResponse> paginationResponse = createPaginationResponse(
-                    filteredContent,
-                    resultPage.getPageable().getPageNumber(),
-                    resultPage.getSize(),
-                    (int) resultPage.getTotalElements()
+            Pageable pageable = PageRequest.of(
+                    filterRequest.getPage() - 1,
+                    filterRequest.getSize(),
+                    Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy())
             );
 
-            if (paginationResponse.getContent().isEmpty()) {
-                log.info("No products found with given filters");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            // Execute query with performance optimization
+            StopWatch stopWatch = new StopWatch();
+            stopWatch.start("database-query");
+            Page<ProductEntity> resultPage = productRepository.findAll(spec, pageable);
+            stopWatch.stop();
+
+            if (stopWatch.getTotalTimeMillis() > 1000) { // 1 second threshold
+                log.warn("Slow query detected! Time: {}ms, Filters: {}",
+                        stopWatch.getTotalTimeMillis(), filterRequest);
             }
 
-            log.info("Successfully fetched {} products with filters", paginationResponse.getContent().size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, paginationResponse);
+            // Apply post-database filtering for ratings
+            List<ProductEntity> filteredContent = applyPostFilters(resultPage.getContent(), filterRequest);
 
+            // Create paginated response
+            PaginationResponse<ProductResponse> response = createPaginationResponse(
+                    filteredContent,
+                    resultPage.getNumber() + 1,
+                    resultPage.getSize(),
+                    (int) resultPage.getTotalElements(),
+                    resultPage.getTotalPages()
+            );
+
+            if (filteredContent.isEmpty() && resultPage.getTotalElements() > 0) {
+                log.info("Post-filtering removed all results. Original count: {}", resultPage.getTotalElements());
+            }
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         } catch (Exception ex) {
-            log.error("Error fetching filtered products: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+            log.error("Error filtering products: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, null);
         }
     }
 
-    private PaginationResponse<ProductResponse> createPaginationResponse(
-            List<ProductEntity> products, int page, int size, int totalElement) {
-
-        int totalPages = (int) Math.ceil((double) totalElement / size);
-
-        int fromIndex = 0;
-        int toIndex = products.size();
-
-        List<ProductEntity> pagedProducts = (fromIndex < totalElement)
-                ? products.subList(fromIndex, toIndex)
-                : Collections.emptyList();
-
-        List<ProductResponse> responseList = pagedProducts.stream()
-                .map(this::buildProductResponse)
-                .toList();
-
-        return new PaginationResponse<>(
-                responseList,
-                page + 1,
-                size,
-                totalElement,
-                totalPages
-        );
-    }
-
-    private List<ProductEntity> applyRatingFilter(List<ProductEntity> products, ProductFilterRequest filterRequest) {
+    private List<ProductEntity> applyPostFilters(List<ProductEntity> products, ProductFilterRequest filterRequest) {
         if (filterRequest.getMinRatings() == null || filterRequest.getMinRatings().isEmpty()) {
             return products;
         }
@@ -104,16 +88,25 @@ public class ProductFilterService {
         return products.stream()
                 .filter(product -> {
                     Double rating = ProductHelper.calculateWeightedRating(product.getReviews());
-                    if (rating == null) return false;
-
-                    // rating dalam range inputan
                     return filterRequest.getMinRatings().stream()
-                            .anyMatch(minRating -> rating >= minRating && rating < minRating + 1);
+                            .anyMatch(min -> rating >= min && rating < min + 1);
                 })
                 .toList();
     }
 
-    private ProductResponse buildProductResponse(ProductEntity product) {
-        return getProductResponse(product);
+    private PaginationResponse<ProductResponse> createPaginationResponse(
+            List<ProductEntity> products, int page, int size, int totalElements, int totalPages) {
+
+        List<ProductResponse> content = products.stream()
+                .map(ProductHelper::convertToResponse)
+                .toList();
+
+        return PaginationResponse.<ProductResponse>builder()
+                .content(content)
+                .currentPage(page)
+                .pageSize(size)
+                .totalItems(totalElements)
+                .totalPages(totalPages)
+                .build();
     }
 }
