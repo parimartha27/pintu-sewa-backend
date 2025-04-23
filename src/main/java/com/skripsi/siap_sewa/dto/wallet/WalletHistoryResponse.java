@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,9 +16,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class WalletHistoryResponse {
-    private String id;
-    private BigDecimal amount;
-    private String type;
-    private String description;
-    private LocalDateTime createdAt;
+    private List<WalletHistory> walletHistory;
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public static class WalletHistory {
+        private String description;
+        private String tanggalTransaksi;
+        private String waktuTransaksi;
+        private BigDecimal amount;
+        private boolean isDebit;
+    }
 }
