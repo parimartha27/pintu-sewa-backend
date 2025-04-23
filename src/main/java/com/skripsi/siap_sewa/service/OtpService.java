@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 public class OtpService {
 
     private final CommonUtils commonUtils;
-    private final ObjectMapper objectMapper;
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
@@ -148,7 +147,7 @@ public class OtpService {
             CustomerEntity customer = customerRepository.findById(customerId)
                     .orElseThrow(() -> {
                         log.warn("Customer not found: {}", customerId);
-                        return new DataNotFoundException("Customer not found");
+                        return new DataNotFoundException("Customer not found with ID " + customerId);
                     });
 
             ValidOtpResponse response = ValidOtpResponse.builder()

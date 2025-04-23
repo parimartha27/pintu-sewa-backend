@@ -126,11 +126,9 @@ public class CheckoutService {
                     shippingPartnerId
             );
 
-            // Mark carts as deleted
-            carts.forEach(cart -> {
-                cart.setDeleted(true);
-                cartRepository.save(cart);
-            });
+            // Hapus cart secara permanen (hard delete)
+            cartRepository.deleteAll(carts);
+            log.info("Deleted {} carts permanently after checkout", carts.size());
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,
                     CheckoutResultResponse.builder().transactionIds(transactionIds).build());
@@ -266,9 +264,6 @@ public class CheckoutService {
         }
         if (carts.stream().anyMatch(c -> !c.getCustomerId().equals(customerId))) {
             throw new BadRequestException("Some carts don't belong to this customer");
-        }
-        if (carts.stream().anyMatch(CartEntity::isDeleted)) {
-            throw new BadRequestException("Cannot checkout deleted carts");
         }
 
         // Validate all cart dates
