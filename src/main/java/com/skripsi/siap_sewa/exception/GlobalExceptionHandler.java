@@ -126,4 +126,33 @@ public class GlobalExceptionHandler {
                 details
         );
     }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<ApiResponse> handleInsufficientBalanceException(InsufficientBalanceException ex) {
+        log.warn("Insufficient balance: {}", ex.getMessage());
+        Map<String, Object> details = new HashMap<>();
+        details.put("currentBalance", ex.getCurrentBalance());
+        details.put("requiredAmount", ex.getRequiredAmount());
+
+        return commonUtils.setResponse(
+                ex.getErrorCode(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                details
+        );
+    }
+
+    @ExceptionHandler(TransactionProcessingException.class)
+    public ResponseEntity<ApiResponse> handleTransactionProcessingException(TransactionProcessingException ex) {
+        log.warn("Transaction processing failed: {}", ex.getMessage());
+        Map<String, Object> details = new HashMap<>();
+        details.put("failedTransactionIds", ex.getFailedTransactionIds());
+
+        return commonUtils.setResponse(
+                ex.getErrorCode(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                details
+        );
+    }
 }
