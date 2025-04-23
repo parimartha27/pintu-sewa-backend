@@ -40,12 +40,17 @@ public enum ErrorMessageEnum {
     MAX_QUANTITY_EXCEEDED(Constant.MAX_QUANTITY_EXCEEDED_CODE, "Jumlah maximum sewa telah tercapai", HttpStatus.BAD_REQUEST),
     MIN_RENT_NOT_MET(Constant.MIN_RENT_NOT_MET_CODE, "Jumlah minimum sewa belum tercapai", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED_CART_ACCESS(Constant.UNAUTHORIZED_CART_ACCESS, "Tidak ada akses ke cart" , HttpStatus.UNAUTHORIZED ),
-    CHECKOUT_VALIDATION_FAILED("PS-08-001", "Validasi checkout gagal", HttpStatus.BAD_REQUEST),
-    PRODUCT_UNAVAILABLE("PS-08-002", "Produk tidak tersedia", HttpStatus.BAD_REQUEST),
-    SHIPPING_CALCULATION_FAILED("PS-08-003", "Gagal menghitung biaya pengiriman", HttpStatus.INTERNAL_SERVER_ERROR),
-    EMAIL_EDIT_EXPIRED("PS-07-002", "Email hanya bisa diubah dalam 30 hari pertama", HttpStatus.BAD_REQUEST),
-    USERNAME_EDIT_EXPIRED("PS-07-003", "Username hanya bisa diubah dalam 30 hari sejak terakhir update", HttpStatus.BAD_REQUEST),
-    TRANSACTION_NOT_FOUND("PS-09-001", "Transaction tidak ditemukan" , HttpStatus.NOT_FOUND ),;
+    CHECKOUT_VALIDATION_FAILED(Constant.CHECKOUT_VALIDATION_FAILED_CODE, "Validasi checkout gagal", HttpStatus.BAD_REQUEST),
+    PRODUCT_UNAVAILABLE(Constant.PRODUCT_UNAVAILABLE_CODE, "Produk tidak tersedia", HttpStatus.BAD_REQUEST),
+    SHIPPING_CALCULATION_FAILED(Constant.SHIPPING_CALCULATION_FAILED_CODE, "Gagal menghitung biaya pengiriman", HttpStatus.INTERNAL_SERVER_ERROR),
+    EMAIL_EDIT_EXPIRED(Constant.EMAIL_EDIT_EXPIRED_CODE, "Email hanya bisa diubah dalam 30 hari pertama", HttpStatus.BAD_REQUEST),
+    USERNAME_EDIT_EXPIRED(Constant.USERNAME_EDIT_EXPIRED_CODE, "Username hanya bisa diubah dalam 30 hari sejak terakhir update", HttpStatus.BAD_REQUEST),
+    TRANSACTION_NOT_FOUND(Constant.TRANSACTION_NOT_FOUND_CODE, "Transaction tidak ditemukan", HttpStatus.NOT_FOUND),
+    INSUFFICIENT_BALANCE(Constant.INSUFFICIENT_BALANCE_CODE, "Saldo tidak mencukupi", HttpStatus.BAD_REQUEST),
+    TRANSACTION_ALREADY_PAID(Constant.TRANSACTION_ALREADY_PAID_CODE, "Transaksi sudah dibayar", HttpStatus.BAD_REQUEST),
+    TRANSACTION_NOT_BELONG_TO_CUSTOMER(Constant.TRANSACTION_NOT_BELONG_TO_CUSTOMER_CODE, "Transaksi tidak dimiliki oleh customer", HttpStatus.FORBIDDEN),
+    PAYMENT_PARTIAL_SUCCESS(Constant.PAYMENT_PARTIAL_SUCCESS_CODE, "Beberapa transaksi gagal diproses", HttpStatus.MULTI_STATUS),
+    TRANSACTION_GROUP_FAILED(Constant.TRANSACTION_GROUP_FAILED_CODE, "Grup transaksi gagal diproses", HttpStatus.BAD_REQUEST),;
 
     private final String errorCode;
     private final String errorMessage;
