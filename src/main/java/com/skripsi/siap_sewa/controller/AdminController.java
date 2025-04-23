@@ -44,12 +44,12 @@ public class AdminController {
         return adminService.editBiodata(request);
     }
 
-    @PatchMapping("/manage-customer/suspend/{id}")
+    @PutMapping("/manage-customer/suspend/{id}")
     public ResponseEntity<ApiResponse> suspendCustomer(@PathVariable String id){
         return adminService.suspendCustomer(id);
     }
 
-    @PatchMapping("/manage-customer/unsuspend/{id}")
+    @PutMapping("/manage-customer/unsuspend/{id}")
     public ResponseEntity<ApiResponse> unSuspendCustomer(@PathVariable String id){
         return adminService.unSuspendCustomer(id);
     }
@@ -65,12 +65,12 @@ public class AdminController {
         return adminService.editShop(request);
     }
 
-    @PatchMapping("/manage-shop/deactive/{id}")
+    @PutMapping("/manage-shop/deactive/{id}")
     public ResponseEntity<ApiResponse> deactiveShop(@PathVariable String id){
         return adminService.deactiveShop(id);
     }
 
-    @PatchMapping("/manage-shop/activate/{id}")
+    @PutMapping("/manage-shop/activate/{id}")
     public ResponseEntity<ApiResponse> activeShop(@PathVariable String id){
         return adminService.activeShop(id);
     }
