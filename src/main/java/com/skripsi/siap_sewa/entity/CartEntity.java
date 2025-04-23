@@ -46,9 +46,6 @@ public class CartEntity {
 
     private String shippingPartner;
 
-    @Column(columnDefinition="BOOLEAN DEFAULT false")
-    private boolean isDeleted;
-
     @JsonIgnore
     private LocalDateTime createdAt;
 
