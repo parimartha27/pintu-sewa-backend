@@ -5,6 +5,7 @@ import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
 import com.skripsi.siap_sewa.dto.admin.CustomerListResponse;
 import com.skripsi.siap_sewa.dto.admin.DashboardResponse;
 import com.skripsi.siap_sewa.dto.admin.ShopListResponse;
+import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import com.skripsi.siap_sewa.dto.customer.CustomerDetailResponse;
 import com.skripsi.siap_sewa.dto.customer.EditBiodataRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
@@ -50,6 +51,7 @@ public class AdminService {
     private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
     private final ChatRepository chatRepository;
+    private final JWTService jwtService;
 
     public ResponseEntity<ApiResponse> loginAdmin(@Valid AdminLoginRequest request) {
         List<CustomerEntity> customerEntity =
@@ -68,7 +70,7 @@ public class AdminService {
             return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Failed to login");
         }
 
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customerEntity.getFirst().getUsername());
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, jwtService.generateToken(new CustomerPrincipal(customerEntity.getFirst())));
     }
 
     public ResponseEntity<ApiResponse> viewDashboard() {
