@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,9 @@ public class ShopEntity {
     private String image;
     private String workHours;
 
+    @Column(columnDefinition = "DECIMAL(19,2) DEFAULT 0")
+    private BigDecimal balance;
+
     // Address
     private String street;
     private String district;
@@ -57,5 +61,7 @@ public class ShopEntity {
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProductEntity> products = new ArrayList<>();
+
+
 }
 

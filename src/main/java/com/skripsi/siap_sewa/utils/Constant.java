@@ -69,4 +69,34 @@ public class Constant {
             Map.of("id", "6", "name", "GrabExpress")
     );
     public static final String DEFAULT_EKSPEDISI = "JNE";
+
+    // Payment related error codes
+    public static final String INSUFFICIENT_BALANCE_CODE = "PS-10-001";
+    public static final String TRANSACTION_ALREADY_PAID_CODE = "PS-10-002";
+    public static final String TRANSACTION_NOT_BELONG_TO_CUSTOMER_CODE = "PS-10-003";
+    public static final String PAYMENT_PARTIAL_SUCCESS_CODE = "PS-10-004";
+    public static final String TRANSACTION_GROUP_FAILED_CODE = "PS-10-005";
+
+    // Wallet report types
+    public static final String WALLET_DEBIT = "DEBIT";
+    public static final String WALLET_CREDIT = "CREDIT";
+
+    // Transaction statuses
+    public static final String TRANSACTION_STATUS_PENDING = "Belum Dibayar";
+    public static final String TRANSACTION_STATUS_PROCESSED = "Diproses";
+    public static final String TRANSACTION_STATUS_CANCELLED = "Dibatalkan";
+    public static final String TRANSACTION_STATUS_FAILED = "Gagal";
+
+    // Checkout & Shipping
+    public static final String CHECKOUT_VALIDATION_FAILED_CODE = "PS-08-001";
+    public static final String PRODUCT_UNAVAILABLE_CODE = "PS-08-002";
+    public static final String SHIPPING_CALCULATION_FAILED_CODE = "PS-08-003";
+
+    // User Profile Update Restrictions
+    public static final String EMAIL_EDIT_EXPIRED_CODE = "PS-07-002";
+    public static final String USERNAME_EDIT_EXPIRED_CODE = "PS-07-003";
+
+    // Transaction
+    public static final String TRANSACTION_NOT_FOUND_CODE = "PS-09-001";
+
 }

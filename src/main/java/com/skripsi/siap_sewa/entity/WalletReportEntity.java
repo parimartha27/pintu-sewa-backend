@@ -19,11 +19,19 @@ public class WalletReportEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
     private String customerId;
+    private String shopId;
     private BigDecimal amount;
-    private int isDebit;
-    private int isCredit;
+
+    @Enumerated(EnumType.STRING)
+    private WalletType type; // DEBIT or CREDIT
+
     private String description;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
+
+    public enum WalletType {
+        DEBIT, CREDIT
+    }
 }
