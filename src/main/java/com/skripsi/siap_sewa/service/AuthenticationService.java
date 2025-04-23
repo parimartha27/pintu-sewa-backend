@@ -24,7 +24,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -41,23 +40,22 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request) {
         try {
             log.info("Validating register request");
             if(commonUtils.isNull(request.getEmail()) && commonUtils.isNull(request.getPhoneNumber())) {
-                log.warn("Bad request - both email and phone number are null");
+                log.info("Bad request - both email and phone number are null");
                 return commonUtils.setResponse(ErrorMessageEnum.BAD_REQUEST, null);
             }
 
             log.info("Checking existing customer");
             if(customerRepository.existsByEmail(request.getEmail())) {
-                log.warn("Email already exists: {}", request.getEmail());
-                throw new EmailExistException("Email sudah digunakan");
+                log.info("Email already used: {}", request.getEmail());
+                throw new EmailExistException("Email sudah digunakan " + request.getEmail());
             } else if(customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-                log.warn("Phone number already exists: {}", request.getPhoneNumber());
-                throw new PhoneNumberExistException("No Handphone sudah digunakan");
+                log.info("Phone number already exists: {}", request.getPhoneNumber());
+                throw new PhoneNumberExistException("No Handphone sudah digunakan " + request.getPhoneNumber());
             }
 
             CustomerEntity newCustomer = new CustomerEntity();
@@ -101,13 +99,13 @@ public class AuthenticationService {
         try {
             log.info("Validating OAuth register request");
             if(commonUtils.isNull(request.getEmail())) {
-                log.warn("Bad request - email is null");
+                log.info("Bad request - email is null");
                 return commonUtils.setResponse(ErrorMessageEnum.BAD_REQUEST, null);
             }
 
             if(customerRepository.existsByEmail(request.getEmail())) {
-                log.warn("Email already exists: {}", request.getEmail());
-                throw new EmailExistException("Email sudah digunakan");
+                log.info("Email already exists: {}", request.getEmail());
+                throw new EmailExistException("Email "  + request.getEmail() + " sudah digunakan");
             }
 
             CustomerEntity newCustomer = new CustomerEntity();
@@ -140,7 +138,7 @@ public class AuthenticationService {
                     request.getEmail(), request.getPhoneNumber());
 
             if(customers.size() > 1) {
-                log.warn("Multiple accounts found for email/phone: {}",
+                log.info("Multiple accounts found for email/phone: {}",
                         request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
                 return commonUtils.setResponse(
                         "SIAP-SEWA-01-001",
@@ -151,9 +149,9 @@ public class AuthenticationService {
             }
 
             if(customers.isEmpty()) {
-                log.warn("No customer found for email/phone: {}",
+                log.info("No customer found for email/phone: {}",
                         request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
-                throw new DataNotFoundException("Customer not found");
+                throw new DataNotFoundException("Customer not found with ID: " + request.getEmail());
             }
 
             CustomerEntity customer = customers.get(0);
@@ -164,7 +162,7 @@ public class AuthenticationService {
                             customer.getUsername(), request.getPassword()));
 
             if (!authentication.isAuthenticated()) {
-                log.warn("Authentication failed for customer: {}", customer.getId());
+                log.info("Authentication failed for customer: {}", customer.getId());
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Failed to login");
             }
 

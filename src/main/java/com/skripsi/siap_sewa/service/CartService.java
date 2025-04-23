@@ -41,8 +41,7 @@ public class CartService {
         try {
             log.info("Fetching active cart products for customer: {}", customerId);
 
-            // Only get non-deleted carts
-            List<CartEntity> activeCarts = cartRepository.findByCustomerIdAndIsDeletedFalse(customerId);
+            List<CartEntity> activeCarts = cartRepository.findByCustomerId(customerId);
 
             if (activeCarts.isEmpty()) {
                 log.info("No active carts found for customer: {}", customerId);
@@ -133,7 +132,7 @@ public class CartService {
 
             // 2. Validasi produk exists
             ProductEntity product = productRepository.findById(request.getProductId())
-                    .orElseThrow(() -> new DataNotFoundException("Product tidak ditemukan"));
+                    .orElseThrow(() -> new DataNotFoundException("Product tidak ditemukan dengan ID: " + request.getProductId()));
 
             // 3. Validasi status produk
             if (!"AVAILABLE".equalsIgnoreCase(product.getStatus())) {
@@ -287,7 +286,7 @@ public class CartService {
                 return commonUtils.setResponse(ErrorMessageEnum.INSUFFICIENT_STOCK, null);
             }
 
-            // 3. Validasi quantity vs stok (maksimal setengah stok)
+            // 3. Validasi quantity vs stok
             if (request.getQuantity() > product.getStock()) {
                 return commonUtils.setResponse(
                         ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,
@@ -320,30 +319,7 @@ public class CartService {
 
             cartRepository.save(cartItem);
 
-//            // 7. Membuat response
-//            CartResponse.CartInfo cartInfo = CartResponse.CartInfo.builder()
-//                    .cartId(cartItem.getId())
-//                    .productId(product.getId())
-//                    .productName(product.getName())
-//                    .price(product.getDailyPrice())
-//                    .startRentDate(CommonUtils.formatDate(request.getStartRentDate()))
-//                    .endRentDate(CommonUtils.formatDate(request.getEndRentDate()))
-//                    .rentDuration(CommonUtils.calculateRentDuration(
-//                            request.getStartRentDate(),
-//                            request.getEndRentDate()))
-//                    .quantity(request.getQuantity())
-//                    .isAvailableToRent(product.getStock() > 0)
-//                    .build();
-
-            return commonUtils.setResponse(
-                    ErrorMessageEnum.SUCCESS,
-//                    CartResponse.builder()
-//                            .shopId(product.getShop().getId())
-//                            .shopName(product.getShop().getName())
-//                            .carts(List.of(cartInfo))
-//                            .build()
-                    null
-            );
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,null);
 
         } catch (DataNotFoundException ex) {
             throw ex;
@@ -357,7 +333,7 @@ public class CartService {
         try {
             // 1. Cari cart item
             CartEntity cartItem = cartRepository.findById(request.getCartId())
-                    .orElseThrow(() -> new DataNotFoundException("Cart item tidak ditemukan"));
+                    .orElseThrow(() -> new DataNotFoundException("Cart item dengan ID "  + request.getCartId() + "tidak ditemukan"));
 
             // 2. Validasi kepemilikan
             if (!cartItem.getCustomerId().equals(request.getCustomerId())) {
@@ -367,15 +343,13 @@ public class CartService {
                 );
             }
 
-            // 3. Hapus dari database
-            cartItem.setDeleted(true);
-            cartItem.setLastUpdateAt(LocalDateTime.now());
-            cartRepository.save(cartItem);
-            log.info("Cart {} berhasil dihapus", request.getCartId());
+            // 3. Hapus dari database (hard delete)
+            cartRepository.delete(cartItem);
+            log.info("Cart {} berhasil dihapus secara permanen", request.getCartId());
 
             return commonUtils.setResponse(
                     ErrorMessageEnum.SUCCESS,
-                   null
+                    null
             );
 
         } catch (DataNotFoundException ex) {
