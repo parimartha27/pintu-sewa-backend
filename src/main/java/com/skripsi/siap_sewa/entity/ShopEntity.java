@@ -36,7 +36,7 @@ public class ShopEntity {
     private String image;
     private String workHours;
 
-    @Column(columnDefinition = "DECIMAL(19,2) DEFAULT 0")
+    @Column(columnDefinition = "DECIMAL(19,2)")
     private BigDecimal balance;
 
     // Address
