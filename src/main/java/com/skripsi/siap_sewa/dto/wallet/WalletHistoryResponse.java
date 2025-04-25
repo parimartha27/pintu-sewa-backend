@@ -18,6 +18,7 @@ import java.util.List;
 public class WalletHistoryResponse {
     private List<WalletHistory> walletHistory;
 
+    @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
