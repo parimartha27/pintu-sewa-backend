@@ -8,6 +8,7 @@ import com.skripsi.siap_sewa.entity.WalletReportEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
+import com.skripsi.siap_sewa.repository.ShopRepository;
 import com.skripsi.siap_sewa.repository.WalletReportRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -34,6 +36,7 @@ public class WalletService {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private final ShopRepository shopRepository;
 
     public ResponseEntity<ApiResponse> getWalletBalance(String customerId) {
         try {
@@ -51,17 +54,28 @@ public class WalletService {
         }
     }
 
-    public ResponseEntity<ApiResponse> getWalletHistory(String customerId, int page, int size) {
+    public ResponseEntity<ApiResponse> getWalletHistory(String id, String role,int page, int size) {
         try {
-            // Validate customer exists
-            if (!customerRepository.existsById(customerId)) {
-                throw new DataNotFoundException("Customer not found");
-            }
+            Page<WalletReportEntity> reports = null;
 
-            // Get paginated wallet history
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createAt").descending());
-            Page<WalletReportEntity> reports = walletReportRepository
-                    .findByCustomerId(customerId, pageable);
+            if(role.equals("customer")){
+                if (!customerRepository.existsById(id)) {
+                    throw new DataNotFoundException("Customer not found");
+                }
+
+                Pageable pageable = PageRequest.of(page, size, Sort.by("createAt").descending());
+                reports = walletReportRepository
+                        .findByCustomerId(id, pageable);
+            }else if(role.equals("shop")){
+                if (!shopRepository.existsById(id)) {
+                    throw new DataNotFoundException("Shop not found");
+                }
+                Pageable pageable = PageRequest.of(page, size, Sort.by("createAt").descending());
+                reports = walletReportRepository
+                        .findByShopId(id, pageable);
+            }else{
+                throw new DataNotFoundException("Role not found");
+            }
 
             // Convert to response
             List<WalletHistoryResponse.WalletHistory> history = reports.getContent().stream()
@@ -71,13 +85,6 @@ public class WalletService {
             WalletHistoryResponse response = WalletHistoryResponse.builder()
                     .walletHistory(history)
                     .build();
-
-//            // Add pagination info
-//            Map<String, Object> meta = new HashMap<>();
-//            meta.put("page", reports.getNumber());
-//            meta.put("size", reports.getSize());
-//            meta.put("totalItems", reports.getTotalElements());
-//            meta.put("totalPages", reports.getTotalPages());
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         } catch (Exception ex) {
@@ -98,4 +105,41 @@ public class WalletService {
                 .isDebit(report.getType() == WalletReportEntity.WalletType.DEBIT)
                 .build();
     }
+
+    public ResponseEntity<ApiResponse> topUpWallet(String customerId, BigDecimal amount) {
+        try {
+            // Validate customer exists
+            if (!customerRepository.existsById(customerId)) {
+                throw new DataNotFoundException("Customer not found");
+            }
+
+            CustomerEntity customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", customerId);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+            customer.setWalletAmount(customer.getWalletAmount().add(amount));
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+            WalletReportEntity wallet = new WalletReportEntity();
+            wallet.setDescription("Top Up Wallet Amount : "+ amount);
+            wallet.setAmount(amount);
+            wallet.setType(WalletReportEntity.WalletType.DEBIT);
+            wallet.setCustomerId(customer.getId());
+            wallet.setCreateAt(LocalDateTime.now());
+            wallet.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(wallet);
+
+            log.info("Successfully Top Up customer with ID: {}", customerId);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,"Top Up Berhasil");
+        } catch (Exception ex) {
+            log.error("Failed Top Up Customer : {}", ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+
 }

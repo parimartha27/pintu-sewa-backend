@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WalletReportRepository extends JpaRepository<WalletReportEntity, String> {
     Page<WalletReportEntity> findByCustomerId(String customerId, Pageable pageable);
+    Page<WalletReportEntity> findByShopId(String shopId, Pageable pageable);
 }
 
