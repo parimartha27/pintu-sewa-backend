@@ -31,8 +31,8 @@ public class WalletController {
             @RequestParam String role,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        log.info("Get wallet history for customer: {}", customerId);
-        return walletService.getWalletHistory(customerId,
+        log.info("Get wallet history for customer: {}", id);
+        return walletService.getWalletHistory(id,role,
                 Optional.ofNullable(page).orElse(0),
                 Optional.ofNullable(size).orElse(10));
     }
