@@ -5,11 +5,9 @@ import com.skripsi.siap_sewa.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Slf4j
@@ -29,12 +27,19 @@ public class WalletController {
 
     @GetMapping("/history")
     public ResponseEntity<ApiResponse> getWalletHistory(
-            @RequestParam String customerId,
+            @RequestParam String id,
+            @RequestParam String role,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        log.info("Get wallet history for customer: {}", customerId);
-        return walletService.getWalletHistory(customerId,
+        log.info("Get wallet history for customer: {}", id);
+        return walletService.getWalletHistory(id,role,
                 Optional.ofNullable(page).orElse(0),
                 Optional.ofNullable(size).orElse(10));
+    }
+
+    @PatchMapping("/topup")
+    public ResponseEntity<ApiResponse> topUpWallet(@RequestParam String customerId, BigDecimal amount) {
+        log.info("Top Up Wallet balance for customer: {}", customerId);
+        return walletService.topUpWallet(customerId,amount);
     }
 }
