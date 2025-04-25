@@ -91,6 +91,7 @@ public class WalletService {
         String waktu = createAt.format(TIME_FORMATTER) + " WIB"; // Adjust timezone if needed
 
         return WalletHistoryResponse.WalletHistory.builder()
+                .id(report.getId())
                 .description(report.getDescription())
                 .tanggalTransaksi(createAt.format(DATE_FORMATTER))
                 .waktuTransaksi(waktu)

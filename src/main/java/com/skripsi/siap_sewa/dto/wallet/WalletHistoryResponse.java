@@ -24,6 +24,7 @@ public class WalletHistoryResponse {
     @AllArgsConstructor
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class WalletHistory {
+        private String id;
         private String description;
         private String tanggalTransaksi;
         private String waktuTransaksi;
