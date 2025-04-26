@@ -40,6 +40,6 @@ public class WalletController {
     @PatchMapping("/topup")
     public ResponseEntity<ApiResponse> topUpWallet(@RequestParam String customerId, BigDecimal amount) {
         log.info("Top Up Wallet balance for customer: {}", customerId);
-        return walletService.topUpWallet(customerId,amount);
+        return walletService.topUpWallet(customerId, amount);
     }
 }

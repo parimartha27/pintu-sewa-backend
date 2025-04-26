@@ -14,6 +14,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +39,7 @@ public class ShopService {
     private final EmailService emailService;
     private final CommonUtils commonUtils;
     private final ModelMapper modelMapper;
+    private final WalletReportRepository walletReportRepository;
 
     public ResponseEntity<ApiResponse> createShop(CreateShopRequest request) {
         
@@ -175,4 +179,47 @@ public class ShopService {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
+
+    public ResponseEntity<ApiResponse> getShopDashboardDetail(String shopId) {
+        try {
+            Pageable pageable = PageRequest.of(1, 5);
+            log.info("Fetching Dashboard Data From Shop : {}", shopId);
+
+            Optional<ShopEntity> shop = shopRepository.findById(shopId);
+            if (!shop.isPresent()) {
+                log.info("No shop found for this Shop ID : {}", shopId);
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            ShopEntity shopEntity = shop.get();
+
+            List<ReviewEntity> reviewsPage = reviewRepository.findByProduct_Shop_Id(shopId);
+            double reviewsAverage = reviewsPage == null || reviewsPage.isEmpty()
+                    ? 0.0
+                    : reviewsPage.stream()
+                    .mapToDouble(ReviewEntity::getRating)
+                    .average()
+                    .orElse(0.0);
+
+            int TrasactionCount = transactionRepository.findByShopId(shopId).size();
+
+            DashboardResponse response = DashboardResponse.builder()
+                    .wallet(shopEntity.getBalance())
+                    .averageRating(reviewsAverage)
+                    .shopStatus(shopEntity.getShopStatus())
+                    .TransactionCount(TrasactionCount)
+                    .walletReport(walletReportRepository.findByShopId(shopId,pageable))
+                    .TransactionList(transactionRepository.findByShopId(shopId)).build();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (DataNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error fetching shop data ID {}: {}", shopId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+
 }
