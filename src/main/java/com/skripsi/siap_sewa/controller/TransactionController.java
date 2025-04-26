@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 
+import com.skripsi.siap_sewa.dto.transaction.ShopTransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.service.TransactionService;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +38,24 @@ public class TransactionController {
                 .build();
 
         return transactionService.getCustomerTransactions(filterRequest);
+    }
+
+    @GetMapping("/shop/{shopId}")
+    public ResponseEntity<ApiResponse> getShopTransactions(
+            @PathVariable String shopId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        ShopTransactionFilterRequest filterRequest = ShopTransactionFilterRequest.builder()
+                .shopId(shopId)
+                .status(status)
+                .searchQuery(search)
+                .startDate(startDate)
+                .endDate(endDate)
+                .build();
+
+        return transactionService.getShopTransactions(filterRequest);
     }
 }
