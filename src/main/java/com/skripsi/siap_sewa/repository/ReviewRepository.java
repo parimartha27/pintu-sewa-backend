@@ -40,4 +40,7 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, String> {
             @Param("rating") Integer rating,
             @Param("reviewTopics") List<String> reviewTopics,
             Pageable pageable);
+
+    @Query("SELECT r FROM ReviewEntity r WHERE " + "r.product.shop.id = :shopId")
+    List<ReviewEntity> findByProduct_Shop_Id(@Param("shopId") String shopId);
 }

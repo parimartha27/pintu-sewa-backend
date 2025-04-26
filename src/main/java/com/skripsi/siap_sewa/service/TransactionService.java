@@ -1,6 +1,7 @@
 package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.transaction.ShopTransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
@@ -124,5 +125,37 @@ public class TransactionService {
         return transactions.stream()
                 .map(TransactionEntity::getTotalDeposit)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public ResponseEntity<ApiResponse> getShopTransactions(ShopTransactionFilterRequest filterRequest) {
+        try {
+            log.info("Fetching transactions for shop {} with filters: {}",
+                    filterRequest.getShopId(), filterRequest);
+
+            // 1. Get all transactions matching filters
+            Specification<TransactionEntity> spec = TransactionSpecification.withFilters(filterRequest);
+            List<TransactionEntity> transactions = transactionRepository.findAll(spec);
+
+            if (transactions.isEmpty()) {
+                log.info("No transactions found for Shop  {}", filterRequest.getShopId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            // 2. Group transactions by referenceNumber
+            Map<String, List<TransactionEntity>> groupedTransactions = transactions.stream()
+                    .collect(Collectors.groupingBy(TransactionEntity::getTransactionNumber));
+
+            // 3. Build response
+            List<TransactionResponse> responseList = groupedTransactions.entrySet().stream()
+                    .map(entry -> buildGroupedTransactionResponse(entry.getKey(), entry.getValue()))
+                    .toList();
+
+            log.info("Found {} transaction groups for Shop {}", responseList.size(), filterRequest.getShopId());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
+
+        } catch (Exception ex) {
+            log.error("Error fetching transactions: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
     }
 }

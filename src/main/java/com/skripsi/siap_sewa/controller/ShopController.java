@@ -36,4 +36,9 @@ public class ShopController {
     public ResponseEntity<ApiResponse> editShop(@RequestBody @Valid EditShopRequest request){
         return shopService.editShop(request);
     }
+
+    @GetMapping("/dashboard/{id}")
+    public ResponseEntity<ApiResponse> getShopDashboardDetail(@PathVariable String id) {
+        return shopService.getShopDashboardDetail(id);
+    }
 }
