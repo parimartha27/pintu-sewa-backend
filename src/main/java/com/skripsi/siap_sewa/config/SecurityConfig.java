@@ -40,7 +40,9 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:3000",
                             "https://pintu-sewa.up.railway.app",
-                            "https://pintu-sewa-admin-production.up.railway.app"));
+                            "https://pintu-sewa-admin-production.up.railway.app",
+                            "https://pintu-sewa-frontend.up.railway.app"
+                            ));
                     config.setAllowedMethods(List.of("*"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(false);
