@@ -241,6 +241,7 @@ public class CheckoutService {
                         transaction.getEndDate()))
                 .quantity(transaction.getQuantity())
                 .availableToRent(true)
+                .image(product.getImage())
                 .build();
     }
 
