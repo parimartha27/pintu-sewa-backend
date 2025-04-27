@@ -134,6 +134,8 @@ public class ShopService {
         updatedShop.setRegency(request.getRegency());
         updatedShop.setProvince(request.getProvince());
         updatedShop.setPostCode(request.getPostCode());
+        updatedShop.setWorkHours(request.getWorkHours());
+        updatedShop.setLastUpdateAt(LocalDateTime.now());
         return updatedShop;
     }
 

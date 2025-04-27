@@ -58,4 +58,9 @@ public class TransactionController {
 
         return transactionService.getShopTransactions(filterRequest);
     }
+
+//    @GetMapping("transaction-detail/{transactionId}")
+//    public ResponseEntity<ApiResponse> getTransactionDetails(@PathVariable String transactionId){
+//        return transactionService.getTransactionDetails(transactionId);
+//    }
 }

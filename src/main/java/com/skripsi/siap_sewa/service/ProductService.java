@@ -17,6 +17,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -418,6 +420,28 @@ public class ProductService {
             throw ex;
         } catch (Exception ex) {
             log.info("Error fetching products from shopId {}: {}", shopId, ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> editStockProduct(String id, Integer newStock) {
+        try {
+            log.info("Edit Stock Product with Id : {}", id);
+            ProductEntity product = productRepository.getReferenceById(id);
+
+            if(newStock <= 0){
+                newStock = 0;
+            }
+
+            product.setStock(newStock);
+            product.setLastUpdateAt(LocalDateTime.now());
+            productRepository.save(product);
+
+            log.info("Success Update Product id {} , New Stock : {}", id,newStock);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
+
+        } catch (Exception ex) {
+            log.info("Error fetching products from ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
