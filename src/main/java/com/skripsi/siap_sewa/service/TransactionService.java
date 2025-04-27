@@ -21,6 +21,7 @@ import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -155,6 +156,22 @@ public class TransactionService {
 
         } catch (Exception ex) {
             log.error("Error fetching transactions: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> getTransactionDetails(String transactionId) {
+        try {
+            log.info("Fetching transactions Details with ID {}", transactionId);
+            Optional<TransactionEntity> transaction = transactionRepository.findById(transactionId);
+
+            if(transaction.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, transaction);
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }

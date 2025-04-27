@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -110,6 +111,7 @@ public class CustomerService {
             inputCustomerData.setProvince(request.getProvince());
             inputCustomerData.setPostCode(request.getPostCode());
             inputCustomerData.setLastUpdateAt(LocalDateTime.now());
+            inputCustomerData.setWalletAmount(BigDecimal.valueOf(0));
 
             customerRepository.save(inputCustomerData);
             log.info("Berhasil menyimpan data customer baru dengan ID: {}", inputCustomerData.getId());
