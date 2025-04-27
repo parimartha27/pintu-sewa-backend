@@ -155,4 +155,11 @@ public class ProductController {
 
         return productFilterService.getFilteredProducts(filterRequest);
     }
+
+    @PutMapping("/edit-stock/{id}")
+    public ResponseEntity<ApiResponse> editStockProduct(
+            @PathVariable String id,
+            @RequestParam Integer newStock){
+        return productService.editProduct(id, newStock);
+    }
 }
