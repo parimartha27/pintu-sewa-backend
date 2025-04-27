@@ -20,9 +20,9 @@ public class WalletController {
 
     @GetMapping("/amount")
     public ResponseEntity<ApiResponse> getWalletBalance(
-            @RequestParam String customerId) {
-        log.info("Get wallet balance for customer: {}", customerId);
-        return walletService.getWalletBalance(customerId);
+            @RequestParam String id,@RequestParam String role) {
+        log.info("Get wallet balance for {}: {}", role,id);
+        return walletService.getWalletBalance(id,role);
     }
 
     @GetMapping("/history")
@@ -38,8 +38,14 @@ public class WalletController {
     }
 
     @PatchMapping("/topup")
-    public ResponseEntity<ApiResponse> topUpWallet(@RequestParam String customerId, BigDecimal amount) {
+    public ResponseEntity<ApiResponse> topUpWallet(@RequestParam String customerId,@RequestParam BigDecimal amount) {
         log.info("Top Up Wallet balance for customer: {}", customerId);
         return walletService.topUpWallet(customerId, amount);
+    }
+
+    @PatchMapping("/withdraw")
+    public ResponseEntity<ApiResponse> withdrawWallet(@RequestParam String shopId,@RequestParam BigDecimal amount) {
+        log.info("Withdraw Wallet balance for shop: {}", shopId);
+        return walletService.withdrawWallet(shopId, amount);
     }
 }
