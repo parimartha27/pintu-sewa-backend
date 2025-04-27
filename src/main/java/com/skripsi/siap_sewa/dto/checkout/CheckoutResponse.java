@@ -56,5 +56,6 @@ public class CheckoutResponse {
         private String rentDuration;
         private int quantity;
         private boolean availableToRent;
+        private String image;
     }
 }
