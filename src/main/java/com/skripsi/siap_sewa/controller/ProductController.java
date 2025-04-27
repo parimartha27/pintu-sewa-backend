@@ -160,6 +160,6 @@ public class ProductController {
     public ResponseEntity<ApiResponse> editStockProduct(
             @PathVariable String id,
             @RequestParam Integer newStock){
-        return productService.editProduct(id, newStock);
+        return productService.editStockProduct(id, newStock);
     }
 }
