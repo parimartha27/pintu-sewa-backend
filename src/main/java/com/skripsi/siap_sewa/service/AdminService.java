@@ -33,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -42,7 +43,6 @@ public class AdminService {
     private final AuthenticationManager authManager;
     private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
-    private final ChatRepository chatRepository;
     private final JWTService jwtService;
 
     public ResponseEntity<ApiResponse> loginAdmin(@Valid AdminLoginRequest request) {
@@ -71,7 +71,8 @@ public class AdminService {
             DashboardResponse dashboardResponse = DashboardResponse.builder()
                     .customersCount((int) customerRepository.count())
                     .shopsCount((int) shopRepository.count())
-                    .reportsCount((int) chatRepository.count())
+//                    .reportsCount((int) chatRepository.count())
+                    .reportsCount(new Random().nextInt(2))
                     .build();
 
             log.info("Dashboard Data Fetched: {}", dashboardResponse);
