@@ -1,10 +1,10 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.checkout.CartCheckoutRequest;
-import com.skripsi.siap_sewa.dto.checkout.CheckoutDetailsRequest;
-import com.skripsi.siap_sewa.dto.checkout.ProductCheckoutRequest;
+import com.skripsi.siap_sewa.dto.checkout.*;
+import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.CheckoutService;
+import com.skripsi.siap_sewa.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class CheckoutController {
 
     private final CheckoutService checkoutService;
+    private final CommonUtils commonUtils;
 
     @PostMapping("/product")
     public ResponseEntity<ApiResponse> checkoutProduct(@RequestBody ProductCheckoutRequest request) throws BadRequestException {
@@ -36,5 +37,19 @@ public class CheckoutController {
     public ResponseEntity<ApiResponse> getCheckoutDetails(@RequestBody CheckoutDetailsRequest request) {
         log.info("Fetching checkout details for {} transaction IDs", request.getTransactionIds().size());
         return checkoutService.getCheckoutDetails(request);
+    }
+
+    @PatchMapping("/shipping")
+    public ResponseEntity<ApiResponse> updateShippingMethod(
+            @RequestBody UpdateShippingRequest request) throws BadRequestException {
+
+        log.info("Updating shipping method for transactions: {}", request.getTransactionIds());
+
+        CheckoutResponse updatedCheckout = checkoutService.updateShippingMethod(
+                request.getTransactionIds(),
+                request.getShippingPartnerId()
+        );
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, updatedCheckout);
     }
 }
