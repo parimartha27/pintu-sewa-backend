@@ -2,7 +2,10 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.dto.shop.*;
+import com.skripsi.siap_sewa.dto.shop.dashboard.TransactionResponse;
+import com.skripsi.siap_sewa.dto.shop.dashboard.WalletReportResponse;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
@@ -20,7 +23,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -184,7 +190,6 @@ public class ShopService {
 
     public ResponseEntity<ApiResponse> getShopDashboardDetail(String shopId) {
         try {
-            Pageable pageable = PageRequest.of(1, 5);
             log.info("Fetching Dashboard Data From Shop : {}", shopId);
 
             Optional<ShopEntity> shop = shopRepository.findById(shopId);
@@ -205,16 +210,44 @@ public class ShopService {
 
             int TrasactionCount = transactionRepository.findByShopId(shopId).size();
 
+            List<TransactionEntity> allTransaction = transactionRepository.findByShopIdOrderByCreatedAtDesc(shopId);
+            List<TransactionResponse> sortedTransactions = allTransaction.stream()
+                    .map(transaction -> TransactionResponse.builder()
+                            .refferenceNo(transaction.getTransactionNumber())
+                            .createAt(transaction.getCreatedAt().toString()) // atau format sesuai kebutuhan
+                            .customerName(transaction.getCustomer().getName()) // asumsi ada relasi ke customer
+                            .startDate(transaction.getStartDate().toString())
+                            .endDate(transaction.getEndDate().toString())
+                            .duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate())))
+                            .status(transaction.getStatus())
+                            .depositStatus(transaction.isDepositReturned())
+                            .build())
+                    .sorted(Comparator.comparing(TransactionResponse::getCreateAt).reversed()) // contoh sort
+                    .limit(5)
+                    .toList();
+
+            List<WalletReportEntity> allWalletReport = walletReportRepository.findShopByIdOrderByCreatedAtDesc(shopId);
+            List<WalletReportResponse> sortedWallet = allWalletReport.stream()
+                    .map(wallet -> WalletReportResponse.builder()
+                            .amount(wallet.getAmount())
+                            .createAt(wallet.getCreateAt().toString())
+                            .description(wallet.getDescription())
+                            .type(String.valueOf(wallet.getType()))
+                            .build())
+                    .sorted(Comparator.comparing(WalletReportResponse::getCreateAt).reversed()) // contoh sort
+                    .limit(5)
+                    .toList();
+
+
             DashboardResponse response = DashboardResponse.builder()
                     .wallet(shopEntity.getBalance())
                     .averageRating(reviewsAverage)
                     .shopStatus(shopEntity.getShopStatus())
                     .TransactionCount(TrasactionCount)
-                    .walletReport(walletReportRepository.findByShopId(shopId,pageable))
-                    .TransactionList(transactionRepository.findByShopId(shopId)).build();
+                    .walletReport(sortedWallet)
+                    .TransactionList(sortedTransactions).build();
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-
         } catch (DataNotFoundException ex) {
             throw ex;
         } catch (Exception ex) {

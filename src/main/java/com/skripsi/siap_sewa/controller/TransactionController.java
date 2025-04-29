@@ -63,9 +63,4 @@ public class TransactionController {
     public ResponseEntity<ApiResponse> getTransactionDetails(@PathVariable String transactionId){
         return transactionService.getTransactionDetails(transactionId);
     }
-
-//    @GetMapping("transaction-detail/{transactionId}")
-//    public ResponseEntity<ApiResponse> getTransactionDetails(@PathVariable String transactionId){
-//        return transactionService.getTransactionDetails(transactionId);
-//    }
 }

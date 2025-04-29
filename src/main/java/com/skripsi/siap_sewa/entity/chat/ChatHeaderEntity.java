@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "CHAT_HEADER")
 public class ChatHeaderEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(name = "customer_id", nullable = false)
