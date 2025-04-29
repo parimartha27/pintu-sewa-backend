@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -169,7 +170,54 @@ public class TransactionService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
 
-            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, transaction);
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, transaction);
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> setStatus(String transactionId,String status) {
+        try {
+            log.info("Update Transaction Id Status {} Into {}", transactionId,status);
+
+            Optional<TransactionEntity> transaction = transactionRepository.findById(transactionId);
+
+            if(transaction.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            transaction.get().setStatus(status);
+            transaction.get().setLastUpdateAt(LocalDateTime.now());
+            transactionRepository.save(transaction.get());
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> setShippingCode(String transactionId,String shippingCode,String type) {
+        try {
+            log.info("Update Transaction Id {} {} Code Into {}",transactionId,shippingCode,type);
+            Optional<TransactionEntity> transaction = transactionRepository.findById(transactionId);
+            if(transaction.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            if(type == "return"){
+                transaction.get().setReturnCode(shippingCode);
+            }else if(type == "shipping"){
+                transaction.get().setShippingCode(shippingCode);
+            }else{
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Type not exist");
+            }
+
+            transaction.get().setLastUpdateAt(LocalDateTime.now());
+            transactionRepository.save(transaction.get());
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
         } catch (Exception ex) {
             log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);

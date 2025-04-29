@@ -48,4 +48,9 @@ public class WalletController {
         log.info("Withdraw Wallet balance for shop: {}", shopId);
         return walletService.withdrawWallet(shopId, amount);
     }
+
+    @PatchMapping("/payment")
+    public ResponseEntity<ApiResponse> paymentWallet(@RequestParam String customerId,@RequestParam BigDecimal amount,@RequestParam String refference_no) {
+        return walletService.paymentWallet(customerId, amount, refference_no);
+    }
 }
