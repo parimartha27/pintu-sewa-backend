@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateShopResponse {
 
+    private String id;
     private String name;
     private String shopStatus;
     private String email;

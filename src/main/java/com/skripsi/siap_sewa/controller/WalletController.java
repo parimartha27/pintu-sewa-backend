@@ -53,4 +53,9 @@ public class WalletController {
     public ResponseEntity<ApiResponse> paymentWallet(@RequestParam String customerId,@RequestParam BigDecimal amount,@RequestParam String refference_no) {
         return walletService.paymentWallet(customerId, amount, refference_no);
     }
+
+    @PatchMapping("/return-deposit")
+    public ResponseEntity<ApiResponse> returnDeposit(@RequestParam String customerId,@RequestParam String transactionId) {
+        return walletService.returnDeposit(customerId, transactionId);
+    }
 }

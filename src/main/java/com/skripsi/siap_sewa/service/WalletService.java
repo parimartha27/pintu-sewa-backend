@@ -5,11 +5,13 @@ import com.skripsi.siap_sewa.dto.wallet.WalletBalanceResponse;
 import com.skripsi.siap_sewa.dto.wallet.WalletHistoryResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
+import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.entity.WalletReportEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
+import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.repository.WalletReportRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class WalletService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final ShopRepository shopRepository;
+    private final TransactionRepository transactionRepository;
 
     public ResponseEntity<ApiResponse> getWalletBalance(String id,String role) {
         try {
@@ -235,4 +238,65 @@ public class WalletService {
         }
     }
 
+    public ResponseEntity<ApiResponse> returnDeposit(String customerId,String transactionId) {
+        try {
+
+            TransactionEntity transaction = transactionRepository.findById(transactionId).orElseThrow(() -> {
+                log.info("Transaction not found with ID : {}", transactionId);
+                return new DataNotFoundException("Transaction not found");
+            });
+
+            CustomerEntity customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", customerId);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+            ShopEntity shop = shopRepository.findById(transaction.getShopId())
+                    .orElseThrow(() -> {
+                        log.info("Shop not found with ID: {}", transaction.getShopId());
+                        return new DataNotFoundException("Shop not found");
+                    });
+
+            BigDecimal deposit = transaction.getTotalDeposit();
+
+            if (shop.getBalance().compareTo(deposit) < 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
+            }
+
+            customer.setWalletAmount(customer.getWalletAmount().add(deposit));
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+
+            shop.setBalance(shop.getBalance().subtract(deposit));
+            shop.setLastUpdateAt(LocalDateTime.now());
+            shopRepository.save(shop);
+
+            WalletReportEntity walletCustomer = new WalletReportEntity();
+            walletCustomer.setDescription("Deposit Return From Transaction ID "+ transaction.getId() + " Amount : "+ deposit);
+            walletCustomer.setAmount(deposit);
+            walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
+            walletCustomer.setCustomerId(customer.getId());
+            walletCustomer.setCreateAt(LocalDateTime.now());
+            walletCustomer.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletCustomer);
+
+            WalletReportEntity walletShop = new WalletReportEntity();
+            walletShop.setDescription("Deposit Return From Transaction ID "+ transaction.getId() + " Amount : "+ deposit);
+            walletShop.setAmount(deposit);
+            walletShop.setType(WalletReportEntity.WalletType.CREDIT);
+            walletShop.setCustomerId(shop.getId());
+            walletShop.setCreateAt(LocalDateTime.now());
+            walletShop.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletShop);
+
+            log.info("Successfully Return Deposit of Transaction ID {} ",transactionId);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,"Return Deposit Success");
+        } catch (Exception ex) {
+            log.error("Failed Return Deposit Transaction : {}", ex.getMessage(), ex);
+            throw ex;
+        }
+    }
 }

@@ -26,21 +26,14 @@ public class CreateShopRequest {
     @Email(message = "Format email tidak valid")
     private String email;
 
-    @NotBlank(message = "Lokasi toko tidak boleh kosong")
-    @Size(min = 5, max = 255, message = "Lokasi toko harus terdiri dari 5 hingga 255 karakter")
     private String street;
 
-    @NotBlank(message = "Kecamatan tidak boleh kosong")
     private String district;
 
-    @NotBlank(message = "Kota tidak boleh kosong")
     private String regency;
 
-    @NotBlank(message = "Provinsi tidak boleh kosong")
     private String province;
 
-    @NotBlank(message = "Kode pos tidak boleh kosong")
-    @Pattern(regexp = "^[0-9]{5}$", message = "Kode pos harus terdiri dari 5 angka")
     private String postCode;
 
     @NotNull(message = "Tolong pilih alamat toko yang sesuai")

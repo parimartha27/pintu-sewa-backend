@@ -62,7 +62,36 @@ public class ShopService {
         if(isShopNameExist){
             return utils.setResponse(ErrorMessageEnum.FAILED, "Shop name already exist");
         }
-        
+
+        if (!request.isSameAddress()) {
+            if (request.getStreet() == null || request.getStreet().isBlank()) {
+                throw new IllegalArgumentException("Lokasi toko tidak boleh kosong");
+            }
+            if (request.getStreet().length() < 5 || request.getStreet().length() > 255) {
+                throw new IllegalArgumentException("Lokasi toko harus terdiri dari 5 hingga 255 karakter");
+            }
+
+            if (request.getDistrict() == null || request.getDistrict().isBlank()) {
+                throw new IllegalArgumentException("Kecamatan tidak boleh kosong");
+            }
+
+            if (request.getRegency() == null || request.getRegency().isBlank()) {
+                throw new IllegalArgumentException("Kota tidak boleh kosong");
+            }
+
+            if (request.getProvince() == null || request.getProvince().isBlank()) {
+                throw new IllegalArgumentException("Provinsi tidak boleh kosong");
+            }
+
+            if (request.getPostCode() == null || request.getPostCode().isBlank()) {
+                throw new IllegalArgumentException("Kode pos tidak boleh kosong");
+            }
+
+            if (!request.getPostCode().matches("^[0-9]{5}$")) {
+                throw new IllegalArgumentException("Kode pos harus terdiri dari 5 angka");
+            }
+        }
+
         CustomerEntity shopOwner = customer.get();
         
         ShopEntity newShop = new ShopEntity();
@@ -92,6 +121,7 @@ public class ShopService {
         shopRepository.save(newShop);
 
         CreateShopResponse response = objectMapper.convertValue(newShop, CreateShopResponse.class);
+        response.setId(newShop.getId());
 
         emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateEmailShop(response.getName()));
         
