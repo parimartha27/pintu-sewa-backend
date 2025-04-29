@@ -22,6 +22,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -94,6 +96,27 @@ public class ShopService {
         emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateEmailShop(response.getName()));
         
         return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getShopId(String id) {
+        try{
+            log.info("Finding Shop Id with Customer ID : {}", id);
+            Optional<CustomerEntity> customer = customerRepository.findById(id);
+            if(customer.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Customer Not Found");
+            }
+
+            Optional<ShopEntity> shop = shopRepository.findByCustomerId(id);
+            if(shop.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Shop Not Found");
+            }else{
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, shop.get().getId());
+            }
+        } catch (Exception ex) {
+            log.error("Error fetching shop ID : {}", ex.getMessage());
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
     }
 
     public ResponseEntity<ApiResponse> shopDetail(String shopId) {
