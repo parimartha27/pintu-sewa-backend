@@ -63,4 +63,14 @@ public class TransactionController {
     public ResponseEntity<ApiResponse> getTransactionDetails(@PathVariable String transactionId){
         return transactionService.getTransactionDetails(transactionId);
     }
+
+    @PatchMapping("transaction-detail/set-status")
+    public ResponseEntity<ApiResponse> setStatus(@RequestParam String transactionId,@RequestParam String status){
+        return transactionService.setStatus(transactionId,status);
+    }
+
+    @PatchMapping("transaction-detail/set-shipping")
+    public ResponseEntity<ApiResponse> setShippingCode(@RequestParam String transactionId,@RequestParam String shippingCode,@RequestParam String type){
+        return transactionService.setShippingCode(transactionId,shippingCode,type);
+    }
 }

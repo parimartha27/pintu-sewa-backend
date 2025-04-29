@@ -193,5 +193,46 @@ public class WalletService {
         }
     }
 
+    public ResponseEntity<ApiResponse> paymentWallet(String customerId, BigDecimal amount,String refference_no) {
+        try {
+
+            if (!customerRepository.existsById(customerId)) {
+                throw new DataNotFoundException("Customer not found");
+            }
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Amount Must be greater than zero");
+            }
+
+            CustomerEntity customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", customerId);
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+            if (customer.getWalletAmount().compareTo(amount) < 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
+            }
+
+            customer.setWalletAmount(customer.getWalletAmount().subtract(amount));
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+            WalletReportEntity wallet = new WalletReportEntity();
+            wallet.setDescription("Payment Transaction "+ refference_no + " Amount : "+ amount);
+            wallet.setAmount(amount);
+            wallet.setType(WalletReportEntity.WalletType.CREDIT);
+            wallet.setCustomerId(customer.getId());
+            wallet.setCreateAt(LocalDateTime.now());
+            wallet.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(wallet);
+
+            log.info("Successfully Payment Transaction ID {} with Customer ID: {}",refference_no, customerId);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,"Payment Success");
+        } catch (Exception ex) {
+            log.error("Failed Payment Transaction  : {}", ex.getMessage(), ex);
+            throw ex;
+        }
+    }
 
 }
