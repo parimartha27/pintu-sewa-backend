@@ -58,13 +58,13 @@ public class TransactionSpecification {
         };
     }
 
-    public static Specification<TransactionEntity> withFilters(ShopTransactionFilterRequest filterRequest) {
+    public static Specification<TransactionEntity> withFiltersShop(ShopTransactionFilterRequest filterRequest) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // Filter by Shop Id
             if (StringUtils.hasText(filterRequest.getShopId())) {
-                predicates.add(criteriaBuilder.equal(root.get("customer").get("id"), filterRequest.getShopId()));
+                predicates.add(criteriaBuilder.equal(root.get("shopId"), filterRequest.getShopId()));
             }
 
             // Filter by Status

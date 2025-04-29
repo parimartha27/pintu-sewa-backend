@@ -135,7 +135,7 @@ public class TransactionService {
                     filterRequest.getShopId(), filterRequest);
 
             // 1. Get all transactions matching filters
-            Specification<TransactionEntity> spec = TransactionSpecification.withFilters(filterRequest);
+            Specification<TransactionEntity> spec = TransactionSpecification.withFiltersShop(filterRequest);
             List<TransactionEntity> transactions = transactionRepository.findAll(spec);
 
             if (transactions.isEmpty()) {
