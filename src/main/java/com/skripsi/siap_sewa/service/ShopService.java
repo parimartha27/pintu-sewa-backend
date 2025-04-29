@@ -98,16 +98,15 @@ public class ShopService {
         return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getShopId(String id) {
+    public ResponseEntity<ApiResponse> getShopId(String customerid) {
         try{
-            log.info("Finding Shop Id with Customer ID : {}", id);
-            Optional<CustomerEntity> customer = customerRepository.findById(id);
+            log.info("Finding Shop Id with Customer ID : {}", customerid);
+            Optional<CustomerEntity> customer = customerRepository.findById(customerid);
             if(customer.isEmpty()){
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Customer Not Found");
             }
 
-            Optional<ShopEntity> shop = shopRepository.findByCustomerId(id);
+            Optional<ShopEntity> shop = shopRepository.findByCustomerId(customerid);
             if(shop.isEmpty()){
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Shop Not Found");
             }else{

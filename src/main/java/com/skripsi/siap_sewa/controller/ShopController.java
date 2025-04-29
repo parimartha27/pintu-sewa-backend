@@ -22,9 +22,9 @@ public class ShopController {
     }
 
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getShopId(@PathVariable String id) {
-        return shopService.getShopId(id);
+    @GetMapping("/{customerid}")
+    public ResponseEntity<ApiResponse> getShopId(@PathVariable String customerid) {
+        return shopService.getShopId(customerid);
     }
 
     //    for shop in page detail
