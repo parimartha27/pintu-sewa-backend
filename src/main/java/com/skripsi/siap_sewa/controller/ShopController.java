@@ -21,7 +21,13 @@ public class ShopController {
         return shopService.shopDetail(id);
     }
 
-//    for shop in page detail
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getShopId(@PathVariable String id) {
+        return shopService.getShopId(id);
+    }
+
+    //    for shop in page detail
     @GetMapping("/product/{productId}")
     public ResponseEntity<ApiResponse> getShopByProductId(@PathVariable String productId) {
         return shopService.getShopDataByProductId(productId);

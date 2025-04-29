@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
 
@@ -23,4 +24,7 @@ public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
     List<ShopEntity> findSimilarShopsByName(@Param("shopName") String shopName);
 
     Page<ShopEntity> findAll(Pageable pageable);
+
+    @Query("SELECT s FROM ShopEntity s WHERE s.customer.id = :customerId")
+    Optional<ShopEntity> findByCustomerId(@Param("customerId") String customerId);
 }
