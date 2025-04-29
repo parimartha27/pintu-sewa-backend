@@ -2,6 +2,8 @@ package com.skripsi.siap_sewa.dto.shop;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.skripsi.siap_sewa.dto.shop.dashboard.TransactionResponse;
+import com.skripsi.siap_sewa.dto.shop.dashboard.WalletReportResponse;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.entity.WalletReportEntity;
 import lombok.AllArgsConstructor;
@@ -19,11 +21,11 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class DashboardResponse {
-    private List<TransactionEntity> TransactionList;
+    private List<TransactionResponse> TransactionList;
     private BigDecimal wallet;
     private double averageRating;
     private String shopStatus;
     private int TransactionCount;
-    private Page<WalletReportEntity> walletReport;
+    private List<WalletReportResponse> walletReport;
 
 }
