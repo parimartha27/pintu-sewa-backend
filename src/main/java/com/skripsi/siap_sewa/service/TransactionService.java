@@ -1,9 +1,9 @@
 package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.transaction.ShopTransactionFilterRequest;
-import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
-import com.skripsi.siap_sewa.dto.transaction.TransactionResponse;
+import com.skripsi.siap_sewa.dto.transaction.*;
+import com.skripsi.siap_sewa.entity.ProductEntity;
+import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.repository.ProductRepository;
@@ -222,5 +222,125 @@ public class TransactionService {
             log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    public ResponseEntity<ApiResponse> getTransactionDetail(TransactionDetailRequest request) {
+        try {
+            log.info("Fetching transaction detail for reference: {}", request.getReferenceNumber());
+
+            // 1. Find all transactions with the same reference number
+            List<TransactionEntity> transactions = transactionRepository
+                    .findByTransactionNumber(request.getReferenceNumber());
+
+            if (transactions.isEmpty()) {
+                log.info("No transactions found with reference: {}", request.getReferenceNumber());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            // 2. Validate ownership (either customer or shop)
+            boolean isValid = validateOwnership(transactions, request);
+            if (!isValid) {
+                log.warn("Unauthorized access to transaction reference: {}", request.getReferenceNumber());
+                return commonUtils.setResponse(ErrorMessageEnum.CUSTOMER_NOT_FOUND, null);
+            }
+
+            // 3. Build response using existing helper methods
+            TransactionDetailResponse response = buildTransactionDetailResponse(transactions);
+
+            log.info("Successfully fetched transaction detail for reference: {}", request.getReferenceNumber());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.error("Error fetching transaction detail: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    private boolean validateOwnership(List<TransactionEntity> transactions, TransactionDetailRequest request) {
+        // If no ownership validation required
+        if (request.getCustomerId() == null && request.getShopId() == null) {
+            return true;
+        }
+
+        // Validate customer ownership
+        if (request.getCustomerId() != null) {
+            return transactions.get(0).getCustomer().getId().equals(request.getCustomerId());
+        }
+
+        // Validate shop ownership
+        if (request.getShopId() != null) {
+            return transactions.stream()
+                    .allMatch(t -> t.getShopId().equals(request.getShopId()));
+        }
+
+        return true;
+    }
+
+    private TransactionDetailResponse buildTransactionDetailResponse(List<TransactionEntity> transactions) {
+        TransactionEntity firstTransaction = transactions.get(0);
+
+        return TransactionDetailResponse.builder()
+                .transactionDetail(buildTransactionDetail(firstTransaction))
+                .productDetails(buildProductDetails(transactions))
+                .paymentDetail(buildPaymentDetail(transactions))
+                .build();
+    }
+
+    private TransactionDetailResponse.TransactionDetail buildTransactionDetail(TransactionEntity transaction) {
+        return TransactionDetailResponse.TransactionDetail.builder()
+                .referenceNumber(transaction.getTransactionNumber())
+                .status(transaction.getStatus())
+                .transactionDate(transaction.getCreatedAt().format(DATE_FORMATTER))
+                .shippingAddress(transaction.getShippingAddress())
+                .shippingPartner(transaction.getShippingPartner())
+                .shippingCode(transaction.getShippingCode())
+                .build();
+    }
+
+    private List<TransactionDetailResponse.ProductDetail> buildProductDetails(List<TransactionEntity> transactions) {
+        return transactions.stream()
+                .map(transaction -> {
+                    ProductEntity product = transaction.getProducts().iterator().next(); // Get first product
+                    return TransactionDetailResponse.ProductDetail.builder()
+                            .orderId(transaction.getId())
+                            .productId(product.getId())
+                            .productName(product.getName())
+                            .image(product.getImage())
+                            .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
+                            .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
+                            .quantity(transaction.getQuantity())
+                            .price(transaction.getAmount().divide(
+                                    BigDecimal.valueOf(transaction.getQuantity()),
+                                    RoundingMode.HALF_UP))
+                            .subTotal(transaction.getAmount())
+                            .deposit(product.getDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                            .shop(buildShopInfo(product.getShop()))
+                            .build();
+                })
+                .toList();
+    }
+
+    private TransactionDetailResponse.ProductDetail.ShopInfo buildShopInfo(ShopEntity shop) {
+        return TransactionDetailResponse.ProductDetail.ShopInfo.builder()
+                .id(shop.getId())
+                .name(shop.getName())
+                .build();
+    }
+
+    private TransactionDetailResponse.PaymentDetail buildPaymentDetail(List<TransactionEntity> transactions) {
+        BigDecimal subTotal = calculateTotalPrice(transactions);
+        BigDecimal totalDeposit = calculateTotalDeposit(transactions);
+
+        return TransactionDetailResponse.PaymentDetail.builder()
+                .paymentMethod(transactions.get(0).getPaymentMethod())
+                .subTotal(subTotal)
+                .shippingPrice(transactions.get(0).getShippingPrice())
+                .serviceFee(transactions.get(0).getServiceFee())
+                .totalDeposit(totalDeposit)
+                .grandTotal(subTotal
+                        .add(transactions.get(0).getShippingPrice())
+                        .add(transactions.get(0).getServiceFee())
+                        .add(totalDeposit))
+                .build();
     }
 }
