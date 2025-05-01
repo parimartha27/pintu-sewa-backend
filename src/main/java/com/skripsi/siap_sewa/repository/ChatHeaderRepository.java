@@ -13,5 +13,13 @@ import java.util.Optional;
 public interface ChatHeaderRepository extends JpaRepository<ChatHeaderEntity, String> {
     @Query("SELECT c FROM ChatHeaderEntity c WHERE c.shopId = :shopId and c.customerId = :customerId")
     Optional<ChatHeaderEntity> findByCustomerIdAndShopId(@Param("customerId") String customerId,@Param("shopId") String shopId);
+
+    Optional<ChatHeaderEntity> findByCustomerIdAndIsReport(String customerId, Boolean isReport);
+
+    @Query("SELECT c FROM ChatHeaderEntity c WHERE c.customerId = :customerId")
+    List<ChatHeaderEntity> findByCustomerId(@Param("customerId") String customerId);
+
+    List<ChatHeaderEntity> findByShopId(String shopId);
+    List<ChatHeaderEntity> findByIsReport(Boolean isReport);
 }
 

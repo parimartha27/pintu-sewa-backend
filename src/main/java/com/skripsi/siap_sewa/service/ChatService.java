@@ -6,9 +6,11 @@ import com.skripsi.siap_sewa.dto.admin.CustomerListResponse;
 import com.skripsi.siap_sewa.dto.admin.DashboardResponse;
 import com.skripsi.siap_sewa.dto.admin.ShopListResponse;
 import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
+import com.skripsi.siap_sewa.dto.chat.ListChatResponse;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
+import com.skripsi.siap_sewa.dto.shop.dashboard.WalletReportResponse;
 import com.skripsi.siap_sewa.entity.CartEntity;
 import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
@@ -37,9 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -80,6 +80,90 @@ public class ChatService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, chatHeaderEntity);
         }catch (Exception ex) {
             log.info("Gagal Create Room Chat : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> customerGetRoomChat(String id) {
+        try {
+            log.info("Get Room Chat For Customer : {}", id);
+
+            Optional<CustomerEntity> customer = customerRepository.findById(id);
+            if (customer.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Customer Not Found");
+            }
+
+            List<ChatHeaderEntity> listChat = chatHeaderRepository.findByCustomerId(id);
+
+            if (listChat.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "There is no chat available");
+            }
+
+            List<ListChatResponse> newListChat = listChat.stream()
+                    .map(chat -> ListChatResponse.builder()
+                            .Image(shopRepository.findById(chat.getShopId()).get().getImage())
+                            .name(shopRepository.findById(chat.getShopId()).get().getName())
+                            .shopId(chat.getShopId())
+                            .customerId(chat.getCustomerId())
+                            .id(chat.getId())
+                            .build())
+                    .toList();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, newListChat);
+        }catch (Exception ex) {
+            log.info("Failed Get RoomChat List : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> deleteRoomChat(String id) {
+        try {
+            log.info("Delete Room Chat with Id : {}", id);
+
+            Optional<ChatHeaderEntity> chat = chatHeaderRepository.findById(id);
+            if (chat.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Chat Not Found");
+            }
+
+            List<ChatDetailEntity> listchat = chatDetailRepository.findByChatHeaderIdOrderByCreatedAtDesc(id);
+            if(!listchat.isEmpty()){
+                chatDetailRepository.deleteAll(listchat);
+            }
+
+            chatHeaderRepository.deleteById(id);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Chat deleted successfully");
+        }catch (Exception ex) {
+            log.info("Failed Get RoomChat List : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> shopGetRoomChat(String shopId) {
+        try {
+            log.info("Get Room Chat For Shop : {}", shopId);
+
+            Optional<ShopEntity> shop = shopRepository.findById(shopId);
+            if (shop.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Shop Not Found");
+            }
+
+            List<ChatHeaderEntity> listChat = chatHeaderRepository.findByShopId(shopId);
+            if (listChat.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "There is no Chat Available");
+            }
+
+            List<ListChatResponse> newListChat = listChat.stream()
+                    .map(chat -> ListChatResponse.builder()
+                            .Image(customerRepository.findById(chat.getCustomerId()).get().getImage())
+                            .name(customerRepository.findById(chat.getCustomerId()).get().getName())
+                            .id(chat.getId())
+                            .build())
+                    .toList();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, newListChat);
+        }catch (Exception ex) {
+            log.info("Failed Get RoomChat List : {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
