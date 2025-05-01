@@ -34,6 +34,24 @@ public class ChatController {
         return chatService.createRoomChat(customerId,shopId,is_report);
     }
 
+    @GetMapping("/customer/get-roomchat")
+    public ResponseEntity<ApiResponse> customerGetRoomChat(@RequestParam String id){
+        log.info("Get List Room Chat For Customer with id {}",id);
+        return chatService.customerGetRoomChat(id);
+    }
+
+    @GetMapping("/shop/get-roomchat")
+    public ResponseEntity<ApiResponse> shopGetRoomChat(@RequestParam String id){
+        log.info("Get List Room Chat For Shop with id {}",id);
+        return chatService.shopGetRoomChat(id);
+    }
+
+    @DeleteMapping("/delete-roomchat")
+    public ResponseEntity<ApiResponse> deleteRoomChat(@RequestParam String id){
+        log.info("Delete Room Chat with id {}",id);
+        return chatService.deleteRoomChat(id);
+    }
+
     @PostMapping("/send-message")
     public ResponseEntity<ApiResponse> sendMessage(
             @RequestParam String message,
