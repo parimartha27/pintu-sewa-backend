@@ -19,6 +19,7 @@ public class TransactionDetailResponse {
     private TransactionDetail transactionDetail;
     private List<ProductDetail> productDetails;
     private PaymentDetail paymentDetail;
+    private TransactionResponse.ShopInfo shopDetail;
 
     @Data
     @Builder
@@ -75,5 +76,15 @@ public class TransactionDetailResponse {
         private BigDecimal serviceFee;
         private BigDecimal totalDeposit;
         private BigDecimal grandTotal;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public static class ShopDetail {
+        private String id;
+        private String name;
     }
 }

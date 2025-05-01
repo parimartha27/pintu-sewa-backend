@@ -283,6 +283,7 @@ public class TransactionService {
                 .transactionDetail(buildTransactionDetail(firstTransaction))
                 .productDetails(buildProductDetails(transactions))
                 .paymentDetail(buildPaymentDetail(transactions))
+                .shopDetail(buildShopInfo(transactions.get(0)))
                 .build();
     }
 
@@ -314,7 +315,6 @@ public class TransactionService {
                                     RoundingMode.HALF_UP))
                             .subTotal(transaction.getAmount())
                             .deposit(product.getDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity())))
-                            .shop(buildShopInfo(product.getShop()))
                             .build();
                 })
                 .toList();
