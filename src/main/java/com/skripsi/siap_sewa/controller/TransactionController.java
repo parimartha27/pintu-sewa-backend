@@ -5,6 +5,8 @@ import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.transaction.ShopTransactionFilterRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionDetailRequest;
 import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
+import com.skripsi.siap_sewa.dto.transaction.UpdateStatusTransactionRequest;
+import com.skripsi.siap_sewa.dto.transaction.UpdateStatusTransactionRequest;
 import com.skripsi.siap_sewa.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,12 +68,12 @@ public class TransactionController {
         return transactionService.getTransactionDetail(request);
     }
 
-    @PatchMapping("transaction-detail/set-status")
-    public ResponseEntity<ApiResponse> setStatus(@RequestParam String transactionId,@RequestParam String status){
-        return transactionService.setStatus(transactionId,status);
+    @PatchMapping("/transaction-detail/set-status")
+    public ResponseEntity<ApiResponse> setStatus(@RequestBody UpdateStatusTransactionRequest request){
+        return transactionService.setStatus(request);
     }
 
-    @PatchMapping("transaction-detail/set-shipping")
+    @PatchMapping("/transaction-detail/set-shipping")
     public ResponseEntity<ApiResponse> setShippingCode(@RequestParam String transactionId,@RequestParam String shippingCode,@RequestParam String type){
         return transactionService.setShippingCode(transactionId,shippingCode,type);
     }

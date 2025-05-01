@@ -177,23 +177,26 @@ public class TransactionService {
         }
     }
 
-    public ResponseEntity<ApiResponse> setStatus(String transactionId,String status) {
+    public ResponseEntity<ApiResponse> setStatus(UpdateStatusTransactionRequest request) {
         try {
-            log.info("Update Transaction Id Status {} Into {}", transactionId,status);
+            log.info("Update Reference Number status {} Into {}", request.getReferenceNumber(), request.getNextStatus());
 
-            Optional<TransactionEntity> transaction = transactionRepository.findById(transactionId);
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
 
-            if(transaction.isEmpty()){
+            if(transactions.isEmpty()){
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
 
-            transaction.get().setStatus(status);
-            transaction.get().setLastUpdateAt(LocalDateTime.now());
-            transactionRepository.save(transaction.get());
+            transactions.forEach(transaction -> {
+                transaction.setStatus(request.getNextStatus());
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            transactionRepository.saveAll(transactions);
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
         } catch (Exception ex) {
-            log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(),ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
