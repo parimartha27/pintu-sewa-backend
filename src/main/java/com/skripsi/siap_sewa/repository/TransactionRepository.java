@@ -28,5 +28,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
             @Param("transactionNumber") String transactionNumber,
             @Param("customerId") String customerId,
             @Param("shopId") String shopId);
+
+
 }
 
