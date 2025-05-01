@@ -110,6 +110,7 @@ public class CustomerService {
             inputCustomerData.setRegency(request.getRegency());
             inputCustomerData.setProvince(request.getProvince());
             inputCustomerData.setPostCode(request.getPostCode());
+            inputCustomerData.setNotes(request.getNotes());
             inputCustomerData.setLastUpdateAt(LocalDateTime.now());
             inputCustomerData.setWalletAmount(BigDecimal.valueOf(0));
 

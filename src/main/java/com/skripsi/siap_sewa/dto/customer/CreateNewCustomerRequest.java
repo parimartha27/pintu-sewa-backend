@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.annotation.Nullable;
-import
-        jakarta.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -67,5 +66,5 @@ public class CreateNewCustomerRequest {
 
     private String password;
 
-    private String note;
+    private String notes;
 }
