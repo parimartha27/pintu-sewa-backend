@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 
 @Data
 @Builder
@@ -14,6 +16,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateStatusTransactionRequest {
-    private String referenceNumber;
+    private List<String> referenceNumbers;
     private String nextStatus;
 }

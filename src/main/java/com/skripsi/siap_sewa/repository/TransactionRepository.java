@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, String>,
@@ -29,6 +30,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
             @Param("customerId") String customerId,
             @Param("shopId") String shopId);
 
+    List<TransactionEntity> findByTransactionNumberIn(Collection<String> transactionNumbers);
 
 }
 

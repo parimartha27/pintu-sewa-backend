@@ -179,9 +179,9 @@ public class TransactionService {
 
     public ResponseEntity<ApiResponse> setStatus(UpdateStatusTransactionRequest request) {
         try {
-            log.info("Update Reference Number status {} Into {}", request.getReferenceNumber(), request.getNextStatus());
+            log.info("Update Reference Number status {} Into {}", request.getReferenceNumbers(), request.getNextStatus());
 
-            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
 
             if(transactions.isEmpty()){
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
@@ -196,7 +196,7 @@ public class TransactionService {
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
         } catch (Exception ex) {
-            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(),ex.getMessage(), ex);
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumbers(),ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
