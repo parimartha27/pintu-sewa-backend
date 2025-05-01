@@ -18,6 +18,7 @@ public enum ErrorMessageEnum {
     INSUFFICIENT_STOCK(Constant.INSUFFICIENT_STOCK_CODE, "Stok produk tidak mencukupi", HttpStatus.BAD_REQUEST),
     CART_ITEM_EXISTS(Constant.CART_ITEM_EXISTS_CODE, "Produk sudah ada di keranjang", HttpStatus.CONFLICT),
 
+    CHAT_FOUND(Constant.CHAT_ALREADY_EXIST,"Chat Sudah Ditemukan",HttpStatus.BAD_REQUEST),
     CHAT_NOT_FOUND(Constant.CHAT_NOT_FOUND_CODE, "Chat tidak ditemukan", HttpStatus.NOT_FOUND),
     INVALID_USER_TYPE(Constant.INVALID_USER_TYPE_CODE, "Tipe pengguna tidak valid", HttpStatus.BAD_REQUEST),
 

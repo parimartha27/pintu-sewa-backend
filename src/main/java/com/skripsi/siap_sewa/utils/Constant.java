@@ -99,4 +99,6 @@ public class Constant {
     // Transaction
     public static final String TRANSACTION_NOT_FOUND_CODE = "PS-09-001";
 
+    // Chat
+    public static final String CHAT_ALREADY_EXIST = "PS-10-001";
 }

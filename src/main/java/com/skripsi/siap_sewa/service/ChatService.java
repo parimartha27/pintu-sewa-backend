@@ -65,6 +65,12 @@ public class ChatService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Shop is not exist");
             }
 
+            Optional<ChatHeaderEntity> chat = chatHeaderRepository.findByCustomerIdAndShopId(customerId,shopId);
+
+            if(!chat.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.CHAT_FOUND, "Chat Already Exist");
+            }
+
             ChatHeaderEntity chatHeaderEntity = new ChatHeaderEntity();
             chatHeaderEntity.setCustomerId(customerId);
             chatHeaderEntity.setShopId(shopId);

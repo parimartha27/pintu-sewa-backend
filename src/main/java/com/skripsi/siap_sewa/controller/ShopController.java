@@ -22,7 +22,7 @@ public class ShopController {
     }
 
 
-    @GetMapping("/{customerid}")
+    @GetMapping("/get-shop/{customerid}")
     public ResponseEntity<ApiResponse> getShopId(@PathVariable String customerid) {
         return shopService.getShopId(customerid);
     }
