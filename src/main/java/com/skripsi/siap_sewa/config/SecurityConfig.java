@@ -42,8 +42,8 @@ public class SecurityConfig {
                             "https://pintu-sewa.up.railway.app",
                             "https://pintu-sewa-admin-production.up.railway.app",
                             "https://pintu-sewa-frontend.up.railway.app",
-                            "https://pintu-sewa-one.vercel.app",
-                            "https://pintu-sewa-admin.vercel.app"
+                            "https://pintu-sewa-one.vercel.app/",
+                            "https://pintu-sewa-admin.vercel.app/"
                             ));
                     config.setAllowedMethods(List.of("*"));
                     config.setAllowedHeaders(List.of("*"));
