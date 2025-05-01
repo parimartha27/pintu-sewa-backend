@@ -35,6 +35,11 @@ public class CustomerController {
         return customerService.inputCustomerData(request);
     }
 
+    @PutMapping("/edit-address")
+    public ResponseEntity<ApiResponse> editAddress(@RequestBody @Valid EditAddressRequest request) {
+        return customerService.editAddress(request);
+    }
+
     @PostMapping(value = "/create", consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse> inputNewCustomerData(
             @RequestPart("data") @Valid CreateNewCustomerRequest request,
