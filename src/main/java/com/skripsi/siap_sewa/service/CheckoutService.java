@@ -206,6 +206,7 @@ public class CheckoutService {
             transactionGroups.add(CheckoutResponse.TransactionGroup.builder()
                     .shopId(shopId)
                     .shopName(firstTransaction.getShopName())
+                    .referenceNumber(firstTransaction.getTransactionNumber())
                     .rentedItems(rentedItems)
                     .deposit(shopDeposit)
                     .shippingPartner(firstTransaction.getShippingPartner())
