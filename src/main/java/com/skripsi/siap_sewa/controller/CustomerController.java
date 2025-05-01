@@ -89,4 +89,9 @@ public class CustomerController {
         return customerService.getCustomerAddress(customerId);
     }
 
+    @PutMapping("/edit-address")
+    public ResponseEntity<ApiResponse> editAddress(@RequestBody @Valid EditAddressRequest request) {
+        return customerService.editAddress(request);
+    }
+
 }

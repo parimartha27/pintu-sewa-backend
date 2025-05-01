@@ -17,5 +17,16 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
 
     @Query("SELECT t FROM TransactionEntity t JOIN t.products p WHERE t.shopId = :shopId ORDER BY t.createdAt DESC")
     List<TransactionEntity> findByShopIdOrderByCreatedAtDesc(@Param("shopId") String shopId);
+
+    List<TransactionEntity> findByTransactionNumber(String transactionNumber);
+
+    @Query("SELECT t FROM TransactionEntity t WHERE " +
+            "t.transactionNumber = :transactionNumber AND " +
+            "(:customerId IS NULL OR t.customer.id = :customerId) AND " +
+            "(:shopId IS NULL OR t.shopId = :shopId)")
+    List<TransactionEntity> findByTransactionNumberAndFilters(
+            @Param("transactionNumber") String transactionNumber,
+            @Param("customerId") String customerId,
+            @Param("shopId") String shopId);
 }
 
