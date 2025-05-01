@@ -3,6 +3,7 @@ package com.skripsi.siap_sewa.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -32,32 +33,32 @@ public class SecurityConfig {
     private UserDetailsService userDetailsService;
 
    @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    return http
-            .csrf(AbstractHttpConfigurer::disable)  // Nonaktifkan CSRF karena stateless
-            .cors(cors -> cors.configurationSource(request -> {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of(
-                    "http://localhost:3000",
-                    "https://pintu-sewa.up.railway.app",
-                    "https://pintu-sewa-admin-production.up.railway.app",
-                    "https://pintu-sewa-frontend.up.railway.app",
-                    "https://pintu-sewa-one.vercel.app",
-                    "https://pintu-sewa-admin.vercel.app"
-                ));
-                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-                config.setAllowedHeaders(List.of("*"));
-                config.setAllowCredentials(false);  // Karena tidak ada session/JWT
-                config.setMaxAge(3600L);  // Preflight cache 1 jam
-                return config;
-            }))
-            .authorizeHttpRequests(request -> request
-                    .requestMatchers(HttpMethod.OPTIONS).permitAll()  // Izinkan preflight
-                    .anyRequest().permitAll())  // Izinkan semua request
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Nonaktifkan session
-            .build();
-}
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)  // Nonaktifkan CSRF karena stateless
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of(
+                        "http://localhost:3000",
+                        "https://pintu-sewa.up.railway.app",
+                        "https://pintu-sewa-admin-production.up.railway.app",
+                        "https://pintu-sewa-frontend.up.railway.app",
+                        "https://pintu-sewa-one.vercel.app",
+                        "https://pintu-sewa-admin.vercel.app"
+                    ));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(false);  // Karena tidak ada session/JWT
+                    config.setMaxAge(3600L);  // Preflight cache 1 jam
+                    return config;
+                }))
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(HttpMethod.OPTIONS).permitAll()  // Izinkan preflight
+                        .anyRequest().permitAll())  // Izinkan semua request
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Nonaktifkan session
+                .build();
+    }
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
