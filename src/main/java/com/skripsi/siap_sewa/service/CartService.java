@@ -157,7 +157,7 @@ public class CartService {
                 int newQuantity = cartItem.getQuantity() + request.getQuantity();
 
                 // Validasi quantity baru
-                int maxAllowed = product.getStock() / 2;
+                int maxAllowed = product.getStock();
                 if (newQuantity > maxAllowed) {
                     return commonUtils.setResponse(
                             ErrorMessageEnum.MAX_QUANTITY_EXCEEDED,

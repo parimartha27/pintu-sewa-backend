@@ -88,5 +88,4 @@ public class CustomerController {
     public ResponseEntity<ApiResponse> getCustomerAddress(@PathVariable String customerId){
         return customerService.getCustomerAddress(customerId);
     }
-
 }

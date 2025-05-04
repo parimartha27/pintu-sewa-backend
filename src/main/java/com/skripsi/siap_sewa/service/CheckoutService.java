@@ -39,6 +39,7 @@ public class CheckoutService {
     private final CartRepository cartRepository;
     private final TransactionRepository transactionRepository;
     private final CommonUtils commonUtils;
+    private final ShopRepository shopRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(Constant.DATE_FORMAT);
 
@@ -205,6 +206,7 @@ public class CheckoutService {
             transactionGroups.add(CheckoutResponse.TransactionGroup.builder()
                     .shopId(shopId)
                     .shopName(firstTransaction.getShopName())
+                    .referenceNumber(firstTransaction.getTransactionNumber())
                     .rentedItems(rentedItems)
                     .deposit(shopDeposit)
                     .shippingPartner(firstTransaction.getShippingPartner())
@@ -439,5 +441,59 @@ public class CheckoutService {
             this.startDate = startDate;
             this.endDate = endDate;
         }
+    }
+
+    @Transactional
+    public CheckoutResponse updateShippingMethod(
+            List<String> transactionIds,
+            String newShippingPartner
+    ) {
+        // 1. Ambil transaksi yang akan diupdate
+        List<TransactionEntity> transactions = transactionRepository.findAllById(transactionIds);
+
+        // 2. Group by shop (karena kurir dipilih per toko)
+        Map<String, List<TransactionEntity>> transactionsByShop = transactions.stream()
+                .collect(Collectors.groupingBy(TransactionEntity::getShopId));
+
+        // 3. Update masing-masing toko
+        for (Map.Entry<String, List<TransactionEntity>> entry : transactionsByShop.entrySet()) {
+            ShopEntity shop = shopRepository.findById(entry.getKey()).orElseThrow();
+            List<TransactionEntity> shopTransactions = entry.getValue();
+
+            // 4. Hitung ulang ongkir untuk semua produk di toko ini
+            BigDecimal totalWeight = shopTransactions.stream()
+                    .map(t -> t.getProducts().iterator().next().getWeight()
+                            .multiply(BigDecimal.valueOf(t.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            CustomerEntity customer = shopTransactions.get(0).getCustomer();
+
+            ShippingCalculator.ShippingInfo newShipping = ShippingCalculator.calculateShipping(
+                    totalWeight,
+                    shop,
+                    customer,
+                    newShippingPartner
+            );
+
+            // 5. Update semua transaksi di toko ini
+            for (TransactionEntity transaction : shopTransactions) {
+                BigDecimal newServiceFee = transaction.getAmount().multiply(BigDecimal.valueOf(0.1));
+
+                transaction.setShippingPartner(newShipping.partnerName());
+                transaction.setShippingPrice(newShipping.shippingPrice());
+                transaction.setServiceFee(newServiceFee);
+                transaction.setTotalAmount(
+                        transaction.getAmount()
+                                .add(transaction.getTotalDeposit())
+                                .add(newServiceFee)
+                                .add(newShipping.shippingPrice())
+                );
+
+                transactionRepository.save(transaction);
+            }
+        }
+
+        // 6. Kembalikan struktur response sama seperti GET /details
+        return buildCheckoutResponseFromTransactions(transactions);
     }
 }
