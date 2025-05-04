@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
+import com.skripsi.siap_sewa.dto.chat.SendMessageRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
 import com.skripsi.siap_sewa.service.AdminService;
@@ -53,12 +54,9 @@ public class ChatController {
     }
 
     @PostMapping("/send-message")
-    public ResponseEntity<ApiResponse> sendMessage(
-            @RequestParam String message,
-            @RequestParam String roomChatId,
-            @RequestParam String senderType) {
-        log.info("Send Message to RoomChatID {} from {}", roomChatId, senderType);
-        return chatService.sendMessage(message,roomChatId,senderType);
+    public ResponseEntity<ApiResponse> sendMessage(@RequestBody @Valid SendMessageRequest request) {
+        log.info("Send Message to RoomChatID {} from {}", request.getRoomChatId(), request.getSenderType());
+        return chatService.sendMessage(request);
     }
 
     @GetMapping("/view-roomchat/{roomChatId}")

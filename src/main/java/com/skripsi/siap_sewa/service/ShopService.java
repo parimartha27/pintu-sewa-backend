@@ -62,7 +62,7 @@ public class ShopService {
         if(isShopNameExist){
             return utils.setResponse(ErrorMessageEnum.FAILED, "Shop name already exist");
         }
-
+        log.info("Shop created {}",request.isSameAddress());
         if (!request.isSameAddress()) {
             if (request.getStreet() == null || request.getStreet().isBlank()) {
                 throw new IllegalArgumentException("Lokasi toko tidak boleh kosong");

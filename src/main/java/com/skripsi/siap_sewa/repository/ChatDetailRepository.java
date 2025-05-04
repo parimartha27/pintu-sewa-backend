@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChatDetailRepository extends JpaRepository<ChatDetailEntity, String> {
-    @Query("SELECT c FROM ChatDetailEntity c WHERE c.chatHeader.id = :chatHeaderId ORDER BY c.createdAt DESC")
-    List<ChatDetailEntity> findByChatHeaderIdOrderByCreatedAtDesc(@Param("chatHeaderId") String chatHeaderId);
+    @Query("SELECT c FROM ChatDetailEntity c WHERE c.chatHeader.id = :chatHeaderId ORDER BY c.createdAt ASC")
+    List<ChatDetailEntity> findByChatHeaderIdOrderByCreatedAtAsc(@Param("chatHeaderId") String chatHeaderId);
 }
 

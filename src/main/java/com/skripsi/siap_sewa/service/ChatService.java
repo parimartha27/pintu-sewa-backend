@@ -6,7 +6,10 @@ import com.skripsi.siap_sewa.dto.admin.CustomerListResponse;
 import com.skripsi.siap_sewa.dto.admin.DashboardResponse;
 import com.skripsi.siap_sewa.dto.admin.ShopListResponse;
 import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
+import com.skripsi.siap_sewa.dto.chat.GroupedMessageResponse;
 import com.skripsi.siap_sewa.dto.chat.ListChatResponse;
+import com.skripsi.siap_sewa.dto.chat.MessageResponse;
+import com.skripsi.siap_sewa.dto.chat.SendMessageRequest;
 import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
 import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
@@ -35,6 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -52,6 +58,7 @@ public class ChatService {
     private final JWTService jwtService;
     private final ChatHeaderRepository chatHeaderRepository;
     private final ChatDetailRepository chatDetailRepository;
+
 
     public ResponseEntity<ApiResponse> createRoomChat(String customerId,String shopId, boolean is_report) {
         try {
@@ -125,7 +132,7 @@ public class ChatService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Chat Not Found");
             }
 
-            List<ChatDetailEntity> listchat = chatDetailRepository.findByChatHeaderIdOrderByCreatedAtDesc(id);
+            List<ChatDetailEntity> listchat = chatDetailRepository.findByChatHeaderIdOrderByCreatedAtAsc(id);
             if(!listchat.isEmpty()){
                 chatDetailRepository.deleteAll(listchat);
             }
@@ -168,25 +175,30 @@ public class ChatService {
         }
     }
 
-    public ResponseEntity<ApiResponse> sendMessage(String message,String roomChatId,String senderType) {
+    public ResponseEntity<ApiResponse> sendMessage(@Valid SendMessageRequest request) {
         try {
-            log.info("Send Message To Room Chat {}", roomChatId);
+            log.info("Send Message To Room Chat {}", request.getRoomChatId());
 
-            Optional<ChatHeaderEntity> roomchat = chatHeaderRepository.findById(roomChatId);
+            Optional<ChatHeaderEntity> roomchat = chatHeaderRepository.findById(request.getRoomChatId());
 
             if(roomchat.isEmpty()){
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Room Chat is not exist");
             }
 
-            if(!senderType.equals("customer") || !senderType.equals("admin") || !senderType.equals("shop")){
+            if (
+                    !request.getSenderType().equals("customer") &&
+                            !request.getSenderType().equals("admin") &&
+                            !request.getSenderType().equals("shop")
+            ) {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Sender Type Wrong");
             }
 
+
             ChatDetailEntity chatDetailEntity = new ChatDetailEntity();
             chatDetailEntity.setChatHeader(roomchat.get());
-            chatDetailEntity.setMessage(message);
+            chatDetailEntity.setMessage(request.getMessage());
             chatDetailEntity.setCreatedAt(LocalDateTime.now());
-            chatDetailEntity.setSenderType(senderType);
+            chatDetailEntity.setSenderType(request.getSenderType());
             chatDetailRepository.save(chatDetailEntity);
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, chatDetailEntity);
@@ -200,16 +212,38 @@ public class ChatService {
         try {
             log.info("Get all Message from Room Chat {}", roomChatId);
 
-            List<ChatDetailEntity> list_chat = chatDetailRepository.findByChatHeaderIdOrderByCreatedAtDesc(roomChatId);
+            List<ChatDetailEntity> listChat = chatDetailRepository.findByChatHeaderIdOrderByCreatedAtAsc(roomChatId);
 
-            if(list_chat.isEmpty()){
+            if (listChat.isEmpty()) {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "This Room Chat Has no Message");
             }
 
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, list_chat);
-        }catch (Exception ex) {
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("id", "ID"));
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+
+            List<MessageResponse> allMessages = listChat.stream()
+                    .map(chat -> MessageResponse.builder()
+                            .message(chat.getMessage())
+                            .time(chat.getCreatedAt().format(timeFormatter))
+                            .senderType(chat.getSenderType())
+                            .date(chat.getCreatedAt().format(dateFormatter))
+                            .build())
+                    .collect(Collectors.toList());
+
+            List<GroupedMessageResponse> groupedMessages = allMessages.stream()
+                    .collect(Collectors.groupingBy(MessageResponse::getDate))
+                    .entrySet()
+                    .stream()
+                    .map(entry -> new GroupedMessageResponse(entry.getKey(), entry.getValue()))
+                    .sorted(Comparator.comparing(GroupedMessageResponse::getDate))
+                    .collect(Collectors.toList());
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, groupedMessages);
+        } catch (Exception ex) {
             log.info("Failed Get Message : {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
+
 }
