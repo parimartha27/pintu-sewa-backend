@@ -37,5 +37,5 @@ public class CreateShopRequest {
     private String postCode;
 
     @NotNull(message = "Tolong pilih alamat toko yang sesuai")
-    private boolean isSameAddress;
+    private String isSameAddress;
 }

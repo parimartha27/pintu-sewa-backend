@@ -62,8 +62,10 @@ public class ShopService {
         if(isShopNameExist){
             return utils.setResponse(ErrorMessageEnum.FAILED, "Shop name already exist");
         }
-        log.info("Shop created {}",request.isSameAddress());
-        if (!request.isSameAddress()) {
+
+        log.info("Shop created {}",request.getIsSameAddress());
+
+        if (request.getIsSameAddress().equals("n")) {
             if (request.getStreet() == null || request.getStreet().isBlank()) {
                 throw new IllegalArgumentException("Lokasi toko tidak boleh kosong");
             }
@@ -96,7 +98,7 @@ public class ShopService {
         
         ShopEntity newShop = new ShopEntity();
         
-        if(request.isSameAddress()){
+        if(request.getIsSameAddress().equals("y")){
             newShop.setStreet(shopOwner.getStreet());
             newShop.setDistrict(shopOwner.getDistrict());
             newShop.setRegency(shopOwner.getRegency());
