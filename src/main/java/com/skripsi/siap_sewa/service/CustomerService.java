@@ -72,20 +72,20 @@ public class CustomerService {
 
             if (customerRepository.existsByUsername(request.getUsername())) {
                 log.info("Username sudah digunakan: {}", request.getUsername());
-                throw new UsernameExistException("Username sudah digunakan");
+                return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EXIST, null);
             }
 
             if (request.getEmail() != null && !request.getEmail().equals(inputCustomerData.getEmail())) {
                 if (customerRepository.existsByEmail(request.getEmail())) {
                     log.info("Email sudah digunakan: {}", request.getEmail());
-                    throw new EmailExistException("Email sudah digunakan");
+                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
                 }
             }
 
             if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(inputCustomerData.getPhoneNumber())) {
                 if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
                     log.info("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
-                    throw new PhoneNumberExistException("Nomor telepon sudah digunakan");
+                    return commonUtils.setResponse(ErrorMessageEnum.PHONE_NUMBER_EXIST, null);
                 }
             }
 
@@ -110,6 +110,7 @@ public class CustomerService {
             inputCustomerData.setRegency(request.getRegency());
             inputCustomerData.setProvince(request.getProvince());
             inputCustomerData.setPostCode(request.getPostCode());
+            inputCustomerData.setNotes(request.getNotes());
             inputCustomerData.setLastUpdateAt(LocalDateTime.now());
             inputCustomerData.setWalletAmount(BigDecimal.valueOf(0));
 

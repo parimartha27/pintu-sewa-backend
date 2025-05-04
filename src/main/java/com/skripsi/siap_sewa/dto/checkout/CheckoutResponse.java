@@ -39,6 +39,7 @@ public class CheckoutResponse {
         private BigDecimal shippingPrice;
         private int totalRentedProduct;
         private BigDecimal totalPrice;
+        private String referenceNumber;
     }
 
     @Data
