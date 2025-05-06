@@ -9,6 +9,7 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,23 +39,6 @@ public class CustomerController {
     @PutMapping("/edit-address")
     public ResponseEntity<ApiResponse> editAddress(@RequestBody @Valid EditAddressRequest request) {
         return customerService.editAddress(request);
-    }
-
-    @PostMapping(value = "/create", consumes = {"multipart/form-data"})
-    public ResponseEntity<ApiResponse> inputNewCustomerData(
-            @RequestPart("data") @Valid CreateNewCustomerRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
-
-        try {
-            if (imageFile != null && !imageFile.isEmpty()) {
-                String imageUrl = cloudinaryService.uploadImage(imageFile);
-                request.setImage(imageUrl);
-            }
-            return customerService.inputCustomerData(request);
-        } catch (IOException e) {
-            log.error("Gagal upload gambar: {}", e.getMessage());
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
     }
 
     @PutMapping(value = "/edit-biodata", consumes = {"multipart/form-data"})
@@ -87,5 +71,12 @@ public class CustomerController {
     @GetMapping("/address/{customerId}")
     public ResponseEntity<ApiResponse> getCustomerAddress(@PathVariable String customerId){
         return customerService.getCustomerAddress(customerId);
+    }
+
+
+    @PostMapping(value = "/create/v2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse> inputNewCustomerWithImage(
+            @Valid CreateNewCustomerRequest request) {
+        return customerService.inputCustomerDataWithImage(request);
     }
 }

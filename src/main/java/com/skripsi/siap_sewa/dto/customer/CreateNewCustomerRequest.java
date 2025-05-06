@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -45,7 +46,8 @@ public class CreateNewCustomerRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    private String image;
+    @NotNull(message = "Image cannot be null")
+    private   MultipartFile image;
 
     @NotBlank(message = "Jalan tidak boleh kosong")
     @Size(min = 5, max = 255, message = "Jalan harus terdiri dari 5 hingga 255 karakter")

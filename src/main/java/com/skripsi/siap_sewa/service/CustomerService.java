@@ -33,6 +33,7 @@ public class CustomerService {
     private final ObjectMapper objectMapper;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final JWTService jwtService;
+    private final CloudinaryService cloudinaryService;
 
     public ResponseEntity<ApiResponse> getCustomerDetails(String id) {
         try {
@@ -327,6 +328,92 @@ public class CustomerService {
         } catch (Exception ex) {
             log.info("Error fetching customer address: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.CUSTOMER_NOT_FOUND, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> inputCustomerDataWithImage(CreateNewCustomerRequest request) {
+        try {
+            log.info("Memproses input data customer baru dengan gambar: {}", request);
+
+            Optional<CustomerEntity> customerEntity = customerRepository.findById(request.getId());
+            if (customerEntity.isEmpty()) {
+                log.info("Customer tidak ditemukan dengan ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
+
+            CustomerEntity inputCustomerData = customerEntity.get();
+
+            if (customerRepository.existsByUsername(request.getUsername())) {
+                log.info("Username sudah digunakan: {}", request.getUsername());
+                return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EXIST, null);
+            }
+
+            if (request.getEmail() != null && !request.getEmail().equals(inputCustomerData.getEmail())) {
+                if (customerRepository.existsByEmail(request.getEmail())) {
+                    log.info("Email sudah digunakan: {}", request.getEmail());
+                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
+                }
+            }
+
+            if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(inputCustomerData.getPhoneNumber())) {
+                if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                    log.info("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
+                    return commonUtils.setResponse(ErrorMessageEnum.PHONE_NUMBER_EXIST, null);
+                }
+            }
+
+
+            String imageUrl = cloudinaryService.uploadImage(request.getImage());
+            if (imageUrl == null) {
+                log.info("Gagal mengupload gambar untuk customer ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.IMAGE_UPLOAD_FAILED, "Failed Upload Image");
+            }
+
+            // Set data customer termasuk URL gambar
+            inputCustomerData.setUsername(request.getUsername());
+            inputCustomerData.setName(request.getName());
+            inputCustomerData.setEmail(request.getEmail());
+            inputCustomerData.setPhoneNumber(request.getPhoneNumber());
+            inputCustomerData.setGender(request.getGender());
+            inputCustomerData.setBirthDate(request.getBirthDate());
+            inputCustomerData.setPassword(encoder.encode(request.getPassword()));
+            inputCustomerData.setStatus("ACTIVE");
+            inputCustomerData.setImage(imageUrl); // Set URL gambar dari Cloudinary
+
+            // Clear OTP fields
+            inputCustomerData.setOtp(null);
+            inputCustomerData.setVerifyCount(0);
+            inputCustomerData.setResendOtpCount(0);
+
+            // Set address
+            inputCustomerData.setStreet(request.getStreet());
+            inputCustomerData.setDistrict(request.getDistrict());
+            inputCustomerData.setRegency(request.getRegency());
+            inputCustomerData.setProvince(request.getProvince());
+            inputCustomerData.setPostCode(request.getPostCode());
+            inputCustomerData.setNotes(request.getNotes());
+            inputCustomerData.setLastUpdateAt(LocalDateTime.now());
+            inputCustomerData.setWalletAmount(BigDecimal.valueOf(0));
+
+            customerRepository.save(inputCustomerData);
+            log.info("Berhasil menyimpan data customer baru dengan ID: {}", inputCustomerData.getId());
+
+            CreateNewCustomerResponse response = CreateNewCustomerResponse.builder()
+                    .customerId(inputCustomerData.getId())
+                    .username(inputCustomerData.getUsername())
+                    .phoneNumber(inputCustomerData.getPhoneNumber())
+                    .email(inputCustomerData.getEmail())
+                    .image(inputCustomerData.getImage())
+                    .status(inputCustomerData.getStatus())
+                    .token(jwtService.generateToken(new CustomerPrincipal(inputCustomerData)))
+                    .duration(1800)
+                    .build();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (Exception ex) {
+            log.error("Gagal memproses input data customer dengan gambar: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
 }
