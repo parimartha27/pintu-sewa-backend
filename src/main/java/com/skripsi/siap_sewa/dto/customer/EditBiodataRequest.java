@@ -29,16 +29,12 @@ public class EditBiodataRequest {
     @Size(min = 3, max = 100, message = "Nama lengkap harus 3-100 karakter")
     private String name;
 
-    @NotBlank(message = "Email tidak boleh kosong")
-    @Email(message = "Email harus valid")
-    private String email;
-
     @NotBlank(message = "Nomor telepon tidak boleh kosong")
     @Pattern(regexp = "^[0-9]+$", message = "Nomor telepon harus angka")
     private String phoneNumber;
 
     @NotBlank(message = "Jenis kelamin tidak boleh kosong")
-    @Pattern(regexp = "^(Laki-laki|Perempuan)$", message = "Jenis kelamin harus 'Laki-laki' atau 'Perempuan'")
+    @Pattern(regexp = "^(Laki-Laki|Perempuan)$", message = "Jenis kelamin harus 'Laki-laki' atau 'Perempuan'")
     private String gender;
 
     @NotNull(message = "Tanggal lahir tidak boleh kosong")

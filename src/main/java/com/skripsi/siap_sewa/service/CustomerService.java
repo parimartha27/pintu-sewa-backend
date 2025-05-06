@@ -166,23 +166,7 @@ public class CustomerService {
                     return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EDIT_EXPIRED, null);
                 }
             }
-
-            // Validasi email
-            if (!customer.getEmail().equals(request.getEmail())) {
-                if (customerRepository.existsByEmailAndIdNot(request.getEmail(), request.getId())) {
-                    log.info("Email {} sudah digunakan", request.getEmail());
-                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
-                }
-
-                LocalDateTime firstEditDate = customer.getFirstEditAt() != null ?
-                        customer.getFirstEditAt() : customer.getCreatedAt();
-
-                if (LocalDateTime.now().isAfter(firstEditDate.plusDays(30))) {
-                    log.info("Email tidak bisa diubah setelah 30 hari pertama");
-                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EDIT_EXPIRED, null);
-                }
-            }
-
+            
             // Handle image upload
             String imageUrl = customer.getImage(); // Default to existing image
 
@@ -218,7 +202,6 @@ public class CustomerService {
             // Update fields
             customer.setUsername(request.getUsername());
             customer.setName(request.getName());
-            customer.setEmail(request.getEmail());
             customer.setPhoneNumber(request.getPhoneNumber());
             customer.setGender(request.getGender());
             customer.setBirthDate(request.getBirthDate());
