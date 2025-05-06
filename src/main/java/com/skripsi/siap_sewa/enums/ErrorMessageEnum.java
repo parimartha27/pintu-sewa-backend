@@ -52,7 +52,8 @@ public enum ErrorMessageEnum {
     TRANSACTION_NOT_BELONG_TO_CUSTOMER(Constant.TRANSACTION_NOT_BELONG_TO_CUSTOMER_CODE, "Transaksi tidak dimiliki oleh customer", HttpStatus.FORBIDDEN),
     PAYMENT_PARTIAL_SUCCESS(Constant.PAYMENT_PARTIAL_SUCCESS_CODE, "Beberapa transaksi gagal diproses", HttpStatus.MULTI_STATUS),
     TRANSACTION_GROUP_FAILED(Constant.TRANSACTION_GROUP_FAILED_CODE, "Grup transaksi gagal diproses", HttpStatus.BAD_REQUEST),
-    IMAGE_UPLOAD_FAILED("PS-02-022", "Image upload failed" , HttpStatus.BAD_REQUEST );
+    IMAGE_UPLOAD_FAILED("PS-02-022", "Image upload failed" , HttpStatus.BAD_REQUEST ),
+    INVALID_FILE_FORMAT("PS-02-023","Format file tidak valid" , HttpStatus.BAD_REQUEST );
 
     private final String errorCode;
     private final String errorMessage;

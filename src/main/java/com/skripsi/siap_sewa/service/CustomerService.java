@@ -19,8 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -153,13 +155,11 @@ public class CustomerService {
 
             // Validasi username
             if (!customer.getUsername().equals(request.getUsername())) {
-                // Cek unik (kecuali milik sendiri)
                 if (customerRepository.existsByUsernameAndIdNot(request.getUsername(), request.getId())) {
                     log.info("Username {} sudah digunakan", request.getUsername());
                     return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EXIST, null);
                 }
 
-                // Cek apakah sudah lewat 30 hari sejak terakhir update
                 if (customer.getLastUpdateAt() != null &&
                         LocalDateTime.now().isAfter(customer.getLastUpdateAt().plusDays(30))) {
                     log.info("Username tidak bisa diubah setelah 30 hari dari terakhir update");
@@ -167,14 +167,13 @@ public class CustomerService {
                 }
             }
 
-            // Validasi email unik (kecuali milik user ini)
+            // Validasi email
             if (!customer.getEmail().equals(request.getEmail())) {
                 if (customerRepository.existsByEmailAndIdNot(request.getEmail(), request.getId())) {
                     log.info("Email {} sudah digunakan", request.getEmail());
-                        return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
+                    return commonUtils.setResponse(ErrorMessageEnum.EMAIL_EXIST, null);
                 }
 
-                // Validasi edit email dalam 30 hari pertama
                 LocalDateTime firstEditDate = customer.getFirstEditAt() != null ?
                         customer.getFirstEditAt() : customer.getCreatedAt();
 
@@ -184,15 +183,51 @@ public class CustomerService {
                 }
             }
 
-            // Update semua field biodata
+            // Handle image upload
+            String imageUrl = customer.getImage(); // Default to existing image
+
+            if (request.getImage() != null && !request.getImage().isEmpty()) {
+                try {
+                    // Upload new image
+                    imageUrl = cloudinaryService.uploadImage(request.getImage());
+
+                    // Delete old image if exists and is from Cloudinary
+                    if (customer.getImage() != null &&
+                            customer.getImage().contains("res.cloudinary.com")) {
+                        try {
+                            String publicId = customer.getImage().substring(
+                                    customer.getImage().lastIndexOf("/") + 1,
+                                    customer.getImage().lastIndexOf(".")
+                            );
+                            cloudinaryService.deleteImage(publicId);
+                        } catch (Exception e) {
+                            log.warn("Gagal menghapus gambar lama: {}", e.getMessage());
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    return commonUtils.setResponse(
+                            ErrorMessageEnum.INVALID_FILE_FORMAT,
+                            Map.of("message", e.getMessage())
+                    );
+                } catch (IOException e) {
+                    log.error("Gagal upload gambar: {}", e.getMessage());
+                    return commonUtils.setResponse(ErrorMessageEnum.IMAGE_UPLOAD_FAILED, null);
+                }
+            }
+
+            // Update fields
             customer.setUsername(request.getUsername());
             customer.setName(request.getName());
             customer.setEmail(request.getEmail());
             customer.setPhoneNumber(request.getPhoneNumber());
             customer.setGender(request.getGender());
             customer.setBirthDate(request.getBirthDate());
-            customer.setImage(request.getImage());
+            customer.setImage(imageUrl);
             customer.setLastUpdateAt(LocalDateTime.now());
+
+            if (customer.getFirstEditAt() == null) {
+                customer.setFirstEditAt(LocalDateTime.now());
+            }
 
             customerRepository.save(customer);
 
@@ -200,7 +235,7 @@ public class CustomerService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
-            log.info("Gagal mengedit biodata customer: {}", ex.getMessage(), ex);
+            log.error("Gagal mengedit biodata customer: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }

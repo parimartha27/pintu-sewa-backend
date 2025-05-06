@@ -2,10 +2,7 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.customer.*;
-import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
-import com.skripsi.siap_sewa.service.CloudinaryService;
 import com.skripsi.siap_sewa.service.CustomerService;
-import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 
 @Slf4j
 @RestController
@@ -23,8 +19,6 @@ import java.io.IOException;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private final CloudinaryService cloudinaryService;
-    private final CommonUtils commonUtils;
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> getCustomerDetails(@PathVariable String id) {
@@ -41,21 +35,10 @@ public class CustomerController {
         return customerService.editAddress(request);
     }
 
-    @PutMapping(value = "/edit-biodata", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/edit-biodata", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse> editBiodata(
-            @RequestPart("data") @Valid EditBiodataRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
-
-        try {
-            if (imageFile != null && !imageFile.isEmpty()) {
-                String imageUrl = cloudinaryService.uploadImage(imageFile);
-                request.setImage(imageUrl);
-            }
-            return customerService.editBiodata(request);
-        } catch (IOException e) {
-            log.error("Gagal upload gambar: {}", e.getMessage());
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
+            @Valid EditBiodataRequest request) {
+        return customerService.editBiodata(request);
     }
 
     @PostMapping("/validate/credential")

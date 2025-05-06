@@ -46,8 +46,8 @@ public class CreateNewCustomerRequest {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    @NotNull(message = "Image cannot be null")
-    private   MultipartFile image;
+    @NotNull(message = "Gambar tidak boleh kosong")
+    private MultipartFile image;
 
     @NotBlank(message = "Jalan tidak boleh kosong")
     @Size(min = 5, max = 255, message = "Jalan harus terdiri dari 5 hingga 255 karakter")
