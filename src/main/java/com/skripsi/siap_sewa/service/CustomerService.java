@@ -166,6 +166,13 @@ public class CustomerService {
                     return commonUtils.setResponse(ErrorMessageEnum.USERNAME_EDIT_EXPIRED, null);
                 }
             }
+
+            if (request.getPhoneNumber() != null && !request.getPhoneNumber().equals(customer.getPhoneNumber())) {
+                if (customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+                    log.info("Nomor telepon sudah digunakan: {}", request.getPhoneNumber());
+                    return commonUtils.setResponse(ErrorMessageEnum.PHONE_NUMBER_EXIST, null);
+                }
+            }
             
             // Handle image upload
             String imageUrl = customer.getImage(); // Default to existing image
