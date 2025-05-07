@@ -28,9 +28,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -153,16 +155,25 @@ public class ShopService {
     public ResponseEntity<ApiResponse> shopDetail(String shopId) {
         log.info("Start find shop with ID: {}", shopId);
         try {
+            // Find shop or throw exception if not found
             ShopEntity shop = shopRepository.findById(shopId)
                     .orElseThrow(() -> new DataNotFoundException("Toko tidak ditemukan"));
 
             ShopDetailResponse response = modelMapper.map(shop, ShopDetailResponse.class);
 
+            List<ReviewEntity> reviews = shop.getProducts().stream()
+                    .flatMap(product -> product.getReviews().stream())
+                    .collect(Collectors.toList());
+            
+            Double rating = ProductHelper.calculateWeightedRating(reviews);
+            response.setRating(rating);
+
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
         } catch (DataNotFoundException ex) {
+            log.error("Shop not found: {}", ex.getMessage());
             throw ex;
         } catch (Exception ex) {
-            log.error("Error fetching shop details: {}", ex.getMessage());
+            log.error("Error fetching shop details: {}", ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
