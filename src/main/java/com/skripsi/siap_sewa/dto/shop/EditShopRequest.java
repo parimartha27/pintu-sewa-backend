@@ -38,7 +38,6 @@ public class EditShopRequest {
     @NotBlank(message = "Provinsi tidak boleh kosong")
     private String province;
 
-    @NotBlank(message = "Kode Pos tidak boleh kosong")
     private String postCode;
 
     private String workHours;

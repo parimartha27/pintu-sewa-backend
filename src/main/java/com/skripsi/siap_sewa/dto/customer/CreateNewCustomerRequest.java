@@ -62,8 +62,6 @@ public class CreateNewCustomerRequest {
     @NotBlank(message = "Provinsi tidak boleh kosong")
     private String province;
 
-    @NotBlank(message = "Kode pos tidak boleh kosong")
-    @Pattern(regexp = "^[0-9]{5}$", message = "Kode pos harus terdiri dari 5 angka")
     private String postCode;
 
     private String password;

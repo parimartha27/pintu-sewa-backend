@@ -316,7 +316,6 @@ public class CheckoutService {
                 .amount(rentalPrice.totalPrice())
                 .totalAmount(rentalPrice.totalPrice().add(deposit).add(serviceFee).add(shippingPrice))
                 .paymentMethod("UNPAID")
-                .status("Belum Dibayar")
                 .isReturn("NOT_RETURNED")
                 .createdAt(LocalDateTime.now())
                 .lastUpdateAt(LocalDateTime.now())

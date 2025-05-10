@@ -86,14 +86,6 @@ public class ShopService {
             if (request.getProvince() == null || request.getProvince().isBlank()) {
                 throw new IllegalArgumentException("Provinsi tidak boleh kosong");
             }
-
-            if (request.getPostCode() == null || request.getPostCode().isBlank()) {
-                throw new IllegalArgumentException("Kode pos tidak boleh kosong");
-            }
-
-            if (!request.getPostCode().matches("^[0-9]{5}$")) {
-                throw new IllegalArgumentException("Kode pos harus terdiri dari 5 angka");
-            }
         }
 
         CustomerEntity shopOwner = customer.get();

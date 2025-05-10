@@ -2,12 +2,14 @@ package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.transaction.*;
-import com.skripsi.siap_sewa.entity.ProductEntity;
-import com.skripsi.siap_sewa.entity.ShopEntity;
-import com.skripsi.siap_sewa.entity.TransactionEntity;
+import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.exception.DataNotFoundException;
+import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.repository.TransactionRepository;
+import com.skripsi.siap_sewa.repository.WalletReportRepository;
+import com.skripsi.siap_sewa.repository.ShopRepository;
 import com.skripsi.siap_sewa.spesification.TransactionSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.transaction.Transactional;
@@ -31,6 +33,9 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final CustomerRepository customerRepository;
+    private final WalletReportRepository walletReportRepository;
+    private final ShopRepository shopRepository;
     private final CommonUtils commonUtils;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
     private final ProductRepository productRepository;
@@ -345,5 +350,233 @@ public class TransactionService {
                         .add(transactions.get(0).getServiceFee())
                         .add(totalDeposit))
                 .build();
+    }
+
+    public ResponseEntity<ApiResponse> processTransaction(ProcessStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} Into Belum Dibayar", request.getReferenceNumbers());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
+
+            if(transactions.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Belum Dibayar");
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumbers(),ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> paymentTransaction(PaymentStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} Into Belum Dibayar", request.getReferenceNumbers());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
+
+            if(transactions.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            if (!customerRepository.existsById(request.getCustomerId())) {
+                throw new DataNotFoundException("Customer not found");
+            }
+            if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Amount Must be greater than zero");
+            }
+
+            CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", request.getCustomerId());
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+            if (customer.getWalletAmount().compareTo(request.getAmount()) < 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
+            }
+
+            customer.setWalletAmount(customer.getWalletAmount().subtract(request.getAmount()));
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+
+            WalletReportEntity wallet = new WalletReportEntity();
+            wallet.setDescription("Payment Transaction : " + request.getAmount());
+            wallet.setAmount(request.getAmount());
+            wallet.setType(WalletReportEntity.WalletType.CREDIT);
+            wallet.setCustomerId(customer.getId());
+            wallet.setCreateAt(LocalDateTime.now());
+            wallet.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(wallet);
+
+            log.info("Successfully Payment Customer ID: {}",request.getCustomerId());
+
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Diproses");
+                transaction.setPaymentMethod(request.getPaymentMethod());
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumbers(),ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> shippingTransaction(ShippingStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} Into Dikirim", request.getReferenceNumber());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
+            if(transactions.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Dikirim");
+                transaction.setShippingCode(request.getShippingCode());
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(),ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> receiveTransaction(ReceiveStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} Into Sedang Disewa", request.getReferenceNumber());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
+
+            if(transactions.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Sedang Disewa");
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(),ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> returnTransaction(ReturnStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} Into Dikembalikan", request.getReferenceNumber());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
+
+            if(transactions.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Dikembalikan");
+                transaction.setReturnCode(request.getReturnCode());
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(),ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> doneTransaction(DoneStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} Into Selesai", request.getReferenceNumber());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
+
+            if(transactions.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            BigDecimal deposit = transactions.getFirst().getTotalDeposit();
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Selesai");
+                transaction.setIsReturn("RETURNED");
+                transaction.setDepositReturned(true);
+                transaction.setDepositReturnedAt(LocalDateTime.now());
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                    .orElseThrow(() -> {
+                        log.info("Customer not found with ID: {}", request.getCustomerId());
+                        return new DataNotFoundException("Customer not found");
+                    });
+
+            ShopEntity shop = shopRepository.findById(transactions.getFirst().getShopId())
+                    .orElseThrow(() -> {
+                        log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
+                        return new DataNotFoundException("Shop not found");
+                    });
+
+            if (shop.getBalance().compareTo(deposit) < 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
+            }
+
+            customer.setWalletAmount(customer.getWalletAmount().add(deposit));
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+
+            shop.setBalance(shop.getBalance().subtract(deposit));
+            shop.setLastUpdateAt(LocalDateTime.now());
+            shopRepository.save(shop);
+
+            WalletReportEntity walletCustomer = new WalletReportEntity();
+            walletCustomer.setDescription("Deposit Return From Transaction Amount : "+ deposit);
+            walletCustomer.setAmount(deposit);
+            walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
+            walletCustomer.setCustomerId(customer.getId());
+            walletCustomer.setCreateAt(LocalDateTime.now());
+            walletCustomer.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletCustomer);
+
+            WalletReportEntity walletShop = new WalletReportEntity();
+            walletShop.setDescription("Deposit Return From Transaction ID Amount : "+ deposit);
+            walletShop.setAmount(deposit);
+            walletShop.setType(WalletReportEntity.WalletType.CREDIT);
+            walletShop.setCustomerId(shop.getId());
+            walletShop.setCreateAt(LocalDateTime.now());
+            walletShop.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletShop);
+
+            log.info("Successfully Return Deposit of Transaction ID {} ",transactions.getFirst().getTransactionNumber());
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(),ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
     }
 }

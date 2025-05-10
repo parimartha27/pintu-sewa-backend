@@ -2,10 +2,7 @@ package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 
-import com.skripsi.siap_sewa.dto.transaction.ShopTransactionFilterRequest;
-import com.skripsi.siap_sewa.dto.transaction.TransactionDetailRequest;
-import com.skripsi.siap_sewa.dto.transaction.TransactionFilterRequest;
-import com.skripsi.siap_sewa.dto.transaction.UpdateStatusTransactionRequest;
+import com.skripsi.siap_sewa.dto.transaction.*;
 import com.skripsi.siap_sewa.dto.transaction.UpdateStatusTransactionRequest;
 import com.skripsi.siap_sewa.service.TransactionService;
 import lombok.RequiredArgsConstructor;
@@ -68,13 +65,33 @@ public class TransactionController {
         return transactionService.getTransactionDetail(request);
     }
 
-    @PatchMapping("/transaction-detail/set-status")
-    public ResponseEntity<ApiResponse> setStatus(@RequestBody UpdateStatusTransactionRequest request){
-        return transactionService.setStatus(request);
+    @PatchMapping("/transaction-detail/process")
+    public ResponseEntity<ApiResponse> processTransaction(@RequestBody ProcessStatusTransactionRequest request){
+        return transactionService.processTransaction(request);
+    }
+
+    @PatchMapping("/transaction-detail/payment")
+    public ResponseEntity<ApiResponse> paymentTransaction(@RequestBody PaymentStatusTransactionRequest request){
+        return transactionService.paymentTransaction(request);
     }
 
     @PatchMapping("/transaction-detail/set-shipping")
-    public ResponseEntity<ApiResponse> setShippingCode(@RequestParam String transactionId,@RequestParam String shippingCode,@RequestParam String type){
-        return transactionService.setShippingCode(transactionId,shippingCode,type);
+    public ResponseEntity<ApiResponse> shippingTransaction(@RequestBody ShippingStatusTransactionRequest request){
+        return transactionService.shippingTransaction(request);
+    }
+
+    @PatchMapping("/transaction-detail/receive-item")
+    public ResponseEntity<ApiResponse> ReceiveTransaction(@RequestBody ReceiveStatusTransactionRequest request){
+        return transactionService.receiveTransaction(request);
+    }
+
+    @PatchMapping("/transaction-detail/return-item")
+    public ResponseEntity<ApiResponse> ReturnTransaction(@RequestBody ReturnStatusTransactionRequest request){
+        return transactionService.returnTransaction(request);
+    }
+
+    @PatchMapping("/transaction-detail/done")
+    public ResponseEntity<ApiResponse> DoneTransaction(@RequestBody DoneStatusTransactionRequest request){
+        return transactionService.doneTransaction(request);
     }
 }

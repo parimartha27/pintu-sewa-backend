@@ -20,6 +20,7 @@ public class TransactionSpecification {
             // Filter by customer ID
             if (StringUtils.hasText(filterRequest.getCustomerId())) {
                 predicates.add(criteriaBuilder.equal(root.get("customer").get("id"), filterRequest.getCustomerId()));
+                predicates.add(criteriaBuilder.isNotNull(root.get("status")));
             }
 
             // Filter by status
@@ -65,6 +66,7 @@ public class TransactionSpecification {
             // Filter by Shop Id
             if (StringUtils.hasText(filterRequest.getShopId())) {
                 predicates.add(criteriaBuilder.equal(root.get("shopId"), filterRequest.getShopId()));
+                predicates.add(criteriaBuilder.isNotNull(root.get("status")));
             }
 
             // Filter by Status
