@@ -121,7 +121,7 @@ public class ProductController {
         return productService.editProduct(productId, request);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/delete/{productId}")
     public ResponseEntity<ApiResponse> deleteProduct(@PathVariable String productId){
         return productService.deleteProduct(productId);
     }
