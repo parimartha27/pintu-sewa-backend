@@ -114,11 +114,11 @@ public class ProductController {
         return productService.addProduct(request);
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping("/edit/{productId}")
     public ResponseEntity<ApiResponse> editProduct(
-            @PathVariable String id,
+            @PathVariable String productId,
             @RequestBody @Valid EditProductRequest request){
-        return productService.editProduct(id, request);
+        return productService.editProduct(productId, request);
     }
 
     @DeleteMapping("/delete/{id}")

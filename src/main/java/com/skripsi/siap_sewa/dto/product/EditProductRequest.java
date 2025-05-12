@@ -20,32 +20,24 @@ public class EditProductRequest {
     @NotBlank(message = "Shop ID tidak boleh kosong")
     private String shopId;
 
-    @NotBlank(message = "Nama produk tidak boleh kosong")
-    @Size(min = 3, max = 100, message = "Nama produk wajib terdiri dari 3 hingga 100 karakter")
     private String name;
 
-    @NotBlank(message = "Kategori produk tidak boleh kosong")
     private String category;
 
-    @NotNull(message = "Durasi sewa tidak boleh kosong")
     @Min(value = 1, message = "Durasi sewa minimal harus 1")
     private Integer rentCategory;
 
     private boolean isRnb;
 
-    @NotNull(message = "Berat produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Berat harus lebih dari 0")
     private BigDecimal weight;
 
-    @NotNull(message = "Tinggi produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Tinggi harus lebih dari 0")
     private BigDecimal height;
 
-    @NotNull(message = "Lebar produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Lebar harus lebih dari 0")
     private BigDecimal width;
 
-    @NotNull(message = "Panjang produk tidak boleh kosong")
     @DecimalMin(value = "0.0", inclusive = false, message = "Panjang harus lebih dari 0")
     private BigDecimal length;
 
@@ -58,7 +50,6 @@ public class EditProductRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Harga bulanan harus lebih dari 0")
     private BigDecimal monthlyPrice;
 
-    @NotBlank(message = "Deskripsi produk tidak boleh kosong")
     private String description;
 
     private String conditionDescription;
