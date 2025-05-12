@@ -14,6 +14,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -444,5 +449,94 @@ public class ProductService {
             log.info("Error fetching products from ID {}: {}", id, ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
+
+    public ResponseEntity<ApiResponse> getProductsByShop(
+            String shopId,
+            String category,
+            Boolean isRnb,
+            String search,
+            String sortBy,
+            String sortDirection,
+            int page) {
+
+        log.debug("Fetching products for shop ID: {}", shopId);
+
+        // Validasi shopId
+        if (!shopRepository.existsById(shopId)) {
+            throw new DataNotFoundException("Shop not found with ID: " + shopId);
+        }
+
+        // Validasi sortBy
+        List<String> validSortFields = List.of("name", "dailyPrice", "weeklyPrice", "monthlyPrice", "rating");
+        if (!validSortFields.contains(sortBy)) {
+            sortBy = "name";
+        }
+
+        // Konstruksi sorting
+        Sort sort = Sort.by(sortBy);
+        if ("desc".equalsIgnoreCase(sortDirection)) {
+            sort = sort.descending();
+        } else {
+            sort = sort.ascending();
+        }
+
+        // Pagination
+        Pageable pageable = PageRequest.of(page, 16, sort);
+
+        // Konstruksi query
+        Specification<ProductEntity> spec = Specification.where((root, query, cb) ->
+                cb.equal(root.get("shop").get("id"), shopId));
+
+        if (category != null && !category.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("category"), category));
+        }
+
+        if (isRnb != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("isRnb"), isRnb));
+        }
+
+        if (search != null && !search.isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"));
+        }
+
+        // Eksekusi query
+        Page<ProductEntity> productsPage = productRepository.findAll(spec, pageable);
+
+        // Mapping ke response
+        List<ProductListResponse> responses = productsPage.getContent().stream()
+                .map(product -> {
+                    List<String> images = processImageString(product.getImage());
+                    Double rating = ProductHelper.calculateWeightedRating(product.getReviews());
+                    int[] transactionCounts = ProductHelper.countProductTransactions(product.getTransactions());
+
+                    return ProductListResponse.builder()
+                            .id(product.getId())
+                            .name(product.getName())
+                            .category(product.getCategory())
+                            .isRnb(product.isRnb())
+                            .dailyPrice(product.getDailyPrice())
+                            .weeklyPrice(product.getWeeklyPrice())
+                            .monthlyPrice(product.getMonthlyPrice())
+                            .stock(product.getStock())
+                            .status(product.getStatus())
+                            .mainImage(images.isEmpty() ? null : images.get(0))
+                            .rating(rating)
+                            .rentedTimes(transactionCounts[0])
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // Membuat response dengan pagination info
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("products", responses);
+        responseData.put("current_page", productsPage.getNumber());
+        responseData.put("total_items", productsPage.getTotalElements());
+        responseData.put("total_pages", productsPage.getTotalPages());
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseData);
     }
 }
