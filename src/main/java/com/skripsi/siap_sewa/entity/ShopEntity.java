@@ -28,7 +28,12 @@ public class ShopEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    // profile
+    @OneToOne
+    @JoinColumn(name = "customer_id", referencedColumnName = "id")
+    @JsonManagedReference
+    private CustomerEntity customer;
+
+    // Profile
     private String name;
     private String description;
     private String email;
@@ -52,16 +57,23 @@ public class ShopEntity {
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
-    @OneToOne
-    @JoinColumn(name = "customer_id", referencedColumnName = "id")
-    @JsonManagedReference
-    private CustomerEntity customer;
-
     @Builder.Default
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ProductEntity> products = new ArrayList<>();
 
+    // ====== Default Value Handler ======
+    @PrePersist
+    public void prePersist() {
+        if (this.balance == null) {
+            this.balance = BigDecimal.ZERO;
+        }
+        this.createdAt = LocalDateTime.now();
+        this.lastUpdateAt = LocalDateTime.now();
+    }
 
+    @PreUpdate
+    public void preUpdate() {
+        this.lastUpdateAt = LocalDateTime.now();
+    }
 }
-

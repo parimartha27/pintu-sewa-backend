@@ -30,37 +30,64 @@ public class ProductEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String name;
-    private String category;
-    private int rentCategory;
-    private boolean isRnb;
-    private BigDecimal weight;
-    private BigDecimal height;
-    private BigDecimal width;
-    private BigDecimal length;
-    private BigDecimal dailyPrice;
-    private BigDecimal weeklyPrice;
-    private BigDecimal monthlyPrice;
-    private String description;
-    private String conditionDescription;
-    private int stock;
-    private int minRented;
-    private String status;
-    private String image;
-    private BigDecimal deposit;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", referencedColumnName = "id")
+    private ShopEntity shop;
 
-    @Version
-    private Integer version;
+    private String name;
+
+    private String category;
+
+    @Column(nullable = false)
+    private int rentCategory;
+
+    @Column(nullable = false)
+    private boolean isRnb;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal weight;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal height;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal width;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal length;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal dailyPrice;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal weeklyPrice;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal monthlyPrice;
+
+    @Column(precision = 38, scale = 2)
+    private BigDecimal buyPrice;
+
+    private String description;
+
+    private String conditionDescription;
+
+    private int stock;
+
+    @Column(nullable = false)
+    private int minRented;
+
+    private String status;
+
+    private String image;
+
+    private BigDecimal deposit;
 
     @JsonIgnore
     private LocalDateTime createdAt;
 
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", referencedColumnName = "id")
-    private ShopEntity shop;
 
     @ManyToMany(mappedBy = "products")
     @JsonBackReference
@@ -70,4 +97,11 @@ public class ProductEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ReviewEntity> reviews = new ArrayList<>();
+
+    @PrePersist
+    public void prePersist() {
+        if (this.buyPrice == null) {
+            this.buyPrice = BigDecimal.ZERO;
+        }
+    }
 }

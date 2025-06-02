@@ -35,6 +35,7 @@ public class ReviewEntity {
     private String comment;
 
     private String image;
+
     private Double rating;
 
     @JsonIgnore

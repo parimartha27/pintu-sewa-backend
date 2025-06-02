@@ -21,7 +21,9 @@ public class WalletReportEntity {
     private String id;
 
     private String customerId;
+
     private String shopId;
+    @Column(precision = 38, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
