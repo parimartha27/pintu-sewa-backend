@@ -41,6 +41,7 @@ public class ProductEntity {
     private BigDecimal dailyPrice;
     private BigDecimal weeklyPrice;
     private BigDecimal monthlyPrice;
+    private BigDecimal buyPrice;
     private String description;
     private String conditionDescription;
     private int stock;

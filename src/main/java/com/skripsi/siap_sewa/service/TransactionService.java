@@ -181,56 +181,56 @@ public class TransactionService {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
-
-    public ResponseEntity<ApiResponse> setStatus(UpdateStatusTransactionRequest request) {
-        try {
-            log.info("Update Reference Number status {} Into {}", request.getReferenceNumbers(), request.getNextStatus());
-
-            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
-
-            if(transactions.isEmpty()){
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
-            }
-
-            transactions.forEach(transaction -> {
-                transaction.setStatus(request.getNextStatus());
-                transaction.setLastUpdateAt(LocalDateTime.now());
-            });
-
-            transactionRepository.saveAll(transactions);
-
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
-        } catch (Exception ex) {
-            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumbers(),ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
-
-    public ResponseEntity<ApiResponse> setShippingCode(String transactionId,String shippingCode,String type) {
-        try {
-            log.info("Update Transaction Id {} {} Code Into {}",transactionId,shippingCode,type);
-            Optional<TransactionEntity> transaction = transactionRepository.findById(transactionId);
-            if(transaction.isEmpty()){
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
-            }
-
-            if(type == "return"){
-                transaction.get().setReturnCode(shippingCode);
-            }else if(type == "shipping"){
-                transaction.get().setShippingCode(shippingCode);
-            }else{
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Type not exist");
-            }
-
-            transaction.get().setLastUpdateAt(LocalDateTime.now());
-            transactionRepository.save(transaction.get());
-
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
-        } catch (Exception ex) {
-            log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
+//
+//    public ResponseEntity<ApiResponse> setStatus(UpdateStatusTransactionRequest request) {
+//        try {
+//            log.info("Update Reference Number status {} Into {}", request.getReferenceNumbers(), request.getNextStatus());
+//
+//            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
+//
+//            if(transactions.isEmpty()){
+//                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+//            }
+//
+//            transactions.forEach(transaction -> {
+//                transaction.setStatus(request.getNextStatus());
+//                transaction.setLastUpdateAt(LocalDateTime.now());
+//            });
+//
+//            transactionRepository.saveAll(transactions);
+//
+//            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+//        } catch (Exception ex) {
+//            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumbers(),ex.getMessage(), ex);
+//            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+//        }
+//    }
+//
+//    public ResponseEntity<ApiResponse> setShippingCode(String transactionId,String shippingCode,String type) {
+//        try {
+//            log.info("Update Transaction Id {} {} Code Into {}",transactionId,shippingCode,type);
+//            Optional<TransactionEntity> transaction = transactionRepository.findById(transactionId);
+//            if(transaction.isEmpty()){
+//                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+//            }
+//
+//            if(type == "return"){
+//                transaction.get().setReturnCode(shippingCode);
+//            }else if(type == "shipping"){
+//                transaction.get().setShippingCode(shippingCode);
+//            }else{
+//                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Type not exist");
+//            }
+//
+//            transaction.get().setLastUpdateAt(LocalDateTime.now());
+//            transactionRepository.save(transaction.get());
+//
+//            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+//        } catch (Exception ex) {
+//            log.error("Error fetching transaction ID {} : {}", transactionId,ex.getMessage(), ex);
+//            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+//        }
+//    }
 
     public ResponseEntity<ApiResponse> getTransactionDetail(TransactionDetailRequest request) {
         try {
