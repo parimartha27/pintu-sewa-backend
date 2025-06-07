@@ -409,7 +409,7 @@ public class TransactionService {
 
 
             WalletReportEntity wallet = new WalletReportEntity();
-            wallet.setDescription("Payment Transaction : " + request.getAmount());
+            wallet.setDescription("Payment Transaction ");
             wallet.setAmount(request.getAmount());
             wallet.setType(WalletReportEntity.WalletType.CREDIT);
             wallet.setCustomerId(customer.getId());
@@ -552,7 +552,7 @@ public class TransactionService {
             shopRepository.save(shop);
 
             WalletReportEntity walletCustomer = new WalletReportEntity();
-            walletCustomer.setDescription("Deposit Return From Transaction Amount : "+ deposit);
+            walletCustomer.setDescription("Deposit Return From Transaction ID  : "+ transactions.getFirst().getTransactionNumber());
             walletCustomer.setAmount(deposit);
             walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
             walletCustomer.setCustomerId(customer.getId());
@@ -561,7 +561,7 @@ public class TransactionService {
             walletReportRepository.save(walletCustomer);
 
             WalletReportEntity walletShop = new WalletReportEntity();
-            walletShop.setDescription("Deposit Return From Transaction ID Amount : "+ deposit);
+            walletShop.setDescription("Deposit Return From Transaction ID  : "+ transactions.getFirst().getTransactionNumber());
             walletShop.setAmount(deposit);
             walletShop.setType(WalletReportEntity.WalletType.CREDIT);
             walletShop.setCustomerId(shop.getId());

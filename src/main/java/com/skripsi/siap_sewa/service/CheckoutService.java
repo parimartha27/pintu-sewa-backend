@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -41,8 +42,8 @@ public class CheckoutService {
     private final CommonUtils commonUtils;
     private final ShopRepository shopRepository;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(Constant.DATE_FORMAT);
-
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("id", "ID"));
     @Transactional
     public ResponseEntity<ApiResponse> processProductCheckout(ProductCheckoutRequest request) throws BadRequestException {
         try {
@@ -128,8 +129,8 @@ public class CheckoutService {
             );
 
             // Hapus cart secara permanen (hard delete)
-            cartRepository.deleteAll(carts);
-            log.info("Deleted {} carts permanently after checkout", carts.size());
+//            cartRepository.deleteAll(carts);
+//            log.info("Deleted {} carts permanently after checkout", carts.size());
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,
                     CheckoutResultResponse.builder().transactionIds(transactionIds).build());
@@ -383,10 +384,6 @@ public class CheckoutService {
                     );
 
                     transactionIds.add(transaction.getId());
-
-                    // Update product stock
-                    item.product.setStock(item.product.getStock() - item.quantity);
-                    productRepository.save(item.product);
                 }
 
                 // Mark shop as successfully processed
@@ -394,20 +391,6 @@ public class CheckoutService {
 
             } catch (Exception e) {
                 log.error("Failed to process items from shop {}: {}", shop.getName(), e.getMessage());
-
-                // Rollback stock updates for this shop's items that might have been processed
-                for (CartCheckoutItem item : shopItems) {
-                    try {
-                        ProductEntity product = productRepository.findById(item.product.getId()).orElse(null);
-                        if (product != null) {
-                            // Add back quantity for any products that might have been decremented
-                            product.setStock(product.getStock() + item.quantity);
-                            productRepository.save(product);
-                        }
-                    } catch (Exception ex) {
-                        log.error("Error reverting stock for product {}: {}", item.product.getId(), ex.getMessage());
-                    }
-                }
 
                 // Rollback transactions for this shop
                 if (!processedShopIds.contains(shop.getId())) {

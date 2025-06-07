@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -37,7 +38,8 @@ public class WalletService {
     private final WalletReportRepository walletReportRepository;
     private final CommonUtils commonUtils;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("id", "ID"));
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final ShopRepository shopRepository;
     private final TransactionRepository transactionRepository;
@@ -141,7 +143,7 @@ public class WalletService {
             customerRepository.save(customer);
 
             WalletReportEntity wallet = new WalletReportEntity();
-            wallet.setDescription("Top Up Wallet Amount : "+ amount);
+            wallet.setDescription("Top Up Wallet ");
             wallet.setAmount(amount);
             wallet.setType(WalletReportEntity.WalletType.DEBIT);
             wallet.setCustomerId(customer.getId());
@@ -179,7 +181,7 @@ public class WalletService {
             shopRepository.save(shop);
 
             WalletReportEntity wallet = new WalletReportEntity();
-            wallet.setDescription("Withdraw Wallet Amount : "+ amount);
+            wallet.setDescription("Withdraw Wallet ");
             wallet.setAmount(amount);
             wallet.setType(WalletReportEntity.WalletType.CREDIT);
             wallet.setShopId(shop.getId());
