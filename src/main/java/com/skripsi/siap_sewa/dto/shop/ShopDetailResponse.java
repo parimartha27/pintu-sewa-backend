@@ -25,5 +25,6 @@ public class ShopDetailResponse {
     private String province;
     private String postCode;
     private Double rating;
+    private String email;
     private String workHours;
 }

@@ -215,10 +215,6 @@ public class CustomerService {
             customer.setImage(imageUrl);
             customer.setLastUpdateAt(LocalDateTime.now());
 
-            if (customer.getFirstEditAt() == null) {
-                customer.setFirstEditAt(LocalDateTime.now());
-            }
-
             customerRepository.save(customer);
 
             CustomerDetailResponse response = buildCustomerResponse(customer);

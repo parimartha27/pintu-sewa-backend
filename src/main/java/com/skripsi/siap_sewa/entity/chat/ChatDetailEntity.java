@@ -27,10 +27,10 @@ public class ChatDetailEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Column(name = "sender_type", nullable = false)
+    private String senderType;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "sender_type", nullable = false)
-    private String senderType;
 }

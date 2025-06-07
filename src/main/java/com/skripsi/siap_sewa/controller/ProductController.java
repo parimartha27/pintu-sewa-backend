@@ -114,16 +114,16 @@ public class ProductController {
         return productService.addProduct(request);
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping("/edit/{productId}")
     public ResponseEntity<ApiResponse> editProduct(
-            @PathVariable String id,
+            @PathVariable String productId,
             @RequestBody @Valid EditProductRequest request){
-        return productService.editProduct(id, request);
+        return productService.editProduct(productId, request);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable String id){
-        return productService.deleteProduct(id);
+    @DeleteMapping("/delete/{productId}")
+    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable String productId){
+        return productService.deleteProduct(productId);
     }
 
     //    find product in shop page
@@ -161,5 +161,18 @@ public class ProductController {
             @PathVariable String id,
             @RequestParam Integer newStock){
         return productService.editStockProduct(id, newStock);
+    }
+
+    @GetMapping("/shop/penyedia-jasa/{shopId}")
+    public ResponseEntity<ApiResponse> getProductsByShop(
+            @PathVariable String shopId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean isRnb,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "name") String sortBy,
+            @RequestParam(required = false, defaultValue = "asc") String sortDirection,
+            @RequestParam(required = false, defaultValue = "0") int page) {
+
+        return productService.getProductsByShop(shopId, category, isRnb, search, sortBy, sortDirection, page);
     }
 }
