@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -97,10 +98,18 @@ public class ProductHelper {
     }
 
     public static BigDecimal getLowestPrice(ProductEntity product) {
+        // Mendefinisikan nilai -1 sebagai konstanta agar lebih rapi
+        final BigDecimal ABSENT_PRICE = new BigDecimal("-1");
+
         return Stream.of(product.getDailyPrice(), product.getWeeklyPrice(), product.getMonthlyPrice())
-                .filter(Objects::nonNull)
+                // 1. Ubah nilai null menjadi -1
+                .map(price -> Optional.ofNullable(price).orElse(ABSENT_PRICE))
+                // 2. Saring semua nilai yang BUKAN -1
+                .filter(price -> price.compareTo(ABSENT_PRICE) != 0)
+                // 3. Cari nilai terkecil dari harga yang valid
                 .min(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
+                // 4. Jika tidak ada harga lain, kembalikan -1
+                .orElse(ABSENT_PRICE);
     }
 
     public static ProductResponse convertToResponse(ProductEntity product) {
