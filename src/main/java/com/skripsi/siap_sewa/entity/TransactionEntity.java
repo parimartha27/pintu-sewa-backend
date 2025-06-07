@@ -43,21 +43,28 @@ public class TransactionEntity {
     @JsonManagedReference
     private Set<ProductEntity> products = new HashSet<>();
 
+    private String shopId;
     private String transactionNumber;
     private LocalDate startDate;
     private LocalDate endDate;
     private String shippingAddress;
+
+    @Column(nullable = false)
     private int quantity;
-    private BigDecimal amount;
-    private BigDecimal totalAmount;
+
+    @Builder.Default
+    @Column(precision = 38, scale = 2)
+    private BigDecimal amount = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(precision = 38, scale = 2)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+
     private String paymentMethod;
     private String status;
     private String isReturn;
     private String shippingCode;
     private String returnCode;
-
-    @Version
-    private Integer version;
 
     @JsonIgnore
     private LocalDateTime createdAt;
@@ -65,15 +72,28 @@ public class TransactionEntity {
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
 
+    @Builder.Default
     @Column(name = "is_selled", columnDefinition = "boolean default false")
-    private boolean isSelled;
+    private boolean isSelled = false;
 
-    private String shopId;
     private String shopName;
-    private BigDecimal totalDeposit;
-    private boolean isDepositReturned;
+
+    @Builder.Default
+    @Column(precision = 38, scale = 2)
+    private BigDecimal totalDeposit = BigDecimal.ZERO;
+
+    @Builder.Default
+    private boolean isDepositReturned = false;
+
     private LocalDateTime depositReturnedAt;
-    private BigDecimal serviceFee;
+
+    @Builder.Default
+    @Column(precision = 38, scale = 2)
+    private BigDecimal serviceFee = BigDecimal.ZERO;
+
     private String shippingPartner;
-    private BigDecimal shippingPrice;
+
+    @Builder.Default
+    @Column(precision = 38, scale = 2)
+    private BigDecimal shippingPrice = BigDecimal.ZERO;
 }

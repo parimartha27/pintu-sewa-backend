@@ -35,20 +35,20 @@ public class OtpService {
 
             CustomerEntity customer = customerRepository.findById(request.getCustomerId())
                     .orElseThrow(() -> {
-                        log.warn("Customer not found: {}", request.getCustomerId());
+                        log.info("Customer not found: {}", request.getCustomerId());
                         return new DataNotFoundException("Customer not found");
                     });
 
             if (customer.getVerifyCount() > Constant.MAX_OTP_VERIFY_ATTEMPTS ||
                     customer.getResendOtpCount() > Constant.MAX_OTP_RESEND_ATTEMPTS) {
-                log.warn("OTP attempts exhausted for customer: {}", request.getCustomerId());
+                log.info("OTP attempts exhausted for customer: {}", request.getCustomerId());
                 throw new OtpAttemptsExceededException("OTP verification attempts exhausted");
             }
 
             if (!request.getOtpCode().equals(customer.getOtp())) {
                 customer.setVerifyCount(customer.getVerifyCount() + 1);
                 customerRepository.save(customer);
-                log.warn("Invalid OTP provided for customer: {}", request.getCustomerId());
+                log.info("Invalid OTP provided for customer: {}", request.getCustomerId());
                 throw new InvalidOtpException("Invalid OTP code");
             }
 
@@ -85,13 +85,13 @@ public class OtpService {
 
             CustomerEntity customer = customerRepository.findById(customerId)
                     .orElseThrow(() -> {
-                        log.warn("Customer not found: {}", customerId);
+                        log.info("Customer not found: {}", customerId);
                         return new DataNotFoundException("Customer not found");
                     });
 
             if (customer.getResendOtpCount() >= Constant.MAX_OTP_RESEND_ATTEMPTS ||
                     customer.getVerifyCount() >= Constant.MAX_OTP_VERIFY_ATTEMPTS) {
-                log.warn("OTP resend attempts exhausted for customer: {}", customerId);
+                log.info("OTP resend attempts exhausted for customer: {}", customerId);
                 throw new OtpAttemptsExceededException("OTP resend attempts exhausted");
             }
 
@@ -99,7 +99,7 @@ public class OtpService {
             if (!isLessThan30Minutes(customer.getLastUpdateAt())) {
                 customer.setResendOtpCount(0);
                 customer.setVerifyCount(0);
-                log.debug("Resetting OTP counters for customer: {}", customerId);
+                log.info("Resetting OTP counters for customer: {}", customerId);
             }
 
             String newOtp = commonUtils.generateOtp();
@@ -115,7 +115,7 @@ public class OtpService {
                     Constant.SUBJECT_EMAIL_REGISTER,
                     commonUtils.generateOtpMessage(newOtp)
             );
-            log.debug("OTP email sent to: {}", customer.getEmail());
+            log.info("OTP email sent to: {}", customer.getEmail());
 
             ResendOtpResponse response = ResendOtpResponse.builder()
                     .customerId(customer.getId())
@@ -146,7 +146,7 @@ public class OtpService {
 
             CustomerEntity customer = customerRepository.findById(customerId)
                     .orElseThrow(() -> {
-                        log.warn("Customer not found: {}", customerId);
+                        log.info("Customer not found: {}", customerId);
                         return new DataNotFoundException("Customer not found with ID " + customerId);
                     });
 
@@ -157,7 +157,7 @@ public class OtpService {
                     .resendOtpCount(customer.getResendOtpCount())
                     .build();
 
-            log.debug("OTP validation result for customer {}: {}", customerId, response);
+            log.info("OTP validation result for customer {}: {}", customerId, response);
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (DataNotFoundException ex) {

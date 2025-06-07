@@ -27,16 +27,12 @@ public class CustomerEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
     private String username;
     private String name;
-
     @Column(unique = true)
     private String email;
-
     @Column(unique = true)
     private String phoneNumber;
-
     private String password;
     private String gender;
     private LocalDate birthDate;
@@ -63,8 +59,8 @@ public class CustomerEntity {
     private LocalDateTime lastUpdateAt;
 
     private LocalDateTime lastLogin;
+
     private BigDecimal walletAmount;
-    private LocalDateTime firstEditAt;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference
@@ -73,6 +69,20 @@ public class CustomerEntity {
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<TransactionEntity> transactions;
+
+    // ===== Default Value Setup =====
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.lastUpdateAt = LocalDateTime.now();
+
+        if (this.walletAmount == null) {
+            this.walletAmount = BigDecimal.ZERO;
+        }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.lastUpdateAt = LocalDateTime.now();
+    }
 }
-
-
