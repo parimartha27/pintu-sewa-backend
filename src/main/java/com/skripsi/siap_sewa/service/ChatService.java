@@ -175,6 +175,35 @@ public class ChatService {
         }
     }
 
+    public ResponseEntity<ApiResponse> adminGetRoomChat(String customerId) {
+        try {
+            log.info("Get Room Chat For Admin");
+
+            Optional<CustomerEntity> customer = customerRepository.findById(customerId);
+            if (customer.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Admin Not Found");
+            }
+
+            List<ChatHeaderEntity> listChat = chatHeaderRepository.findByIsReport(Boolean.TRUE);
+            if (listChat.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "There is no Chat Available");
+            }
+
+            List<ListChatResponse> newListChat = listChat.stream()
+                    .map(chat -> ListChatResponse.builder()
+                            .Image(customerRepository.findById(chat.getCustomerId()).get().getImage())
+                            .name(customerRepository.findById(chat.getCustomerId()).get().getName())
+                            .id(chat.getId())
+                            .build())
+                    .toList();
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, newListChat);
+        }catch (Exception ex) {
+            log.info("Failed Get RoomChat List : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
     public ResponseEntity<ApiResponse> sendMessage(@Valid SendMessageRequest request) {
         try {
             log.info("Send Message To Room Chat {}", request.getRoomChatId());

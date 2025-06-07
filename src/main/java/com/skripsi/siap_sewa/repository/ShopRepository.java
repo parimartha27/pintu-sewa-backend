@@ -26,5 +26,5 @@ public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
     Page<ShopEntity> findAll(Pageable pageable);
 
     @Query("SELECT s FROM ShopEntity s WHERE s.customer.id = :customerId")
-    Optional<ShopEntity> findByCustomerId(@Param("customerId") String customerId);
+        Optional<ShopEntity> findByCustomerId(@Param("customerId") String customerId);
 }

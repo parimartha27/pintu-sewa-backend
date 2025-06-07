@@ -19,7 +19,7 @@ public class CloudinaryService {
         this.cloudinary = cloudinary;
     }
 
-    public String uploadImage(MultipartFile file) throws IOException {
+        public String uploadImage(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             return null;
         }

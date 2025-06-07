@@ -150,6 +150,12 @@ public class OtpService {
                         return new DataNotFoundException("Customer not found with ID " + customerId);
                     });
 
+            if (!isLessThan30Minutes(customer.getLastUpdateAt())) {
+                customer.setResendOtpCount(0);
+                customer.setVerifyCount(0);
+                log.info("Resetting OTP counters for customer: {}", customerId);
+            }
+
             ValidOtpResponse response = ValidOtpResponse.builder()
                     .customerId(customer.getId())
                     .status(customer.getStatus())

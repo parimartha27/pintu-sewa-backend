@@ -30,64 +30,38 @@ public class ProductEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", referencedColumnName = "id")
-    private ShopEntity shop;
-
     private String name;
-
     private String category;
-
-    @Column(nullable = false)
     private int rentCategory;
-
-    @Column(nullable = false)
     private boolean isRnb;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal weight;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal height;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal width;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal length;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal dailyPrice;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal weeklyPrice;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal monthlyPrice;
-
-    @Column(precision = 38, scale = 2)
     private BigDecimal buyPrice;
-
     private String description;
-
     private String conditionDescription;
-
     private int stock;
-
-    @Column(nullable = false)
     private int minRented;
-
     private String status;
-
     private String image;
-
     private BigDecimal deposit;
+
+    @Version
+    private Integer version;
 
     @JsonIgnore
     private LocalDateTime createdAt;
 
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", referencedColumnName = "id")
+    private ShopEntity shop;
 
     @ManyToMany(mappedBy = "products")
     @JsonBackReference
@@ -97,11 +71,4 @@ public class ProductEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ReviewEntity> reviews = new ArrayList<>();
-
-    @PrePersist
-    public void prePersist() {
-        if (this.buyPrice == null) {
-            this.buyPrice = BigDecimal.ZERO;
-        }
-    }
 }
