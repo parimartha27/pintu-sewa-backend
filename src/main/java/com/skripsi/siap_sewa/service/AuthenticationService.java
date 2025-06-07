@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -51,11 +52,21 @@ public class AuthenticationService {
 
             log.info("Checking existing customer");
             if(customerRepository.existsByEmail(request.getEmail())) {
-                log.info("Email already used: {}", request.getEmail());
-                throw new EmailExistException("Email sudah digunakan " + request.getEmail());
+                Optional<CustomerEntity> customer = customerRepository.findByEmail(request.getEmail());
+                if(customer.get().getUsername() != null){
+                    log.info("Email already used: {}", request.getEmail());
+                    throw new EmailExistException("Email sudah digunakan " + request.getEmail());
+                }else{
+                    return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customer.get().getStatus());
+                }
             } else if(customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-                log.info("Phone number already exists: {}", request.getPhoneNumber());
-                throw new PhoneNumberExistException("No Handphone sudah digunakan " + request.getPhoneNumber());
+                Optional<CustomerEntity> customer = customerRepository.findByPhoneNumber(request.getPhoneNumber());
+                if(customer.get().getUsername() != null){
+                    log.info("Phone number already exists: {}", request.getPhoneNumber());
+                    throw new PhoneNumberExistException("No Handphone sudah digunakan " + request.getPhoneNumber());
+                }else{
+                    return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, customer.get().getStatus());
+                }
             }
 
             CustomerEntity newCustomer = new CustomerEntity();

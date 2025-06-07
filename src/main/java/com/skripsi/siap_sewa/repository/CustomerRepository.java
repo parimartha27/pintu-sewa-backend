@@ -20,6 +20,10 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
 
     Optional<CustomerEntity> findByPhoneNumberOrEmail(String phoneNumber, String email);
 
+    Optional<CustomerEntity> findByEmail(String email);
+
+    Optional<CustomerEntity> findByPhoneNumber(String phoneNumber);
+
     boolean existsByEmail(String email);
 
     boolean existsByPhoneNumber(String phoneNumber);
