@@ -315,9 +315,14 @@ public class CheckoutService {
                 .quantity(quantity)
                 .amount(rentalPrice.totalPrice())
                 .totalAmount(rentalPrice.totalPrice().add(deposit).add(serviceFee).add(shippingPrice))
+<<<<<<< Updated upstream
                 .paymentMethod("UNPAID")
                 .status("Belum Dibayar")
                 .isReturn("NOT_RETURNED")
+=======
+                .paymentMethod("-")
+                .isReturn("N")
+>>>>>>> Stashed changes
                 .createdAt(LocalDateTime.now())
                 .lastUpdateAt(LocalDateTime.now())
                 .isSelled(false)
@@ -333,11 +338,11 @@ public class CheckoutService {
         return transactionRepository.save(transaction);
     }
 
-    private String generateTransactionNumber(String shopId) {
+    private String generateTransactionNumber() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyyHHmmss");
         String timestamp = LocalDateTime.now().format(formatter);
         int random = new Random().nextInt(900) + 100; // 100-999
-        return shopId + "-PS" + timestamp + random;
+        return "PS" + timestamp + random;
     }
 
     @Transactional
@@ -358,7 +363,7 @@ public class CheckoutService {
 
             try {
                 // Generate a single transaction number for all items from this shop
-                String transactionNumber = generateTransactionNumber(shop.getId());
+                String transactionNumber = generateTransactionNumber();
 
                 for (CartCheckoutItem item : shopItems) {
                     // Validate dates for each item
@@ -386,7 +391,7 @@ public class CheckoutService {
                     transactionIds.add(transaction.getId());
 
                     // Update product stock
-                    item.product.setStock(item.product.getStock() - item.quantity);
+//                    item.product.setStock(item.product.getStock() - item.quantity);
                     productRepository.save(item.product);
                 }
 
