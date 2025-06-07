@@ -96,11 +96,11 @@ public class ProductHelper {
                 .count();
     }
 
-    public static BigDecimal getLowestPrice (ProductEntity product) {
+    public static BigDecimal getLowestPrice(ProductEntity product) {
         return Stream.of(product.getDailyPrice(), product.getWeeklyPrice(), product.getMonthlyPrice())
                 .filter(Objects::nonNull)
                 .min(BigDecimal::compareTo)
-                .orElse(null);
+                .orElse(BigDecimal.ZERO);
     }
 
     public static ProductResponse convertToResponse(ProductEntity product) {
