@@ -21,21 +21,16 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@RequestBody @Valid RegisterRequest request) {
-        log.info("Register request received for email: {} or phone: {}",
-                request.getEmail(), request.getPhoneNumber());
         return authenticationService.register(request);
     }
 
     @PostMapping("/register/oauth")
     public ResponseEntity<ApiResponse> registerOauth(@RequestBody @Valid RegisterOauthRequest request) {
-        log.info("OAuth register request received for email: {}", request.getEmail());
         return authenticationService.registerOauth(request);
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> login(@RequestBody @Valid LoginRequest request) {
-        log.info("Login attempt for email/phone: {}",
-                request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
         return authenticationService.login(request);
     }
 }

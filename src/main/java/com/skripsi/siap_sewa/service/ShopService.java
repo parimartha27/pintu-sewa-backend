@@ -119,7 +119,7 @@ public class ShopService {
         CreateShopResponse response = objectMapper.convertValue(newShop, CreateShopResponse.class);
         response.setId(newShop.getId());
 
-        emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER, commonUtils.generateEmailShop(response.getName()));
+        emailService.sendEmail(response.getEmail(), 1, newShop.getName());
         
         return utils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }

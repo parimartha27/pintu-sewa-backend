@@ -24,11 +24,6 @@ public class TestController {
         return "PINTU SEWA";
     }
 
-    @GetMapping("/email")
-    public void email(){
-        emailService.sendEmailTest();
-    }
-
     @PostMapping("/token")
     public String getToken(@RequestParam String id){
         CustomerEntity customer = customerRepository.findById(id).orElse(null);
