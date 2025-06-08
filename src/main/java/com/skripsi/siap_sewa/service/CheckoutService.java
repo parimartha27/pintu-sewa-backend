@@ -315,14 +315,8 @@ public class CheckoutService {
                 .quantity(quantity)
                 .amount(rentalPrice.totalPrice())
                 .totalAmount(rentalPrice.totalPrice().add(deposit).add(serviceFee).add(shippingPrice))
-<<<<<<< Updated upstream
-                .paymentMethod("UNPAID")
-                .status("Belum Dibayar")
-                .isReturn("NOT_RETURNED")
-=======
                 .paymentMethod("-")
                 .isReturn("N")
->>>>>>> Stashed changes
                 .createdAt(LocalDateTime.now())
                 .lastUpdateAt(LocalDateTime.now())
                 .isSelled(false)
