@@ -90,10 +90,6 @@ public class AuthenticationService {
         List<CustomerEntity> customers = customerRepository.findByEmailOrPhoneNumber(
                 request.getEmail(), request.getPhoneNumber());
 
-        if (customers.size() > 1) {
-            log.warn("Multiple accounts found for identifier: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
-            throw new BadCredentialsException("Ditemukan beberapa akun dengan email atau nomor telepon yang sama. Silakan hubungi dukungan pelanggan.");
-        }
         if (customers.isEmpty()) {
             log.warn("Login failed: Customer not found for identifier: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
             throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
