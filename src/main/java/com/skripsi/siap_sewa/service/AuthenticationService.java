@@ -105,19 +105,16 @@ public class AuthenticationService {
         CustomerEntity customer = customers.get(0);
 
         try {
-            String accessToken = jwtService.generateToken(new CustomerPrincipal(customer));
-
-            RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(customer.getId());
 
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             customer.getUsername(),
                             request.getPassword()));
             log.info("Authentication successful for customer: {}", customer.getId());
-        } catch (AuthenticationException ex) {
-            log.warn("Authentication failed for customer: {}. Reason: {}", customer.getId(), ex.getMessage());
-            throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
-        }
+
+            String accessToken = jwtService.generateToken(new CustomerPrincipal(customer));
+
+            RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(customer.getId());
 
             LoginResponse response = LoginResponse.builder()
                     .customerId(customer.getId())
@@ -131,8 +128,13 @@ public class AuthenticationService {
                     .duration(1800)
                     .build();
 
-        log.info("Login successful, token generated for customer: {}", customer.getId());
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            log.info("Login successful, token generated for customer: {}", customer.getId());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+
+        } catch (AuthenticationException ex) {
+            log.warn("Authentication failed for customer: {}. Reason: {}", customer.getId(), ex.getMessage());
+            throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
+        }
     }
 
     private void validateRegistrationRequest(RegisterRequest request) {
