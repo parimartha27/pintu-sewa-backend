@@ -31,7 +31,7 @@ public class CommonUtils {
                 errorMessageEnum.getHttpStatus());
     }
 
-    public ResponseEntity<ApiResponse> setValidationErrorResponse(List<Map<String, Object>> validationErrors) {
+    public ResponseEntity<ApiResponse> setValidationErrorResponse(String validationErrors) {
         return new ResponseEntity<>(
                 ApiResponse.builder()
                         .errorSchema(ApiResponse.ErrorSchema.builder()

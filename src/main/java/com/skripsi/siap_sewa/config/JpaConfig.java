@@ -29,6 +29,7 @@ public class JpaConfig {
         dataSourceBuilder.url(environment.getProperty("spring.datasource.url"));
         dataSourceBuilder.username(environment.getProperty("spring.datasource.username"));
         dataSourceBuilder.password(environment.getProperty("spring.datasource.password"));
+        dataSourceBuilder.driverClassName(environment.getProperty("spring.datasource.driver-class-name"));
         return dataSourceBuilder.build();
     }
 

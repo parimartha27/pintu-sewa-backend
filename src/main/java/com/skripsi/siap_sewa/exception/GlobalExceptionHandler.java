@@ -3,7 +3,9 @@ package com.skripsi.siap_sewa.exception;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.utils.CommonUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.jboss.logging.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,18 +26,19 @@ public class GlobalExceptionHandler {
     private CommonUtils commonUtils;
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        log.warn("Validation error: {}", ex.getMessage());
+    public ResponseEntity<ApiResponse> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        String httpMethod = request.getMethod();
+        String objectName = ex.getBindingResult().getObjectName();
 
-        List<Map<String, Object>> validationErrors = new ArrayList<>();
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            Map<String, Object> errorDetail = new HashMap<>();
-            errorDetail.put("field_error", fieldError.getField());
-            errorDetail.put("error_message", List.of(Objects.requireNonNull(fieldError.getDefaultMessage())));
-            validationErrors.add(errorDetail);
-        }
+        log.warn("[Generall Error] TraceID: {}. Request: {} {} | DTO: {} | Message: {}",
+                MDC.get("traceId"),
+                httpMethod,
+                requestUri,
+                objectName,
+                ex.getMessage());
 
-        return commonUtils.setValidationErrorResponse(validationErrors);
+        return commonUtils.setValidationErrorResponse(ex.getGlobalErrors().toString());
     }
 
     @ExceptionHandler({EmailExistException.class})
