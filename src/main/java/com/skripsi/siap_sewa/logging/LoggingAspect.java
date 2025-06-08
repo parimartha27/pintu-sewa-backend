@@ -34,11 +34,11 @@ public class LoggingAspect {
         logger.info("{} Exiting {}.{}() returned: {}", traceId, className, methodName, result);
     }
 
-    @AfterThrowing(pointcut = "appMethods()", throwing = "ex")
-    public void logMethodException(JoinPoint joinPoint, Exception ex) {
-        String traceId = MDC.get(TraceIdFilter.TRACE_ID);
-        String className = joinPoint.getTarget().getClass().getSimpleName();
-        String methodName = joinPoint.getSignature().getName();
-        logger.error("{} Exception in {}.{}() with message: {}", traceId, className, methodName, ex.getMessage(), ex);
-    }
+//    @AfterThrowing(pointcut = "appMethods()", throwing = "ex")
+//    public void logMethodException(JoinPoint joinPoint, Exception ex) {
+//        String traceId = MDC.get(TraceIdFilter.TRACE_ID);
+//        String className = joinPoint.getTarget().getClass().getSimpleName();
+//        String methodName = joinPoint.getSignature().getName();
+//        logger.error("{} Exception in {}.{}() with message: {}", traceId, className, methodName, ex.getMessage(), ex);
+//    }
 }
