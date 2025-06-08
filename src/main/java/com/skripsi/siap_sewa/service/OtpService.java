@@ -111,9 +111,7 @@ public class OtpService {
 
             // Send OTP email
             emailService.sendEmail(
-                    customer.getEmail(),
-                    Constant.SUBJECT_EMAIL_REGISTER,
-                    commonUtils.generateOtpMessage(newOtp)
+                    customer.getEmail(),0, newOtp
             );
             log.info("OTP email sent to: {}", customer.getEmail());
 

@@ -12,9 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 @Component
 public class CommonUtils {
@@ -63,13 +61,13 @@ public class CommonUtils {
         return String.valueOf(otp);
     }
 
-    public String generateOtpMessage(String otp) {
+    public static String generateOtpMessage(String otp) {
         return String.format(
                 """
                         Hi, Sobat Sewa.
                         
                         Berikut merupakan one-time passcode (OTP) kamu : %s.
-                        
+
                         OTP akan expired dalam 30 menit.
                         
                         Selamat menggunakan website Pintu Sewa
@@ -77,6 +75,21 @@ public class CommonUtils {
                         Hormat kami,
                         Tim Pintu Sewa
                 """, otp
+        );
+    }
+
+    public static String generateGreeting(String shopName) {
+        return String.format(
+                """
+                        Hi, Sobat Sewa.
+                        
+                        Selamat atas toko baru kamu : %s.
+
+                        Semoga lancar dan selamat menyewakan
+                        
+                        Hormat kami,
+                        Tim Pintu Sewa
+                """, shopName
         );
     }
 

@@ -15,12 +15,10 @@ import com.skripsi.siap_sewa.exception.EmailExistException;
 import com.skripsi.siap_sewa.exception.PhoneNumberExistException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.utils.Constant;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -164,8 +162,7 @@ public class AuthenticationService {
 
         if (!commonUtils.isNull(customer.getEmail())) {
             log.info("Sending OTP to email: {}", customer.getEmail());
-            emailService.sendEmail(customer.getEmail(), Constant.SUBJECT_EMAIL_REGISTER,
-                    commonUtils.generateOtpMessage(otp));
+            emailService.sendEmail(customer.getEmail(), 0, otp);
         }
 
         // else if (!commonUtils.isNull(customer.getPhoneNumber())) {
