@@ -98,6 +98,7 @@ public class CartService {
         ProductEntity product = cart.getProduct();
         boolean isAvailable = product.getStock() >= cart.getQuantity();
 
+
         return CartResponse.CartInfo.builder()
                 .cartId(cart.getId())
                 .productId(product.getId())
