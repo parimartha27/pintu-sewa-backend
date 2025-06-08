@@ -93,12 +93,15 @@ public class AuthenticationService {
             RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
             response.setCustomerId(newCustomer.getId());
 
-            if(request.getEmail().isEmpty()){
-                whatsappService.sendOtpByWhatsapp(newCustomer.getPhoneNumber(), otp);
-            }else{
-                emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER,
+//            if(request.getEmail().isEmpty()){
+//                whatsappService.sendOtpByWhatsapp(newCustomer.getPhoneNumber(), otp);
+//            }else{
+//                emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER,
+//                        commonUtils.generateOtpMessage(otp));
+//            }
+
+            emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER,
                         commonUtils.generateOtpMessage(otp));
-            }
             
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 

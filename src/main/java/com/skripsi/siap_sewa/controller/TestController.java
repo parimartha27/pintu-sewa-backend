@@ -5,7 +5,7 @@ import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.service.EmailService;
 import com.skripsi.siap_sewa.service.JWTService;
-import com.skripsi.siap_sewa.service.WhatsappService;
+//import com.skripsi.siap_sewa.service.WhatsappService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +17,7 @@ public class TestController {
     private final EmailService emailService;
     private final JWTService jwtService;
     private final CustomerRepository customerRepository;
-    private final WhatsappService whatsappService;
+//    private final WhatsappService whatsappService;
 
     @GetMapping("/hello")
     public String hello() {
@@ -35,9 +35,9 @@ public class TestController {
         return jwtService.generateToken(new CustomerPrincipal(customer));
     }
 
-    @PostMapping("/send/otp/wa")
-    public int sendOtpByWa(){
-        return whatsappService.sendOtpByWhatsapp("6281529518909", "2020");
-    }
+//    @PostMapping("/send/otp/wa")
+//    public int sendOtpByWa(){
+//        return whatsappService.sendOtpByWhatsapp("6281529518909", "2020");
+//    }
 
 }
