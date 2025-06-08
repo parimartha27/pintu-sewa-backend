@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -46,14 +47,19 @@ public class AuthenticationService {
     @Transactional
     public ResponseEntity<ApiResponse> register(@Valid RegisterRequest request) {
         
-        validateRegistrationRequest(request);
-        
+        Optional<CustomerEntity> validate = validateRegistrationRequest(request);
+        if(validate != null){
+            RegisterResponse response = objectMapper.convertValue(validate, RegisterResponse.class);
+            response.setCustomerId(validate.get().getId());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        }
+
         CustomerEntity newCustomer = createNewCustomer(request);
         customerRepository.save(newCustomer);
         log.info("Customer entity saved successfully with ID: {}", newCustomer.getId());
         
         sendOtpNotification(newCustomer);
-        
+
         RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
         response.setCustomerId(newCustomer.getId());
         
@@ -127,18 +133,31 @@ public class AuthenticationService {
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
-    private void validateRegistrationRequest(RegisterRequest request) {
+    private Optional<CustomerEntity> validateRegistrationRequest(RegisterRequest request) {
         if (commonUtils.isNull(request.getEmail()) && commonUtils.isNull(request.getPhoneNumber())) {
             throw new IllegalArgumentException("Email atau Nomor Handphone wajib diisi.");
         }
 
         if (!commonUtils.isNull(request.getEmail()) && customerRepository.existsByEmail(request.getEmail())) {
-            throw new EmailExistException("Email sudah digunakan: " + request.getEmail());
+            Optional<CustomerEntity> customer = customerRepository.findByEmail(request.getEmail());
+            log.info("Email : {}", customer);
+            if(customer.get().getUsername() != null){
+                log.info("Email already used: {}", request.getEmail());
+                throw new EmailExistException("Email sudah digunakan : " + request.getEmail());
+            }else{
+                return customer;
+            }
         }
-
         if (!commonUtils.isNull(request.getPhoneNumber()) && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new PhoneNumberExistException("No Handphone sudah digunakan: " + request.getPhoneNumber());
+            Optional<CustomerEntity> customer = customerRepository.findByPhoneNumber(request.getPhoneNumber());
+            if(customer.get().getUsername() != null){
+                log.info("Phone Number already used: {}", request.getPhoneNumber());
+                throw new PhoneNumberExistException("No Handphone sudah digunakan: " + request.getPhoneNumber());
+            }else{
+                return customer;
+            }
         }
+        return null;
     }
 
     private CustomerEntity createNewCustomer(RegisterRequest request) {

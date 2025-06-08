@@ -41,7 +41,8 @@ public class CheckoutService {
     private final CommonUtils commonUtils;
     private final ShopRepository shopRepository;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(Constant.DATE_FORMAT);
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("id-ID"));
 
     @Transactional
     public ResponseEntity<ApiResponse> processProductCheckout(ProductCheckoutRequest request) throws BadRequestException {
