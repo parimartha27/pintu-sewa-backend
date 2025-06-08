@@ -39,7 +39,7 @@ public class WalletService {
     private final CommonUtils commonUtils;
 
     private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("id", "ID"));
+            DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("id-ID"));
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private final ShopRepository shopRepository;
     private final TransactionRepository transactionRepository;

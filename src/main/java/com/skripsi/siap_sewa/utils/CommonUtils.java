@@ -181,8 +181,9 @@ public class CommonUtils {
     }
 
     public static String formatDate(LocalDate date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", new Locale("id"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("id"));
         return date.format(formatter);
     }
+
 
 }

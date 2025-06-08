@@ -247,7 +247,8 @@ public class ChatService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "This Room Chat Has no Message");
             }
 
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("id", "ID"));
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("id-ID")
+            );
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
 

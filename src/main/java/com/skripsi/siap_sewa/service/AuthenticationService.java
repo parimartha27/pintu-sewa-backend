@@ -41,7 +41,7 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
-    private final WhatsappService whatsappService;
+//    private final WhatsappService whatsappService;
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request) {
         try {
