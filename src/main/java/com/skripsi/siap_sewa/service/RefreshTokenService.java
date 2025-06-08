@@ -32,7 +32,6 @@ public class RefreshTokenService {
     public RefreshTokenEntity createRefreshToken(String customerId) {
         CustomerEntity customer = customerRepository.findById(customerId).orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        // Hapus token lama jika ada, untuk memastikan single session
         refreshTokenRepository.deleteByCustomer(customer);
 
         RefreshTokenEntity refreshToken = RefreshTokenEntity.builder()

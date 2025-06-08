@@ -43,7 +43,8 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
-    private RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenService;
+
 //    private final WhatsappService whatsappService;
 
     @Transactional
