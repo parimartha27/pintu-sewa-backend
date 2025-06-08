@@ -49,10 +49,7 @@ public class ProductEntity {
     private String status;
     private String image;
     private BigDecimal deposit;
-
-    @Version
-    private Integer version;
-
+    
     @JsonIgnore
     private LocalDateTime createdAt;
 
