@@ -3,9 +3,7 @@ package com.skripsi.siap_sewa.dto.product;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
@@ -13,7 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
