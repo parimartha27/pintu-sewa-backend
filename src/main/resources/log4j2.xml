@@ -3,7 +3,7 @@
     <Properties>
         <Property name="LOG_LEVEL_PATTERN">%5p</Property>
         <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd'T'HH:mm:ss.SSSXXX</Property>
-        <Property name="LOG_PATTERN">%d{${sys:LOG_DATEFORMAT_PATTERN}} %5p [%t] %logger{36} - %msg%n</Property>
+        <Property name="LOG_PATTERN">%d{${sys:LOG_DATEFORMAT_PATTERN}} %5p [%t] [%X{traceId}] : %msg%n</Property>
         <Property name="INPUT_OUTPUT_PATTERN">%d{${sys:LOG_DATEFORMAT_PATTERN}} %5p [%t] %logger{36} - Method: %M, Input: %msg, Output: %ex%n</Property>
     </Properties>
     <Appenders>
@@ -15,7 +15,7 @@
         </File>
     </Appenders>
     <Loggers>
-        <Logger name="com.skripsi.siap_sewa" level="DEBUG">
+        <Logger name="com.skripsi.siap_sewa" level="DEBUG" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
         </Logger>
