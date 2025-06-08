@@ -41,6 +41,7 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
+    private final WhatsappService whatsappService;
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request) {
         try {
@@ -92,10 +93,13 @@ public class AuthenticationService {
             RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
             response.setCustomerId(newCustomer.getId());
 
-            emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER,
-                    commonUtils.generateOtpMessage(otp));
-            log.info("OTP email sent to: {}", response.getEmail());
-
+            if(request.getEmail().isEmpty()){
+                whatsappService.sendOtpByWhatsapp(newCustomer.getPhoneNumber(), otp);
+            }else{
+                emailService.sendEmail(response.getEmail(), Constant.SUBJECT_EMAIL_REGISTER,
+                        commonUtils.generateOtpMessage(otp));
+            }
+            
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (EmailExistException | PhoneNumberExistException ex) {
