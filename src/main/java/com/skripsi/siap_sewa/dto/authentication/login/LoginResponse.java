@@ -21,5 +21,6 @@ public class LoginResponse {
     private String image;
     private String status;
     private String token;
-    private int duration;
+    private String refreshToken;
+    private long duration;
 }

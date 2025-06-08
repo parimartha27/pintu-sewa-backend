@@ -9,6 +9,7 @@ import com.skripsi.siap_sewa.dto.authentication.register.RegisterOauthRequest;
 import com.skripsi.siap_sewa.dto.authentication.register.RegisterRequest;
 import com.skripsi.siap_sewa.dto.authentication.register.RegisterResponse;
 import com.skripsi.siap_sewa.entity.CustomerEntity;
+import com.skripsi.siap_sewa.entity.RefreshTokenEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.exception.EmailExistException;
@@ -41,6 +42,7 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final CustomerRepository customerRepository;
+    private RefreshTokenService refreshTokenService;
 //    private final WhatsappService whatsappService;
 
     public ResponseEntity<ApiResponse> register(RegisterRequest request) {
@@ -175,6 +177,10 @@ public class AuthenticationService {
             CustomerEntity customer = customers.get(0);
             log.info("Authenticating customer: {}", customer.getId());
 
+            String accessToken = jwtService.generateToken(new CustomerPrincipal(customer));
+
+            RefreshTokenEntity refreshToken = refreshTokenService.createRefreshToken(customer.getId());
+
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             customer.getUsername(), request.getPassword()));
@@ -191,7 +197,8 @@ public class AuthenticationService {
                     .phoneNumber(customer.getPhoneNumber())
                     .status(customer.getStatus())
                     .image(customer.getImage() == null ? "" : customer.getImage())
-                    .token(jwtService.generateToken(new CustomerPrincipal(customer)))
+                    .token(accessToken)
+                    .refreshToken(refreshToken.getToken())
                     .duration(1800)
                     .build();
 
