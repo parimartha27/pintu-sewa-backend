@@ -1,12 +1,13 @@
 package com.skripsi.siap_sewa.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.shop.dashboard.TransactionResponseShopDashboard;
 import com.skripsi.siap_sewa.dto.transaction.*;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.CustomerRepository;
-import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.repository.WalletReportRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +40,7 @@ public class TransactionService {
     private final ShopRepository shopRepository;
     private final CommonUtils commonUtils;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
-    private final ProductRepository productRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public ResponseEntity<ApiResponse> getCustomerTransactions(TransactionFilterRequest filterRequest) {
@@ -148,14 +150,18 @@ public class TransactionService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
-            // 2. Group transactions by referenceNumber
-            Map<String, List<TransactionEntity>> groupedTransactions = transactions.stream()
-                    .collect(Collectors.groupingBy(TransactionEntity::getTransactionNumber));
-
-            // 3. Build response
-            List<TransactionResponse> responseList = groupedTransactions.entrySet().stream()
-                    .map(entry -> buildGroupedTransactionResponse(entry.getKey(), entry.getValue()))
-                    .toList();
+            List<TransactionResponseShopDashboard> responseList = transactions.stream()
+                    .map( transaction -> TransactionResponseShopDashboard.builder()
+                            .referenceNumber(transaction.getTransactionNumber())
+                            .createAt(transaction.getCreatedAt().toString())
+                            .customerName(transaction.getCustomer().getName())
+                            .startDate(transaction.getStartDate().toString())
+                            .endDate(transaction.getEndDate().toString())
+                            .duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate())))
+                            .status(transaction.getStatus())
+                            .depositStatus(transaction.isDepositReturned())
+                            .build())
+                    .collect(Collectors.toList());
 
             log.info("Found {} transaction groups for Shop {}", responseList.size(), filterRequest.getShopId());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);

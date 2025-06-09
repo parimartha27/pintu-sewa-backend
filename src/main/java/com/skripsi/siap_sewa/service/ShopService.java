@@ -2,33 +2,25 @@ package com.skripsi.siap_sewa.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.product.ProductResponse;
 import com.skripsi.siap_sewa.dto.shop.*;
-import com.skripsi.siap_sewa.dto.shop.dashboard.TransactionResponse;
+import com.skripsi.siap_sewa.dto.shop.dashboard.TransactionResponseShopDashboard;
 import com.skripsi.siap_sewa.dto.shop.dashboard.WalletReportResponse;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
 import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.utils.Constant;
 import com.skripsi.siap_sewa.helper.ProductHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -273,10 +265,10 @@ public class ShopService {
             int TrasactionCount = transactionRepository.findByShopId(shopId).size();
 
             List<TransactionEntity> allTransaction = transactionRepository.findByShopIdOrderByCreatedAtDesc(shopId);
-            List<TransactionResponse> sortedTransactions = allTransaction.stream()
+            List<TransactionResponseShopDashboard> sortedTransactions = allTransaction.stream()
                     .filter(transaction -> transaction.getStatus() != null)
-                    .map(transaction -> TransactionResponse.builder()
-                            .refferenceNo(transaction.getTransactionNumber())
+                    .map(transaction -> TransactionResponseShopDashboard.builder()
+                            .referenceNumber(transaction.getTransactionNumber())
                             .createAt(transaction.getCreatedAt().toString())
                             .customerName(transaction.getCustomer().getName())
                             .startDate(transaction.getStartDate().toString())
@@ -285,7 +277,7 @@ public class ShopService {
                             .status(transaction.getStatus())
                             .depositStatus(transaction.isDepositReturned())
                             .build())
-                    .sorted(Comparator.comparing(TransactionResponse::getCreateAt).reversed())
+                    .sorted(Comparator.comparing(TransactionResponseShopDashboard::getCreateAt).reversed())
                     .limit(5)
                     .toList();
 

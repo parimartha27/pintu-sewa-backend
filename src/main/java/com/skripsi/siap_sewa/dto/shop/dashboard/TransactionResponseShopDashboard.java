@@ -8,15 +8,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class TransactionResponse {
-    private String refferenceNo;
+public class TransactionResponseShopDashboard {
+    private String referenceNumber;
     private String createAt;
     private String customerName;
     private String startDate;

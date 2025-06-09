@@ -38,8 +38,9 @@ public class TransactionResponse {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class ProductInfo {
-        private String orderId;  // Transaction ID (unique per product)
+        private String orderId;
         private String productId;
         private String productName;
         private String image;
