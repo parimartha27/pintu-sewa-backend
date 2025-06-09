@@ -274,17 +274,18 @@ public class ShopService {
 
             List<TransactionEntity> allTransaction = transactionRepository.findByShopIdOrderByCreatedAtDesc(shopId);
             List<TransactionResponse> sortedTransactions = allTransaction.stream()
+                    .filter(transaction -> transaction.getStatus() != null)
                     .map(transaction -> TransactionResponse.builder()
                             .refferenceNo(transaction.getTransactionNumber())
-                            .createAt(transaction.getCreatedAt().toString()) // atau format sesuai kebutuhan
-                            .customerName(transaction.getCustomer().getName()) // asumsi ada relasi ke customer
+                            .createAt(transaction.getCreatedAt().toString())
+                            .customerName(transaction.getCustomer().getName())
                             .startDate(transaction.getStartDate().toString())
                             .endDate(transaction.getEndDate().toString())
                             .duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate())))
                             .status(transaction.getStatus())
                             .depositStatus(transaction.isDepositReturned())
                             .build())
-                    .sorted(Comparator.comparing(TransactionResponse::getCreateAt).reversed()) // contoh sort
+                    .sorted(Comparator.comparing(TransactionResponse::getCreateAt).reversed())
                     .limit(5)
                     .toList();
 
