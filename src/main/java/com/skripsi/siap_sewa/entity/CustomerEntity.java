@@ -29,9 +29,7 @@ public class CustomerEntity {
     private String id;
     private String username;
     private String name;
-    @Column(unique = true)
     private String email;
-    @Column(unique = true)
     private String phoneNumber;
     private String password;
     private String gender;
