@@ -30,7 +30,7 @@ public class ShippingCalculator {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Shipping partner not found"));
 
-        // Calculate distance factor
+
         BigDecimal distanceFactor = calculateDistanceFactor(shop, customer);
 
         // Calculate shipping price

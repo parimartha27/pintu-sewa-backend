@@ -420,7 +420,6 @@ public class CheckoutService {
                     }
                 }
 
-                // Re-throw to fail the entire transaction from this shop
                 throw new CheckoutProcessingException(ErrorMessageEnum.FAILED,"", "");
             }
         }
@@ -428,7 +427,6 @@ public class CheckoutService {
         return transactionIds;
     }
 
-    // Helper class to hold checkout item details
     private static class CartCheckoutItem {
         private final ProductEntity product;
         private final int quantity;
