@@ -36,6 +36,7 @@ public class CustomerService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final JWTService jwtService;
     private final CloudinaryService cloudinaryService;
+    private final EmailService emailService;
 
     public ResponseEntity<ApiResponse> getCustomerDetails(String id) {
         try {
@@ -287,11 +288,19 @@ public class CustomerService {
             }
 
             Optional<CustomerEntity> validCustomer = customerRepository.findByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+
+            if(validCustomer.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.UNAUTHORIZED_ACCESS, null);
+            }
+
+            CustomerEntity customer = validCustomer.get();
+            String otp = CommonUtils.generateOtp();
+            emailService.sendEmail(customer.getEmail(), 0, otp);
+
             ValidateCredentialResponse response = ValidateCredentialResponse.builder()
                     .customerId(validCustomer.get().getId())
                     .build();
 
-            log.info("Berhasil validasi kredensial untuk customer ID: {}", response.getCustomerId());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {

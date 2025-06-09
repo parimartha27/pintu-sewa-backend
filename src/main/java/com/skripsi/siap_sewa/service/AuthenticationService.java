@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -158,7 +157,7 @@ public class AuthenticationService {
 
     private CustomerEntity createNewCustomer(RegisterRequest request) {
         CustomerEntity newCustomer = new CustomerEntity();
-        String otp = commonUtils.generateOtp();
+        String otp = CommonUtils.generateOtp();
 
         newCustomer.setEmail(request.getEmail());
         newCustomer.setPhoneNumber(request.getPhoneNumber());

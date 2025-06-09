@@ -53,7 +53,8 @@ public enum ErrorMessageEnum {
     PAYMENT_PARTIAL_SUCCESS(Constant.PAYMENT_PARTIAL_SUCCESS_CODE, "Beberapa transaksi gagal diproses", HttpStatus.MULTI_STATUS),
     TRANSACTION_GROUP_FAILED(Constant.TRANSACTION_GROUP_FAILED_CODE, "Grup transaksi gagal diproses", HttpStatus.BAD_REQUEST),
     IMAGE_UPLOAD_FAILED("PS-02-022", "Image upload failed" , HttpStatus.BAD_REQUEST ),
-    INVALID_FILE_FORMAT("PS-02-023","Format file tidak valid" , HttpStatus.BAD_REQUEST );
+    INVALID_FILE_FORMAT("PS-02-023","Format file tidak valid" , HttpStatus.BAD_REQUEST ),
+    UNAUTHORIZED_ACCESS("PS-01-401", "Tidak ada akses" , HttpStatus.UNAUTHORIZED );
 
     private final String errorCode;
     private final String errorMessage;

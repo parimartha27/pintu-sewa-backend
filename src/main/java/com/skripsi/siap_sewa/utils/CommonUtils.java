@@ -55,7 +55,7 @@ public class CommonUtils {
                 httpStatus);
     }
 
-    public String generateOtp() {
+    public static String generateOtp() {
         SecureRandom random = new SecureRandom();
         int otp = 1000 + random.nextInt(9000);
         return String.valueOf(otp);
