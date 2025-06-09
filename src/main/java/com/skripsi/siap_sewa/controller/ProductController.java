@@ -89,8 +89,6 @@ public class ProductController {
                     .size(size)
                     .build();
 
-            log.info("Incoming filter request: {}", filterRequest);
-
             filterRequest.validate();
             return productFilterService.getFilteredProducts(filterRequest);
         } catch (IllegalArgumentException e) {
@@ -103,7 +101,6 @@ public class ProductController {
     }
 
 //    for prodcut detail page
-
     @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse> getProductDetail(@PathVariable String productId){
         return productService.getProductDetail(productId);
@@ -173,6 +170,15 @@ public class ProductController {
             @RequestParam(required = false, defaultValue = "asc") String sortDirection,
             @RequestParam(required = false, defaultValue = "0") int page) {
 
-        return productService.getProductsByShop(shopId, category, isRnb, search, sortBy, sortDirection, page);
+        ProductFilterDto request = ProductFilterDto.builder()
+                .category(category)
+                .isRnb(isRnb)
+                .search(search)
+                .sortBy(sortBy)
+                .sortDirection(sortDirection)
+                .page(page)
+                .build();
+
+        return productService.getProductsByShop(shopId, request);
     }
 }

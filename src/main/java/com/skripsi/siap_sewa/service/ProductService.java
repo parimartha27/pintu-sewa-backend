@@ -1,15 +1,18 @@
 package com.skripsi.siap_sewa.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skripsi.siap_sewa.dto.product.ProductDetailResponse;
-import com.skripsi.siap_sewa.dto.product.*;
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.entity.*;
+import com.skripsi.siap_sewa.dto.product.*;
+import com.skripsi.siap_sewa.entity.CustomerEntity;
+import com.skripsi.siap_sewa.entity.ProductEntity;
+import com.skripsi.siap_sewa.entity.ShopEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
-import com.skripsi.siap_sewa.repository.*;
+import com.skripsi.siap_sewa.mapper.ProductMapper;
+import com.skripsi.siap_sewa.repository.CustomerRepository;
+import com.skripsi.siap_sewa.repository.ProductRepository;
+import com.skripsi.siap_sewa.repository.ShopRepository;
+import com.skripsi.siap_sewa.repository.TransactionRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
-import com.skripsi.siap_sewa.helper.ProductHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,522 +24,242 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final TransactionRepository transactionRepository;
     private final CustomerRepository customerRepository;
     private final ShopRepository shopRepository;
-    private final ObjectMapper objectMapper;
+    private final ProductMapper productMapper;
     private final CommonUtils commonUtils;
     private final ModelMapper modelMapper;
 
+    private static final List<String> VALID_SORT_FIELDS = List.of("name", "dailyPrice", "weeklyPrice", "monthlyPrice", "rating");
+
     public ResponseEntity<ApiResponse> getProductByMostRented() {
-        try {
-            log.info("Fetching most rented products");
-
-            List<ProductEntity> allProducts = productRepository.findAll();
-
-            if (allProducts.isEmpty()) {
-                log.info("No products found in database");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            List<ProductResponse> sortedProducts = allProducts.stream()
-                    .map(this::buildProductResponse)
-                    .sorted(Comparator.comparingInt(ProductResponse::getRentedTimes).reversed())
-                    .limit(10)
-                    .toList();
-
-            log.info("Successfully fetched {} most rented products", sortedProducts.size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, sortedProducts);
-
-        } catch (Exception ex) {
-            log.info("Error fetching most rented products: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        log.info("Fetching 10 most rented products");
+        List<ProductEntity> products = productRepository.findAll();
+        if (products.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }
+
+        List<ProductResponse> response = products.stream()
+                .map(productMapper::toProductResponse)
+                .sorted(Comparator.comparingInt(ProductResponse::getRentedTimes).reversed())
+                .limit(10)
+                .toList();
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
-    
+
     public ResponseEntity<ApiResponse> getProductRecommendedForGuest() {
-        try {
-            log.info("Fetching recommended products for guest");
-
-            List<ProductEntity> allProducts = productRepository.findAll();
-
-            if (allProducts.isEmpty()) {
-                log.info("No products found in database for guest");
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            Collections.shuffle(allProducts);
-
-            List<ProductResponse> responseList = allProducts.stream()
-                    .map(this::buildProductResponse)
-                    .limit(10)
-                    .toList();
-
-            log.info("Successfully fetched {} recommended products for guest", responseList.size());
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
-
-        } catch (Exception ex) {
-            log.info("Error fetching recommended products for guest: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        log.info("Fetching 10 recommended products for guest");
+        List<ProductEntity> products = productRepository.findAll();
+        if (products.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }
+
+        Collections.shuffle(products);
+        List<ProductResponse> response = products.stream()
+                .limit(10)
+                .map(productMapper::toProductResponse)
+                .toList();
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
     public ResponseEntity<ApiResponse> getProductNearCustomer(String customerId) {
-        try {
-            log.info("Fetching products near customer: {}", customerId);
+        log.info("Fetching products near customer: {}", customerId);
+        CustomerEntity customer = findCustomerById(customerId);
+        String customerRegency = customer.getRegency();
 
-            CustomerEntity customer = customerRepository.findById(customerId)
-                    .orElseThrow(() -> {
-                        log.info("Customer not found with ID: {}", customerId);
-                        return new DataNotFoundException("Customer not found");
-                    });
-
-            String customerRegency = customer.getRegency();
-            List<ShopEntity> shopsInSameRegency = shopRepository.findByRegency(customerRegency);
-
-            if (shopsInSameRegency.isEmpty()) {
-                log.info("No shops found in regency: {}", customerRegency);
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            List<ProductEntity> products = shopsInSameRegency.stream()
-                    .flatMap(shop -> shop.getProducts().stream())
-                    .collect(Collectors.toList());
-
-            if (products.isEmpty()) {
-                log.info("No products found in shops for regency: {}", customerRegency);
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            Collections.shuffle(products);
-
-            List<ProductResponse> responseList = products.stream()
-                    .map(this::buildProductResponse)
-                    .limit(10)
-                    .toList();
-
-            log.info("Found {} products near customer {} in regency {}", responseList.size(), customerId, customerRegency);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error fetching products near customer {}: {}", customerId, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
-    }
-    
-    public ResponseEntity<ApiResponse> getProductDetail(String id) {
-        log.debug("Starting to process product detail request for ID: {}", id);
-
-        return productRepository.findById(id)
-                .map(product -> {
-                    log.debug("Product found, processing images and ratings for ID: {}", id);
-
-                    List<String> images = processImageString(product.getImage());
-                    log.debug("Processed {} images for product ID: {}", images.size(), id);
-
-                    int[] transactionCounts = ProductHelper.countProductTransactions(product.getTransactions());
-                    log.debug("Transaction counts - rented: {}, bought: {} for ID: {}",
-                            transactionCounts[0], transactionCounts[1], id);
-
-                    Double rating = ProductHelper.calculateWeightedRating(product.getReviews());
-                    log.debug("Calculated rating: {} for product ID: {}", rating, id);
-
-                    ProductDetailResponse response = new ProductDetailResponse(
-                            product.getId(),
-                            product.getName(),
-                            product.getCategory(),
-                            product.getRentCategory(),
-                            product.isRnb(),
-                            product.getWeight(),
-                            product.getHeight(),
-                            product.getWidth(),
-                            product.getLength(),
-                            product.getDailyPrice(),
-                            product.getWeeklyPrice(),
-                            product.getMonthlyPrice(),
-                            product.getDescription(),
-                            product.getConditionDescription(),
-                            product.getStock(),
-                            product.getMinRented(),
-                            product.getStatus(),
-                            images,
-                            rating,
-                            transactionCounts[0],
-                            transactionCounts[1]
-                    );
-
-                    log.info("Successfully built response for product ID: {}", id);
-                    return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-                })
-                .orElseGet(() -> {
-                    log.warn("Product not found with ID: {}", id);
-                    throw new DataNotFoundException("Product not found with ID: " + id);
-                });
-    }
-
-    private List<String> processImageString(String imageString) {
-        if (!StringUtils.hasText(imageString)) {
-            log.debug("Empty image string received");
-            return List.of();
-        }
-
-        return Arrays.stream(imageString.split(";"))
-                .map(String::trim)
-                .filter(StringUtils::hasText)
-                .peek(img -> log.trace("Processing image URL: {}", img))
+        List<ProductEntity> productsInSameRegency = shopRepository.findByRegency(customerRegency).stream()
+                .flatMap(shop -> shop.getProducts().stream())
                 .toList();
+
+        if (productsInSameRegency.isEmpty()) {
+            log.info("No products found in regency: {}", customerRegency);
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+        }
+
+        Collections.shuffle(productsInSameRegency);
+        List<ProductResponse> response = productsInSameRegency.stream()
+                .limit(10)
+                .map(productMapper::toProductResponse)
+                .toList();
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
+    public ResponseEntity<ApiResponse> getProductDetail(String id) {
+        log.debug("Fetching product detail for ID: {}", id);
+        ProductEntity product = findProductById(id);
+        ProductDetailResponse response = productMapper.toProductDetailResponse(product);
+        log.info("Successfully built response for product ID: {}", id);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    }
+
+    @Transactional
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {
-        try {
-            log.info("Adding new product for shop ID: {}", request.getShopId());
+        log.info("Adding new product for shop ID: {}", request.getShopId());
+        ShopEntity shop = findShopById(request.getShopId());
 
-            ShopEntity shop = shopRepository.findById(request.getShopId())
-                    .orElseThrow(() -> {
-                        log.info("Shop not found with ID: {}", request.getShopId());
-                        return new DataNotFoundException("Shop not found");
-                    });
+        ProductEntity newProduct = modelMapper.map(request, ProductEntity.class);
+        newProduct.setShop(shop);
+        newProduct.setCreatedAt(LocalDateTime.now());
+        newProduct.setLastUpdateAt(LocalDateTime.now());
 
-            ProductEntity newProduct = ProductEntity.builder()
-                    .name(request.getName())
-                    .category(request.getCategory())
-                    .rentCategory(request.getRentCategory())
-                    .isRnb(request.isRnb())
-                    .weight(request.getWeight())
-                    .height(request.getHeight())
-                    .width(request.getWidth())
-                    .length(request.getLength())
-                    .dailyPrice(request.getDailyPrice())
-                    .weeklyPrice(request.getWeeklyPrice())
-                    .monthlyPrice(request.getMonthlyPrice())
-                    .description(request.getDescription())
-                    .conditionDescription(request.getConditionDescription())
-                    .stock(request.getStock())
-                    .minRented(request.getMinRented())
-                    .status(request.getStatus())
-                    .image(request.getImage())
-                    .createdAt(LocalDateTime.now())
-                    .lastUpdateAt(LocalDateTime.now())
-                    .shop(shop)
-                    .build();
+        ProductEntity savedProduct = productRepository.save(newProduct);
+        log.info("Successfully added new product with ID: {}", savedProduct.getId());
 
-            productRepository.save(newProduct);
-            log.info("Successfully added new product with ID: {}", newProduct.getId());
-
-            AddProductResponse response = objectMapper.convertValue(newProduct, AddProductResponse.class);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error adding new product: {}", ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
+        AddProductResponse response = modelMapper.map(savedProduct, AddProductResponse.class);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse> editProduct(String id, @Valid EditProductRequest request) {
-        try {
-            log.info("Editing product with ID: {}", id);
+        log.info("Editing product with ID: {}", id);
+        ProductEntity product = findProductById(id);
+        ShopEntity shop = findShopById(request.getShopId());
 
-            ProductEntity product = productRepository.findById(id)
-                    .orElseThrow(() -> {
-                        log.info("Product not found with ID: {}", id);
-                        return new DataNotFoundException("Product not found");
-                    });
+       
+        modelMapper.map(request, product);
+        product.setShop(shop);
+        product.setLastUpdateAt(LocalDateTime.now());
 
-            ShopEntity shop = shopRepository.findById(request.getShopId())
-                    .orElseThrow(() -> {
-                        log.info("Shop not found with ID: {}", request.getShopId());
-                        return new DataNotFoundException("Shop not found");
-                    });
+        ProductEntity updatedProduct = productRepository.save(product);
+        log.info("Successfully updated product with ID: {}", id);
 
-            // Update product data
-            product.setName(request.getName());
-            product.setCategory(request.getCategory());
-            product.setRentCategory(request.getRentCategory());
-            product.setRnb(request.isRnb());
-            product.setWeight(request.getWeight());
-            product.setHeight(request.getHeight());
-            product.setWidth(request.getWidth());
-            product.setLength(request.getLength());
-            product.setDailyPrice(request.getDailyPrice());
-            product.setWeeklyPrice(request.getWeeklyPrice());
-            product.setMonthlyPrice(request.getMonthlyPrice());
-            product.setDescription(request.getDescription());
-            product.setConditionDescription(request.getConditionDescription());
-            product.setStock(request.getStock());
-            product.setMinRented(request.getMinRented());
-            product.setStatus(request.getStatus());
-            product.setImage(request.getImage());
-            product.setShop(shop);
-            product.setLastUpdateAt(LocalDateTime.now());
-
-            productRepository.save(product);
-            log.info("Successfully updated product with ID: {}", id);
-
-            EditProductResponse response = EditProductResponse.builder()
-                    .name(product.getName())
-                    .category(product.getCategory())
-                    .rentCategory(product.getRentCategory())
-                    .isRnb(product.isRnb())
-                    .weight(product.getWeight())
-                    .height(product.getHeight())
-                    .width(product.getWidth())
-                    .length(product.getLength())
-                    .dailyPrice(product.getDailyPrice())
-                    .weeklyPrice(product.getWeeklyPrice())
-                    .monthlyPrice(product.getMonthlyPrice())
-                    .description(product.getDescription())
-                    .conditionDescription(product.getConditionDescription())
-                    .stock(product.getStock())
-                    .status(product.getStatus())
-                    .image(product.getImage())
-                    .shop(product.getShop())
-                    .build();
-
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error editing product with ID {}: {}", id, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
+        EditProductResponse response = productMapper.toEditProductResponse(updatedProduct);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse> deleteProduct(String id) {
-        try {
-            log.info("Attempting to delete product with ID: {}", id);
+        log.info("Attempting to delete product with ID: {}", id);
+        ProductEntity product = findProductById(id);
 
-            ProductEntity product = productRepository.findById(id)
-                    .orElseThrow(() -> {
-                        log.info("Product not found with ID: {}", id);
-                        return new DataNotFoundException("Product not found");
-                    });
-
-            // Check if product has associated transactions
-            boolean hasTransactions = !transactionRepository.findByProductId(id).isEmpty();
-
-            if (hasTransactions) {
-                log.info("Cannot delete product with ID: {} - has associated transactions", id);
-                return commonUtils.setResponse(
-                        ErrorMessageEnum.FAILED,
-                        "Product cannot be deleted because it has associated transactions"
-                );
-            }
-
-            productRepository.delete(product);
-            log.info("Successfully deleted product with ID: {}", id);
-
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Product deleted successfully");
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error deleting product with ID {}: {}", id, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        if (!transactionRepository.findByProductId(id).isEmpty()) {
+            log.warn("Cannot delete product ID: {} - it has associated transactions.", id);
+            return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Product cannot be deleted, it has transactions.");
         }
+
+        productRepository.delete(product);
+        log.info("Successfully deleted product with ID: {}", id);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Product deleted successfully");
     }
 
     public ResponseEntity<ApiResponse> getProductByShopId(String shopId) {
-        try {
-            log.info("Fetching products by shop ID: {}", shopId);
-
-            List<ProductEntity> products = productRepository.findByShopId(shopId);
-
-            if (products.isEmpty()) {
-                log.info("No products found for shop ID: {}", shopId);
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            List<ProductResponse> responseList = products.stream()
-                    .map(this::buildProductResponse)
-                    .limit(5)
-                    .toList();
-
-            log.info("Successfully fetched {} products for shop ID: {}", responseList.size(), shopId);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error fetching products by shop ID {}: {}", shopId, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        log.info("Fetching up to 5 products by shop ID: {}", shopId);
+        List<ProductEntity> products = productRepository.findByShopId(shopId);
+        if (products.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }
-    }
 
-    private ProductResponse buildProductResponse(ProductEntity product) {
-        return getProductResponse(product);
-    }
-
-    static ProductResponse getProductResponse(ProductEntity product) {
-        Double productRating = ProductHelper.calculateWeightedRating(product.getReviews());
-
-        return ProductResponse.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .rentCategory(CommonUtils.getRentDurationName(product.getRentCategory()))
-                .isRnb(product.isRnb())
-                .image(product.getImage())
-                .address(product.getShop() != null ? product.getShop().getRegency() : "Kabupaten")
-                .rating(productRating)
-                .rentedTimes(ProductHelper.countRentedTimes(product.getTransactions()))
-                .price(ProductHelper.getLowestPrice(product))
-                .build();
+        List<ProductResponse> response = products.stream()
+                .limit(5)
+                .map(productMapper::toProductResponse)
+                .toList();
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
     public ResponseEntity<ApiResponse> getTopProductByShopId(String shopId) {
-        try {
-            log.info("Fetching top 5 products from shopId: {}", shopId);
-            List<ProductEntity> products = productRepository.findByShopId(shopId);
-
-            if (products.isEmpty()) {
-                log.info("No product in this shop: {}", shopId);
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-            }
-
-            Collections.shuffle(products);
-
-            List<ProductResponse> responseList = products.stream()
-                    .map(this::buildProductResponse)
-                    .limit(10)
-                    .toList();
-
-            log.info("Found top products by shop id {}", shopId);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
-
-        } catch (DataNotFoundException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.info("Error fetching products from shopId {}: {}", shopId, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        log.info("Fetching top 10 products from shopId: {}", shopId);
+        findShopById(shopId);
+        List<ProductEntity> products = productRepository.findByShopId(shopId);
+        if (products.isEmpty()) {
+            return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }
+
+        Collections.shuffle(products);
+        List<ProductResponse> response = products.stream()
+                .limit(10)
+                .map(productMapper::toProductResponse)
+                .toList();
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
     }
 
+    @Transactional
     public ResponseEntity<ApiResponse> editStockProduct(String id, Integer newStock) {
-        try {
-            log.info("Edit Stock Product with Id : {}", id);
-            ProductEntity product = productRepository.getReferenceById(id);
+        log.info("Editing stock for product ID: {}", id);
+        ProductEntity product = findProductById(id);
 
-            if(newStock <= 0){
-                newStock = 0;
-            }
+        int stockToSet = (newStock != null && newStock > 0) ? newStock : 0;
+        product.setStock(stockToSet);
+        product.setLastUpdateAt(LocalDateTime.now());
+        productRepository.save(product);
 
-            product.setStock(newStock);
-            product.setLastUpdateAt(LocalDateTime.now());
-            productRepository.save(product);
-
-            log.info("Success Update Product id {} , New Stock : {}", id,newStock);
-            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
-
-        } catch (Exception ex) {
-            log.info("Error fetching products from ID {}: {}", id, ex.getMessage(), ex);
-            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
-        }
+        log.info("Successfully updated stock for product ID {} to {}", id, stockToSet);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
     }
 
-    public ResponseEntity<ApiResponse> getProductsByShop(
-            String shopId,
-            String category,
-            Boolean isRnb,
-            String search,
-            String sortBy,
-            String sortDirection,
-            int page) {
+    public ResponseEntity<ApiResponse> getProductsByShop(String shopId, ProductFilterDto filters) {
+        log.debug("Fetching products for shop ID: {} with filters: {}", shopId, filters);
+        findShopById(shopId);
 
-        log.debug("Fetching products for shop ID: {}", shopId);
+        Pageable pageable = createPageable(filters);
+        Specification<ProductEntity> spec = createSpecification(shopId, filters);
 
-        // Validasi shopId
-        if (!shopRepository.existsById(shopId)) {
-            throw new DataNotFoundException("Shop not found with ID: " + shopId);
-        }
-
-        // Validasi sortBy
-        List<String> validSortFields = List.of("name", "dailyPrice", "weeklyPrice", "monthlyPrice", "rating");
-        if (!validSortFields.contains(sortBy)) {
-            sortBy = "name";
-        }
-
-        // Konstruksi sorting
-        Sort sort = Sort.by(sortBy);
-        if ("desc".equalsIgnoreCase(sortDirection)) {
-            sort = sort.descending();
-        } else {
-            sort = sort.ascending();
-        }
-
-        // Pagination
-        Pageable pageable = PageRequest.of(page, 16, sort);
-
-        // Konstruksi query
-        Specification<ProductEntity> spec = Specification.where((root, query, cb) ->
-                cb.equal(root.get("shop").get("id"), shopId));
-
-        if (category != null && !category.isEmpty()) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("category"), category));
-        }
-
-        if (isRnb != null) {
-            spec = spec.and((root, query, cb) ->
-                    cb.equal(root.get("isRnb"), isRnb));
-        }
-
-        if (search != null && !search.isEmpty()) {
-            spec = spec.and((root, query, cb) ->
-                    cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"));
-        }
-
-        // Eksekusi query
         Page<ProductEntity> productsPage = productRepository.findAll(spec, pageable);
+        List<ProductListResponse> productResponses = productsPage.getContent().stream()
+                .map(productMapper::toProductListResponse)
+                .toList();
 
-        // Mapping ke response
-        List<ProductListResponse> responses = productsPage.getContent().stream()
-                .map(product -> {
-                    List<String> images = processImageString(product.getImage());
-                    Double rating = ProductHelper.calculateWeightedRating(product.getReviews());
-                    int[] transactionCounts = ProductHelper.countProductTransactions(product.getTransactions());
-
-                    return ProductListResponse.builder()
-                            .id(product.getId())
-                            .name(product.getName())
-                            .category(product.getCategory())
-                            .isRnb(product.isRnb())
-                            .dailyPrice(product.getDailyPrice())
-                            .weeklyPrice(product.getWeeklyPrice())
-                            .monthlyPrice(product.getMonthlyPrice())
-                            .stock(product.getStock())
-                            .status(product.getStatus())
-                            .mainImage(images.isEmpty() ? null : images.get(0))
-                            .rating(rating)
-                            .rentedTimes(transactionCounts[0])
-                            .build();
-                })
-                .collect(Collectors.toList());
-
-        // Membuat response dengan pagination info
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("products", responses);
-        responseData.put("current_page", productsPage.getNumber());
-        responseData.put("total_items", productsPage.getTotalElements());
-        responseData.put("total_pages", productsPage.getTotalPages());
+        Map<String, Object> responseData = Map.of(
+                "products", productResponses,
+                "current_page", productsPage.getNumber(),
+                "total_items", productsPage.getTotalElements(),
+                "total_pages", productsPage.getTotalPages()
+        );
 
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseData);
+    }
+
+    private ProductEntity findProductById(String id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("Product not found with ID: " + id));
+    }
+
+    private ShopEntity findShopById(String shopId) {
+        return shopRepository.findById(shopId)
+                .orElseThrow(() -> new DataNotFoundException("Shop not found with ID: " + shopId));
+    }
+
+    private CustomerEntity findCustomerById(String customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new DataNotFoundException("Customer not found with ID: " + customerId));
+    }
+
+    private Pageable createPageable(ProductFilterDto filters) {
+        String sortBy = (filters.getSortBy() != null && VALID_SORT_FIELDS.contains(filters.getSortBy()))
+                ? filters.getSortBy() : "name";
+        Sort.Direction direction = "desc".equalsIgnoreCase(filters.getSortDirection())
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+        return PageRequest.of(filters.getPage(), 16, Sort.by(direction, sortBy));
+    }
+
+    private Specification<ProductEntity> createSpecification(String shopId, ProductFilterDto filters) {
+        Specification<ProductEntity> spec = (root, query, cb) -> cb.equal(root.get("shop").get("id"), shopId);
+
+        if (filters.getCategory() != null && !filters.getCategory().isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), filters.getCategory()));
+        }
+        if (filters.getIsRnb() != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("isRnb"), filters.getIsRnb()));
+        }
+        if (filters.getSearch() != null && !filters.getSearch().isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("name")), "%" + filters.getSearch().toLowerCase() + "%"));
+        }
+        return spec;
     }
 }

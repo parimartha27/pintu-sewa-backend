@@ -12,7 +12,6 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import com.skripsi.siap_sewa.helper.ProductHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
 
-import java.util.Collections;
 import java.util.List;
-
-import static com.skripsi.siap_sewa.service.ProductService.getProductResponse;
 
 @Slf4j
 @Service
@@ -36,9 +31,7 @@ public class ProductFilterService {
     
     public ResponseEntity<ApiResponse> getFilteredProducts(ProductFilterRequest filterRequest) {
         try {
-            log.info("Processing product filter request: {}", filterRequest);
 
-            // Build specification and pageable
             Specification<ProductEntity> spec = ProductSpecification.withFilters(filterRequest);
             Pageable pageable = PageRequest.of(
                     filterRequest.getPage() - 1,
@@ -46,21 +39,10 @@ public class ProductFilterService {
                     Sort.by(filterRequest.getSortDirection(), filterRequest.getSortBy())
             );
 
-            // Execute query with performance optimization
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start("database-query");
             Page<ProductEntity> resultPage = productRepository.findAll(spec, pageable);
-            stopWatch.stop();
 
-            if (stopWatch.getTotalTimeMillis() > 1000) { // 1 second threshold
-                log.warn("Slow query detected! Time: {}ms, Filters: {}",
-                        stopWatch.getTotalTimeMillis(), filterRequest);
-            }
-
-            // Apply post-database filtering for ratings
             List<ProductEntity> filteredContent = applyPostFilters(resultPage.getContent(), filterRequest);
 
-            // Create paginated response
             PaginationResponse<ProductResponse> response = createPaginationResponse(
                     filteredContent,
                     resultPage.getNumber() + 1,

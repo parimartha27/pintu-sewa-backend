@@ -49,14 +49,20 @@ public class AddProductRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Panjang harus lebih dari 0")
     private BigDecimal length;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Harga harian harus lebih dari 0")
-    private BigDecimal dailyPrice;
+    @Builder.Default
+    private BigDecimal dailyPrice = BigDecimal.ZERO;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Harga mingguan harus lebih dari 0")
-    private BigDecimal weeklyPrice;
+    @Builder.Default
+    private BigDecimal weeklyPrice = BigDecimal.ZERO;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Harga bulanan harus lebih dari 0")
-    private BigDecimal monthlyPrice;
+    @Builder.Default
+    private BigDecimal monthlyPrice = BigDecimal.ZERO;
+
+    @Builder.Default
+    private BigDecimal deposit = BigDecimal.ZERO;
+
+    @Builder.Default
+    private BigDecimal buyPrice = BigDecimal.ZERO;
 
     @NotBlank(message = "Deskripsi produk tidak boleh kosong")
     private String description;
