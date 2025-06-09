@@ -142,8 +142,7 @@ public class AuthenticationService {
             }else{
                 return customer;
             }
-        }
-        if (!commonUtils.isNull(request.getPhoneNumber()) && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+        }else if (!commonUtils.isNull(request.getPhoneNumber()) && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
             Optional<CustomerEntity> customer = customerRepository.findByPhoneNumber(request.getPhoneNumber());
             if(customer.get().getUsername() != null){
                 log.info("Phone Number already used: {}", request.getPhoneNumber());

@@ -53,5 +53,6 @@ public class CartResponse {
         private BigDecimal dailyPrice;
         private BigDecimal weeklyPrice;
         private BigDecimal monthlyPrice;
+        private boolean dateError;
     }
 }
