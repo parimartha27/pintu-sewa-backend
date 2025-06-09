@@ -195,11 +195,9 @@ public class TransactionService {
             return true;
         }
 
-
         if (request.getCustomerId() != null) {
             return transactions.get(0).getCustomer().getId().equals(request.getCustomerId());
         }
-
 
         if (request.getShopId() != null) {
             return transactions.stream().allMatch(t -> t.getShopId().equals(request.getShopId()));
@@ -211,20 +209,43 @@ public class TransactionService {
     private TransactionDetailResponse buildTransactionDetailResponse(List<TransactionEntity> transactions) {
         TransactionEntity firstTransaction = transactions.get(0);
 
-        return TransactionDetailResponse.builder().transactionDetail(buildTransactionDetail(firstTransaction)).productDetails(buildProductDetails(transactions)).paymentDetail(buildPaymentDetail(transactions)).shopDetail(buildShopInfo(transactions.get(0))).build();
+        return TransactionDetailResponse.builder()
+                .transactionDetail(buildTransactionDetail(firstTransaction))
+                .productDetails(buildProductDetails(transactions))
+                .paymentDetail(buildPaymentDetail(transactions))
+                .shopDetail(buildShopInfo(transactions.get(0)))
+                .build();
     }
 
     private TransactionDetailResponse.TransactionDetail buildTransactionDetail(TransactionEntity transaction) {
-        return TransactionDetailResponse.TransactionDetail.builder().referenceNumber(transaction.getTransactionNumber()).status(transaction.getStatus()).transactionDate(transaction.getCreatedAt().format(DATE_FORMATTER)).shippingAddress(transaction.getShippingAddress()).shippingPartner(transaction.getShippingPartner()).shippingCode(transaction.getShippingCode()).build();
+        return TransactionDetailResponse.TransactionDetail.builder().
+                referenceNumber(transaction.getTransactionNumber())
+                .status(transaction.getStatus())
+                .transactionDate(transaction.getCreatedAt().format(DATE_FORMATTER))
+                .shippingAddress(transaction.getShippingAddress())
+                .shippingPartner(transaction.getShippingPartner())
+                .shippingCode(transaction.getShippingCode())
+                .build();
     }
 
     private List<TransactionDetailResponse.ProductDetail> buildProductDetails(List<TransactionEntity> transactions) {
-        return transactions.stream().map(transaction -> {
-            ProductEntity product = transaction.getProducts().iterator().next();
-            return TransactionDetailResponse.ProductDetail.builder().orderId(transaction.getId()).productId(product.getId()).productName(product.getName()).image(product.getImage()).startRentDate(transaction.getStartDate().format(DATE_FORMATTER)).endRentDate(transaction.getEndDate().format(DATE_FORMATTER)).quantity(transaction.getQuantity()).price(transaction.getAmount().divide(BigDecimal.valueOf(transaction.getQuantity()), RoundingMode.HALF_UP)).subTotal(transaction.getAmount()).deposit(product.getDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity()))).build();
-        }).toList();
+        return transactions.stream()
+                .flatMap(transaction -> transaction.getProducts().stream().map(product ->
+                        TransactionDetailResponse.ProductDetail.builder()
+                                .orderId(transaction.getId())
+                                .productId(product.getId())
+                                .productName(product.getName())
+                                .image(product.getImage())
+                                .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
+                                .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
+                                .quantity(transaction.getQuantity())
+                                .price(transaction.getAmount())
+                                .subTotal(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                                .deposit(product.getDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                                .build()
+                )).toList();
     }
-
+    
     private TransactionDetailResponse.PaymentDetail buildPaymentDetail(List<TransactionEntity> transactions) {
         BigDecimal subTotal = calculateTotalPrice(transactions);
         BigDecimal totalDeposit = calculateTotalDeposit(transactions);
