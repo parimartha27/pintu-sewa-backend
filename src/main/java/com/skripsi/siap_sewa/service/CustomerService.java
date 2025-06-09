@@ -295,11 +295,13 @@ public class CustomerService {
 
             CustomerEntity customer = validCustomer.get();
             String otp = CommonUtils.generateOtp();
+            customer.setOtp(otp);
+            customerRepository.save(customer);
             emailService.sendEmail(customer.getEmail(), 0, otp);
 
             ValidateCredentialResponse response = ValidateCredentialResponse.builder()
-                    .customerId(customer.getId())
                     .email(customer.getEmail())
+                    .customerId(validCustomer.get().getId())
                     .build();
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
