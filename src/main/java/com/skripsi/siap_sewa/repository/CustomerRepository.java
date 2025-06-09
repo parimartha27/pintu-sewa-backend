@@ -32,4 +32,8 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
     boolean existsByUsernameAndIdNot(@NotBlank(message = "Username tidak boleh kosong") @Size(min = 3, max = 50, message = "Username harus 3-50 karakter") String username, @NotBlank(message = "ID tidak boleh kosong") String id);
 
     Page<CustomerEntity> findAll(Pageable pageable);
+
+    Optional<CustomerEntity> findByEmail(String email);
+
+    Optional<CustomerEntity> findByPhoneNumber(String phoneNumber);
 }
