@@ -15,4 +15,5 @@ import lombok.NoArgsConstructor;
 public class ValidateCredentialResponse{
 
    private String customerId;
+   private String email;
 }

@@ -298,7 +298,8 @@ public class CustomerService {
             emailService.sendEmail(customer.getEmail(), 0, otp);
 
             ValidateCredentialResponse response = ValidateCredentialResponse.builder()
-                    .customerId(validCustomer.get().getId())
+                    .customerId(customer.getId())
+                    .email(customer.getEmail())
                     .build();
 
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
