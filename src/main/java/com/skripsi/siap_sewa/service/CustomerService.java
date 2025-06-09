@@ -311,8 +311,6 @@ public class CustomerService {
 
     public ResponseEntity<ApiResponse> forgetPassword(@Valid ForgetPasswordRequest request) {
         try {
-            log.info("Memproses reset password untuk customer ID: {}", request.getCustomerId());
-
             Optional<CustomerEntity> optionalCustomer = customerRepository.findById(request.getCustomerId());
             if(optionalCustomer.isEmpty()){
                 log.info("Customer tidak ditemukan dengan ID: {}", request.getCustomerId());
@@ -322,8 +320,7 @@ public class CustomerService {
             CustomerEntity updatedPassword = optionalCustomer.get();
             updatedPassword.setPassword(encoder.encode(request.getPassword()));
             customerRepository.save(updatedPassword);
-
-            log.info("Berhasil reset password untuk customer ID: {}", request.getCustomerId());
+            
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Reset password berhasil");
 
         } catch (DataNotFoundException ex) {
