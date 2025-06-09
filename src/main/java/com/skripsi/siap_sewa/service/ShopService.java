@@ -136,7 +136,12 @@ public class ShopService {
             if(shop.isEmpty()){
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Shop Not Found");
             }else{
-                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, shop.get().getId());
+                CustomerAccessShopResponse response = CustomerAccessShopResponse.builder()
+                        .shopId(shop.get().getId())
+                        .shopName(shop.get().getName())
+                        .shopImage(shop.get().getImage())
+                        .build();
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,response);
             }
         } catch (Exception ex) {
             log.error("Error fetching shop ID : {}", ex.getMessage());
