@@ -1,7 +1,6 @@
 package com.skripsi.siap_sewa.repository;
 
 import com.skripsi.siap_sewa.entity.CustomerEntity;
-import com.skripsi.siap_sewa.entity.ProductEntity;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,10 +19,6 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
 
     Optional<CustomerEntity> findByPhoneNumberOrEmail(String phoneNumber, String email);
 
-    Optional<CustomerEntity> findByEmail(String email);
-
-    Optional<CustomerEntity> findByPhoneNumber(String phoneNumber);
-
     boolean existsByEmail(String email);
 
     boolean existsByPhoneNumber(String phoneNumber);
@@ -37,4 +32,8 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
     boolean existsByUsernameAndIdNot(@NotBlank(message = "Username tidak boleh kosong") @Size(min = 3, max = 50, message = "Username harus 3-50 karakter") String username, @NotBlank(message = "ID tidak boleh kosong") String id);
 
     Page<CustomerEntity> findAll(Pageable pageable);
+
+    Optional<CustomerEntity> findByEmail(String email);
+
+    Optional<CustomerEntity> findByPhoneNumber(String phoneNumber);
 }

@@ -41,7 +41,8 @@ public class CheckoutService {
     private final CommonUtils commonUtils;
     private final ShopRepository shopRepository;
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(Constant.DATE_FORMAT);
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("id-ID"));
 
     @Transactional
     public ResponseEntity<ApiResponse> processProductCheckout(ProductCheckoutRequest request) throws BadRequestException {
@@ -419,7 +420,6 @@ public class CheckoutService {
                     }
                 }
 
-                // Re-throw to fail the entire transaction from this shop
                 throw new CheckoutProcessingException(ErrorMessageEnum.FAILED,"", "");
             }
         }
@@ -427,7 +427,6 @@ public class CheckoutService {
         return transactionIds;
     }
 
-    // Helper class to hold checkout item details
     private static class CartCheckoutItem {
         private final ProductEntity product;
         private final int quantity;

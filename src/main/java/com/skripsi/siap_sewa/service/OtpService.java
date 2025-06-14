@@ -1,6 +1,5 @@
 package com.skripsi.siap_sewa.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.authentication.CustomerPrincipal;
 import com.skripsi.siap_sewa.dto.authentication.otp.*;
@@ -102,7 +101,7 @@ public class OtpService {
                 log.info("Resetting OTP counters for customer: {}", customerId);
             }
 
-            String newOtp = commonUtils.generateOtp();
+            String newOtp = CommonUtils.generateOtp();
             customer.setOtp(newOtp);
             customer.setResendOtpCount(customer.getResendOtpCount() + 1);
             customer.setLastUpdateAt(LocalDateTime.now());

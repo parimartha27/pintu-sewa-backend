@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -49,8 +48,13 @@ public class AuthenticationService {
 
     @Transactional
     public ResponseEntity<ApiResponse> register(@Valid RegisterRequest request) {
-
-        validateRegistrationRequest(request);
+        
+        Optional<CustomerEntity> validate = validateRegistrationRequest(request);
+        if(validate != null){
+            RegisterResponse response = objectMapper.convertValue(validate, RegisterResponse.class);
+            response.setCustomerId(validate.get().getId());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        }
 
         CustomerEntity newCustomer = createNewCustomer(request);
         customerRepository.save(newCustomer);
@@ -94,10 +98,6 @@ public class AuthenticationService {
         List<CustomerEntity> customers = customerRepository.findByEmailOrPhoneNumber(
                 request.getEmail(), request.getPhoneNumber());
 
-        if (customers.size() > 1) {
-            log.warn("Multiple accounts found for identifier: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
-            throw new BadCredentialsException("Ditemukan beberapa akun dengan email atau nomor telepon yang sama. Silakan hubungi dukungan pelanggan.");
-        }
         if (customers.isEmpty()) {
             log.warn("Login failed: Customer not found for identifier: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
             throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
@@ -138,23 +138,35 @@ public class AuthenticationService {
         }
     }
 
-    private void validateRegistrationRequest(RegisterRequest request) {
+    private Optional<CustomerEntity> validateRegistrationRequest(RegisterRequest request) {
         if (commonUtils.isNull(request.getEmail()) && commonUtils.isNull(request.getPhoneNumber())) {
             throw new IllegalArgumentException("Email atau Nomor Handphone wajib diisi.");
         }
 
         if (!commonUtils.isNull(request.getEmail()) && customerRepository.existsByEmail(request.getEmail())) {
-            throw new EmailExistException("Email sudah digunakan: " + request.getEmail());
+            Optional<CustomerEntity> customer = customerRepository.findByEmail(request.getEmail());
+            log.info("Email : {}", customer);
+            if(customer.get().getUsername() != null){
+                log.info("Email already used: {}", request.getEmail());
+                throw new EmailExistException("Email sudah digunakan : " + request.getEmail());
+            }else{
+                return customer;
+            }
+        }else if (!commonUtils.isNull(request.getPhoneNumber()) && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            Optional<CustomerEntity> customer = customerRepository.findByPhoneNumber(request.getPhoneNumber());
+            if(customer.get().getUsername() != null){
+                log.info("Phone Number already used: {}", request.getPhoneNumber());
+                throw new PhoneNumberExistException("No Handphone sudah digunakan: " + request.getPhoneNumber());
+            }else{
+                return customer;
+            }
         }
-
-        if (!commonUtils.isNull(request.getPhoneNumber()) && customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new PhoneNumberExistException("No Handphone sudah digunakan: " + request.getPhoneNumber());
-        }
+        return null;
     }
 
     private CustomerEntity createNewCustomer(RegisterRequest request) {
         CustomerEntity newCustomer = new CustomerEntity();
-        String otp = commonUtils.generateOtp();
+        String otp = CommonUtils.generateOtp();
 
         newCustomer.setEmail(request.getEmail());
         newCustomer.setPhoneNumber(request.getPhoneNumber());

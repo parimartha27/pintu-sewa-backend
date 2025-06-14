@@ -1,4 +1,4 @@
-package com.skripsi.siap_sewa.dto.customer;
+package com.skripsi.siap_sewa.dto.shop;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ValidateCredentialResponse{
-   private String email;
-   private String customerId;
+public class CustomerAccessShopResponse {
+    private String shopId;
+    private String shopName;
+    private String shopImage;
 }

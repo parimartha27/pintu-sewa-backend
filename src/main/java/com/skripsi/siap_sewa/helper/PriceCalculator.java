@@ -17,7 +17,6 @@ public class PriceCalculator {
 
         BigDecimal totalPrice = BigDecimal.ZERO;
 
-        // Calculate based on monthly, weekly, daily chunks
         long months = days / 30;
         days = days % 30;
 

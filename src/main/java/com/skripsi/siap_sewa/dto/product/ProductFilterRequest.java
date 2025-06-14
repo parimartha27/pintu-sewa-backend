@@ -2,7 +2,6 @@ package com.skripsi.siap_sewa.dto.product;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 import org.springframework.data.domain.Sort;
 
@@ -32,7 +31,7 @@ public class ProductFilterRequest {
     private String shopId;
 
     public void validate() {
-        // Validate pagination parameters
+        
         if (page < 1) {
             throw new IllegalArgumentException("Page number must be greater than or equal to 1");
         }
@@ -41,12 +40,10 @@ public class ProductFilterRequest {
             throw new IllegalArgumentException("Page size must be between 1 and 100");
         }
 
-        // Validate price range
         if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
             throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
         }
 
-        // Validate rent durations
         if (rentDurations != null) {
             for (Integer duration : rentDurations) {
                 if (duration < 1 || duration > 7) {
@@ -55,7 +52,6 @@ public class ProductFilterRequest {
             }
         }
 
-        // Validate ratings
         if (minRatings != null) {
             for (Double rating : minRatings) {
                 if (rating < 0 || rating > 5) {

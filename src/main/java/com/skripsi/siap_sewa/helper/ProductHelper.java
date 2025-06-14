@@ -6,10 +6,7 @@ import com.skripsi.siap_sewa.entity.ReviewEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -38,41 +35,7 @@ public class ProductHelper {
 
         return Math.round(weightedRating * 10) / 10.0;
     }
-
-    public static String getTimeAgoInIndonesian(LocalDateTime dateTime) {
-        LocalDateTime now = LocalDateTime.now();
-        Duration duration = Duration.between(dateTime, now);
-
-        long seconds = duration.getSeconds();
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-        long days = hours / 24;
-        long months = days / 30;
-        long years = days / 365;
-
-        if (years > 0) {
-            return years + " tahun lalu";
-        } else if (months > 0) {
-            return months + " bulan lalu";
-        } else if (days > 0) {
-            return days + " hari lalu";
-        } else if (hours > 0) {
-            return hours + " jam lalu";
-        } else if (minutes > 0) {
-            return minutes + " menit lalu";
-        } else {
-            return "beberapa detik lalu";
-        }
-    }
-
-    public static long countUniqueReviewers(List<ProductEntity> products) {
-        return products.stream()
-                .flatMap(product -> product.getReviews().stream())
-                .map(review -> review.getCustomer().getId())
-                .distinct()
-                .count();
-    }
-
+    
     public static int[] countProductTransactions(Set<TransactionEntity> transactions) {
         int rentedTimes = 0;
         int buyTimes = 0;
@@ -98,17 +61,13 @@ public class ProductHelper {
     }
 
     public static BigDecimal getLowestPrice(ProductEntity product) {
-        // Mendefinisikan nilai -1 sebagai konstanta agar lebih rapi
-        final BigDecimal ABSENT_PRICE = new BigDecimal("-1");
+        
+        final BigDecimal ABSENT_PRICE = BigDecimal.ZERO;
 
         return Stream.of(product.getDailyPrice(), product.getWeeklyPrice(), product.getMonthlyPrice())
-                // 1. Ubah nilai null menjadi -1
                 .map(price -> Optional.ofNullable(price).orElse(ABSENT_PRICE))
-                // 2. Saring semua nilai yang BUKAN -1
                 .filter(price -> price.compareTo(ABSENT_PRICE) != 0)
-                // 3. Cari nilai terkecil dari harga yang valid
                 .min(BigDecimal::compareTo)
-                // 4. Jika tidak ada harga lain, kembalikan -1
                 .orElse(ABSENT_PRICE);
     }
 
@@ -116,7 +75,7 @@ public class ProductHelper {
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
-//                .category(product.getCategory())
+
                 .rentCategory(getRentDurationName(product.getRentCategory()))
                 .isRnb(product.isRnb())
                 .image(product.getImage())

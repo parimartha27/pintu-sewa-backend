@@ -37,6 +37,7 @@ public class CartService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
 
+
     public ResponseEntity<ApiResponse> getAllCartProductByCustomerId(String customerId) {
         try {
             log.info("Fetching active cart products for customer: {}", customerId);
@@ -97,6 +98,13 @@ public class CartService {
     private CartResponse.CartInfo buildCartInfo(CartEntity cart) {
         ProductEntity product = cart.getProduct();
         boolean isAvailable = product.getStock() >= cart.getQuantity();
+        LocalDate today = LocalDate.now();
+        boolean dateError;
+        if(ChronoUnit.DAYS.between(today, cart.getStartRentDate()) > 5){
+            dateError = false;
+        }else{
+            dateError = true;
+        }
 
         return CartResponse.CartInfo.builder()
                 .cartId(cart.getId())
@@ -118,6 +126,7 @@ public class CartService {
                 .dailyPrice(product.getDailyPrice())
                 .weeklyPrice(product.getWeeklyPrice())
                 .monthlyPrice(product.getMonthlyPrice())
+                .dateError(dateError)
                 .build();
     }
 

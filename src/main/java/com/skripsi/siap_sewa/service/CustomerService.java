@@ -36,6 +36,7 @@ public class CustomerService {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final JWTService jwtService;
     private final CloudinaryService cloudinaryService;
+    private final EmailService emailService;
 
     public ResponseEntity<ApiResponse> getCustomerDetails(String id) {
         try {
@@ -287,11 +288,22 @@ public class CustomerService {
             }
 
             Optional<CustomerEntity> validCustomer = customerRepository.findByPhoneNumberOrEmail(request.getPhoneNumber(), request.getEmail());
+
+            if(validCustomer.isEmpty()){
+                return commonUtils.setResponse(ErrorMessageEnum.UNAUTHORIZED_ACCESS, null);
+            }
+
+            CustomerEntity customer = validCustomer.get();
+            String otp = CommonUtils.generateOtp();
+            customer.setOtp(otp);
+            customerRepository.save(customer);
+            emailService.sendEmail(customer.getEmail(), 0, otp);
+
             ValidateCredentialResponse response = ValidateCredentialResponse.builder()
+                    .email(customer.getEmail())
                     .customerId(validCustomer.get().getId())
                     .build();
 
-            log.info("Berhasil validasi kredensial untuk customer ID: {}", response.getCustomerId());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
 
         } catch (Exception ex) {
@@ -302,8 +314,6 @@ public class CustomerService {
 
     public ResponseEntity<ApiResponse> forgetPassword(@Valid ForgetPasswordRequest request) {
         try {
-            log.info("Memproses reset password untuk customer ID: {}", request.getCustomerId());
-
             Optional<CustomerEntity> optionalCustomer = customerRepository.findById(request.getCustomerId());
             if(optionalCustomer.isEmpty()){
                 log.info("Customer tidak ditemukan dengan ID: {}", request.getCustomerId());
@@ -313,8 +323,7 @@ public class CustomerService {
             CustomerEntity updatedPassword = optionalCustomer.get();
             updatedPassword.setPassword(encoder.encode(request.getPassword()));
             customerRepository.save(updatedPassword);
-
-            log.info("Berhasil reset password untuk customer ID: {}", request.getCustomerId());
+            
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Reset password berhasil");
 
         } catch (DataNotFoundException ex) {

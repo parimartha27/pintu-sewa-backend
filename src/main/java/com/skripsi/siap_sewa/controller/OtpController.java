@@ -29,6 +29,4 @@ public class OtpController {
     public ResponseEntity<ApiResponse> valid(@RequestParam String customerId){
         return otpService.validateOtp(customerId);
     }
-
-
 }
