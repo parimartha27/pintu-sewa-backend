@@ -18,11 +18,13 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,6 +44,7 @@ public class ShopService {
     private final CommonUtils commonUtils;
     private final ModelMapper modelMapper;
     private final WalletReportRepository walletReportRepository;
+    private final CloudinaryService cloudinaryService;
 
     public ResponseEntity<ApiResponse> createShop(CreateShopRequest request) {
         
@@ -168,35 +171,75 @@ public class ShopService {
     }
 
     public ResponseEntity<ApiResponse> editShop(@Valid EditShopRequest request) {
-        Optional<ShopEntity> shopEntity = shopRepository.findById(request.getId());
+        try {
+            log.info("Memproses edit shop dengan ID: {}", request.getId());
 
-        if(shopEntity.isPresent()) {
-            ShopEntity updatedShop = getShopEntity(request, shopEntity);
+            Optional<ShopEntity> shopOpt = shopRepository.findById(request.getId());
+            if (shopOpt.isEmpty()) {
+                log.info("Shop tidak ditemukan dengan ID: {}", request.getId());
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
+            }
 
-            shopRepository.save(updatedShop);
+            ShopEntity shop = shopOpt.get();
 
-            EditShopResponse response = objectMapper.convertValue(updatedShop, EditShopResponse.class);
+            // Upload image jika berbeda
+            String imageUrl = shop.getImage(); // default: existing image
+            if (request.getImage() != null && !request.getImage().equals(shop.getImage())) {
+                try {
+                    imageUrl = cloudinaryService.uploadImage(request.getImage());
 
+//                    // Hapus gambar lama jika dari Cloudinary
+//                    if (shop.getImage() != null && shop.getImage().contains("res.cloudinary.com")) {
+//                        try {
+//                            String publicId = shop.getImage().substring(
+//                                    shop.getImage().lastIndexOf("/") + 1,
+//                                    shop.getImage().lastIndexOf(".")
+//                            );
+//                            cloudinaryService.deleteImage(publicId);
+//                        } catch (Exception e) {
+//                            log.warn("Gagal menghapus gambar lama: {}", e.getMessage());
+//                        }
+//                    }
+                } catch (IllegalArgumentException e) {
+                    return commonUtils.setResponse(
+                            ErrorMessageEnum.INVALID_FILE_FORMAT,
+                            Map.of("message", e.getMessage())
+                    );
+                } catch (IOException e) {
+                    log.error("Gagal upload gambar: {}", e.getMessage());
+                    return commonUtils.setResponse(ErrorMessageEnum.IMAGE_UPLOAD_FAILED, null);
+                }
+            }
+
+            // Set field baru
+            shop.setName(request.getName());
+            shop.setDescription(request.getDescription());
+            shop.setImage(imageUrl);
+            shop.setStreet(request.getStreet());
+            shop.setDistrict(request.getDistrict());
+            shop.setRegency(request.getRegency());
+            shop.setProvince(request.getProvince());
+            shop.setPostCode(request.getPostCode());
+            shop.setWorkHours(request.getWorkHours());
+            shop.setLastUpdateAt(LocalDateTime.now());
+
+            shopRepository.save(shop);
+
+            EditShopResponse response = EditShopResponse.builder()
+                    .name(shop.getName())
+                    .description(shop.getDescription())
+                    .image(shop.getImage())
+                    .street(shop.getStreet())
+                    .district(shop.getDistrict())
+                    .regency(shop.getRegency())
+                    .province(shop.getProvince())
+                    .postCode(shop.getPostCode())
+                    .build();
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        } catch (Exception ex) {
+            log.error("Gagal mengedit shop: {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
-
-        return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
-    }
-
-    private ShopEntity getShopEntity(EditShopRequest request, Optional<ShopEntity> shopEntity) {
-        ShopEntity updatedShop = shopEntity.get();
-
-        updatedShop.setName(request.getName());
-        updatedShop.setDescription(request.getDescription());
-        updatedShop.setImage(request.getImage());
-        updatedShop.setStreet(request.getStreet());
-        updatedShop.setDistrict(request.getDistrict());
-        updatedShop.setRegency(request.getRegency());
-        updatedShop.setProvince(request.getProvince());
-        updatedShop.setPostCode(request.getPostCode());
-        updatedShop.setWorkHours(request.getWorkHours());
-        updatedShop.setLastUpdateAt(LocalDateTime.now());
-        return updatedShop;
     }
 
     public ResponseEntity<ApiResponse> getShopDataByProductId(String productId) {

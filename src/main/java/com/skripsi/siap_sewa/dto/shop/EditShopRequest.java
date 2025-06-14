@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @Builder
@@ -23,8 +24,7 @@ public class EditShopRequest {
 
     private String description;
 
-    @NotBlank(message = "Gambar toko tidak boleh kosong")
-    private String image;
+    private MultipartFile image;
 
     @NotBlank(message = "Jalan tidak boleh kosong")
     private String street;

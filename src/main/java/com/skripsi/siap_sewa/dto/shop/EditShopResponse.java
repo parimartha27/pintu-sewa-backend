@@ -15,8 +15,6 @@ import lombok.NoArgsConstructor;
 public class EditShopResponse {
     private String name;
     private String description;
-    private String instagram;
-    private String facebook;
     private String image;
     private String street;
     private String district;

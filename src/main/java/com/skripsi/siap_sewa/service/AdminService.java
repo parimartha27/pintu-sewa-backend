@@ -293,7 +293,7 @@ public class AdminService {
 
             shop.setName(request.getName());
             shop.setDescription(request.getDescription());
-            shop.setImage(request.getImage());
+//            shop.setImage(request.getImage());
             shop.setStreet(request.getStreet());
             shop.setDistrict(request.getDistrict());
             shop.setRegency(request.getRegency());

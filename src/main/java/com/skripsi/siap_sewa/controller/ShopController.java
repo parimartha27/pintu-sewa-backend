@@ -6,6 +6,7 @@ import com.skripsi.siap_sewa.dto.shop.CreateShopRequest;
 import com.skripsi.siap_sewa.service.ShopService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +39,8 @@ public class ShopController {
         return shopService.createShop(request);
     }
 
-    @PutMapping("/edit")
-    public ResponseEntity<ApiResponse> editShop(@RequestBody @Valid EditShopRequest request){
+    @PutMapping(value = "/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse> editShop(@Valid EditShopRequest request){
         return shopService.editShop(request);
     }
 
