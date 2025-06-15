@@ -166,7 +166,7 @@ public class CommonUtils {
     }
 
     public static String calculateRentDuration(LocalDate startDate, LocalDate endDate) {
-        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
 
         if (days >= 365) {
             double years = days / 365.0;
@@ -178,7 +178,7 @@ public class CommonUtils {
             double weeks = days / 7.0;
             return formatDuration(weeks, "Minggu");
         } else {
-            return days + (days > 1 ? " Hari" : " Hari");
+            return days + (" Hari");
         }
     }
 
