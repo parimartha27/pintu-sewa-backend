@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -19,13 +20,11 @@ public class UserDetailServiceCustom implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        List<CustomerEntity> customers = customerRepository.findByUsername(username);
-        if (customers.isEmpty()) {
+        Optional<CustomerEntity> customer = customerRepository.findByEmail(username);
+        if (customer.isEmpty()) {
             throw new UsernameNotFoundException("User not found");
-        } else if (customers.size() > 1) {
-            throw new SecurityException("User is duplicate");
         }
-        return new CustomerPrincipal(customers.getFirst());
+        return new CustomerPrincipal(customer.get());
     }
 
     public UserDetails loadUserById(String id) throws UsernameNotFoundException {
