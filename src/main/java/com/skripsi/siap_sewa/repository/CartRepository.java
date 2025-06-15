@@ -16,5 +16,12 @@ public interface CartRepository extends JpaRepository<CartEntity, String> {
             String productId,
             LocalDate startRentDate,
             LocalDate endRentDate);
+
+    Optional<CartEntity> findByCustomerIdAndProduct_IdAndStartRentDateAndEndRentDate(
+            String customerId,
+            String productId,
+            LocalDate startRentDate,
+            LocalDate endRentDate
+    );
 }
 

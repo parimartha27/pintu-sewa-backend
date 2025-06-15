@@ -6,10 +6,7 @@ import com.skripsi.siap_sewa.dto.transaction.*;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.DataNotFoundException;
-import com.skripsi.siap_sewa.repository.CustomerRepository;
-import com.skripsi.siap_sewa.repository.TransactionRepository;
-import com.skripsi.siap_sewa.repository.WalletReportRepository;
-import com.skripsi.siap_sewa.repository.ShopRepository;
+import com.skripsi.siap_sewa.repository.*;
 import com.skripsi.siap_sewa.spesification.TransactionSpecification;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.transaction.Transactional;
@@ -29,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Service
@@ -36,6 +35,7 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final CartRepository cartRepository;
     private final CustomerRepository customerRepository;
     private final WalletReportRepository walletReportRepository;
     private final ShopRepository shopRepository;
@@ -272,9 +272,18 @@ public class TransactionService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
 
+            CustomerEntity customer = transactions.getFirst().getCustomer();
             transactions.forEach(transaction -> {
                 transaction.setStatus("Belum Dibayar");
                 transaction.setLastUpdateAt(LocalDateTime.now());
+                log.info("Sekarang lagi ID yang ini {} startnya ini {} dan end nya ini {}",transaction.getId(),transaction.getStartDate(),transaction.getEndDate());
+                for (ProductEntity product : transaction.getProducts()) {
+
+                    Optional<CartEntity> cart = cartRepository.findByCustomerIdAndProduct_IdAndStartRentDateAndEndRentDate(customer.getId(), product.getId(),transaction.getStartDate(),transaction.getEndDate());
+                    if (cart.isPresent()) {
+                        cartRepository.delete(cart.get());
+                    }
+                }
             });
 
             transactionRepository.saveAll(transactions);
@@ -289,7 +298,7 @@ public class TransactionService {
 //    endpoint untuk user bayar. Status "Belum Dibayar" berubah menjadi "Diproses"
     public ResponseEntity<ApiResponse> paymentTransaction(PaymentStatusTransactionRequest request) {
         try {
-            log.info("Update Reference Number status {} Into Belum Dibayar", request.getReferenceNumbers());
+            log.info("Update Reference Number status {} Into Diproses", request.getReferenceNumbers());
 
             List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
 
@@ -309,30 +318,21 @@ public class TransactionService {
                 return new DataNotFoundException("Customer not found");
             });
 
-            if (customer.getWalletAmount().compareTo(request.getAmount()) < 0) {
-                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
+            if(request.getPaymentMethod() == "Pintu_Sewa_Wallet"){
+                if (customer.getWalletAmount().compareTo(request.getAmount()) < 0) {
+                    return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
+                }
+                customer.setWalletAmount(customer.getWalletAmount().subtract(request.getAmount()));
+                customer.setLastUpdateAt(LocalDateTime.now());
+                customerRepository.save(customer);
             }
-
-            customer.setWalletAmount(customer.getWalletAmount().subtract(request.getAmount()));
-            customer.setLastUpdateAt(LocalDateTime.now());
-            customerRepository.save(customer);
-
-//            set customer wallet
-            WalletReportEntity walletCustomer = new WalletReportEntity();
-            walletCustomer.setDescription("Pembayaran penyewaan barang - " + request.getReferenceNumbers());
-            walletCustomer.setAmount(request.getAmount());
-            walletCustomer.setType(WalletReportEntity.WalletType.CREDIT);
-            walletCustomer.setCustomerId(customer.getId());
-            walletCustomer.setCreateAt(LocalDateTime.now());
-            walletCustomer.setUpdateAt(LocalDateTime.now());
-            walletReportRepository.save(walletCustomer);
 
             ShopEntity shop = shopRepository.findById(transactions.getFirst().getShopId()).orElseThrow(() -> {
                 log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
                 return new DataNotFoundException("Shop not found");
             });
 
-            // set customer wallet
+            // set Seller wallet
             WalletReportEntity walletSeller = new WalletReportEntity();
             walletSeller.setDescription("Pembayaran masuk dari penyewa  - " + request.getReferenceNumbers());
             walletSeller.setAmount(request.getAmount());
@@ -342,13 +342,32 @@ public class TransactionService {
             walletSeller.setUpdateAt(LocalDateTime.now());
             walletReportRepository.save(walletSeller);
 
+            if(request.getPaymentMethod() == "Pintu_Sewa_Wallet"){
+                WalletReportEntity wallet = new WalletReportEntity();
+                walletCustomer.setDescription("Pembayaran penyewaan barang - " + request.getReferenceNumbers());
+                wallet.setAmount(request.getAmount());
+                wallet.setType(WalletReportEntity.WalletType.CREDIT);
+                wallet.setCustomerId(customer.getId());
+                wallet.setCreateAt(LocalDateTime.now());
+                wallet.setUpdateAt(LocalDateTime.now());
+                walletReportRepository.save(wallet);
+            }
+
             log.info("Successfully Payment Customer ID: {}", request.getCustomerId());
 
-            transactions.forEach(transaction -> {
+            for (TransactionEntity transaction : transactions) {
                 transaction.setStatus("Diproses");
                 transaction.setPaymentMethod(request.getPaymentMethod());
                 transaction.setLastUpdateAt(LocalDateTime.now());
-            });
+
+                for (ProductEntity product : transaction.getProducts()) {
+                    if (product.getStock() < transaction.getQuantity()) {
+                        return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Stock Tidak Cukup");
+                    }
+
+                    product.setStock(product.getStock() - transaction.getQuantity());
+                }
+            }
 
             transactionRepository.saveAll(transactions);
 
@@ -516,31 +535,31 @@ public class TransactionService {
             List<FlowShippingResponse> shippingFlows = new ArrayList<>();
 
             FlowShippingResponse flow1 = new FlowShippingResponse();
-            flow1.setProcessDate(transactions.getFirst().getStartDate().minusDays(3).toString());
+            flow1.setProcessDate(generateRandomDateTime(transactions.getFirst().getStartDate(), 3,9,12));
             flow1.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
             flow1.setDetail("Barang Diambil Dari Toko");
             flow1.setStatus("DIKIRIM");
             shippingFlows.add(flow1);
 
             FlowShippingResponse flow2 = new FlowShippingResponse();
-            flow2.setProcessDate(transactions.getFirst().getStartDate().minusDays(2).toString());
+            flow2.setProcessDate(generateRandomDateTime(transactions.getFirst().getStartDate(), 2,9,12));
             flow2.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
             flow2.setDetail("Barang Sedang Dalam Pengiriman Ke DC "+ transactions.getFirst().getCustomer().getDistrict());
             flow2.setStatus("DIKIRIM");
             shippingFlows.add(flow2);
 
             FlowShippingResponse flow3 = new FlowShippingResponse();
-            flow3.setProcessDate(transactions.getFirst().getStartDate().minusDays(1).toString());
+            flow3.setProcessDate(generateRandomDateTime(transactions.getFirst().getStartDate(), 1,9,12));
             flow3.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
             flow3.setDetail("Barang Diantarkan Ke alamat Penerima");
             flow3.setStatus("DIKIRIM");
             shippingFlows.add(flow3);
 
             FlowShippingResponse flow4 = new FlowShippingResponse();
-            flow4.setProcessDate(transactions.getFirst().getStartDate().minusDays(1).toString());
+            flow4.setProcessDate(generateRandomDateTime(transactions.getFirst().getStartDate(), 1,9,12));
             flow4.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
             flow4.setDetail("Barang Telah sampai pada alamat Penerima");
-            flow4.setStatus("DITERIMA");
+            flow4.setStatus("DIKIRIM");
             shippingFlows.add(flow4);
 
 
@@ -557,7 +576,6 @@ public class TransactionService {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
-
 
 //endpoint saat vendor ingin membatalkan transaksi, bisa disaat status masih "Diproses"
     public ResponseEntity<ApiResponse> cancelTransaction(CancelStatusTransactionRequest request) {
@@ -625,5 +643,14 @@ public class TransactionService {
             log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(), ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+
+    private String generateRandomDateTime(LocalDate date, int minusDays,int start, int end) {
+        LocalDate targetDate = date.minusDays(minusDays);
+        LocalDateTime dateTime = targetDate.atTime(
+                ThreadLocalRandom.current().nextInt(start, end),
+                ThreadLocalRandom.current().nextInt(60),
+                ThreadLocalRandom.current().nextInt(60)
+        );
+        return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }
