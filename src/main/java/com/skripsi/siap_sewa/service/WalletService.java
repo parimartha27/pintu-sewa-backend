@@ -143,7 +143,7 @@ public class WalletService {
             customerRepository.save(customer);
 
             WalletReportEntity wallet = new WalletReportEntity();
-            wallet.setDescription("Top Up Wallet ");
+            wallet.setDescription("Top up berhasil");
             wallet.setAmount(amount);
             wallet.setType(WalletReportEntity.WalletType.DEBIT);
             wallet.setCustomerId(customer.getId());

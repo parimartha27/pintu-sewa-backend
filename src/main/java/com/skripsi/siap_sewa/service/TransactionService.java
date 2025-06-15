@@ -260,6 +260,7 @@ public class TransactionService {
                 .build();
     }
 
+//    Ini endpoint waktu customer checkout barang dan status
     public ResponseEntity<ApiResponse> processTransaction(ProcessStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Belum Dibayar", request.getReferenceNumbers());
@@ -284,6 +285,7 @@ public class TransactionService {
         }
     }
 
+//    endpoint untuk user bayar. Status "Belum Dibayar" berubah menjadi "Diproses"
     public ResponseEntity<ApiResponse> paymentTransaction(PaymentStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Belum Dibayar", request.getReferenceNumbers());
@@ -314,15 +316,30 @@ public class TransactionService {
             customer.setLastUpdateAt(LocalDateTime.now());
             customerRepository.save(customer);
 
+//            set customer wallet
+            WalletReportEntity walletCustomer = new WalletReportEntity();
+            walletCustomer.setDescription("Pembayaran penyewaan barang - " + request.getReferenceNumbers());
+            walletCustomer.setAmount(request.getAmount());
+            walletCustomer.setType(WalletReportEntity.WalletType.CREDIT);
+            walletCustomer.setCustomerId(customer.getId());
+            walletCustomer.setCreateAt(LocalDateTime.now());
+            walletCustomer.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletCustomer);
 
-            WalletReportEntity wallet = new WalletReportEntity();
-            wallet.setDescription("Payment Transaction ");
-            wallet.setAmount(request.getAmount());
-            wallet.setType(WalletReportEntity.WalletType.CREDIT);
-            wallet.setCustomerId(customer.getId());
-            wallet.setCreateAt(LocalDateTime.now());
-            wallet.setUpdateAt(LocalDateTime.now());
-            walletReportRepository.save(wallet);
+            ShopEntity shop = shopRepository.findById(transactions.getFirst().getShopId()).orElseThrow(() -> {
+                log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
+                return new DataNotFoundException("Shop not found");
+            });
+
+            // set customer wallet
+            WalletReportEntity walletSeller = new WalletReportEntity();
+            walletSeller.setDescription("Pembayaran masuk dari penyewa  - " + request.getReferenceNumbers());
+            walletSeller.setAmount(request.getAmount());
+            walletSeller.setType(WalletReportEntity.WalletType.DEBIT);
+            walletSeller.setCustomerId(shop.getId());
+            walletSeller.setCreateAt(LocalDateTime.now());
+            walletSeller.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletSeller);
 
             log.info("Successfully Payment Customer ID: {}", request.getCustomerId());
 
@@ -341,6 +358,7 @@ public class TransactionService {
         }
     }
 
+//    endpoint untuk vendor ubah status dari "Diproses" menjadi "Dikirim"
     public ResponseEntity<ApiResponse> shippingTransaction(ShippingStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Dikirim", request.getReferenceNumber());
@@ -365,6 +383,7 @@ public class TransactionService {
         }
     }
 
+// endpoint saat user menerima barang. Status berubah menjadi "Dikirim" menjadi "Sedang Disewa"
     public ResponseEntity<ApiResponse> receiveTransaction(ReceiveStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Sedang Disewa", request.getReferenceNumber());
@@ -389,6 +408,7 @@ public class TransactionService {
         }
     }
 
+//endpoint saat customer mengembalikan barang. Status berubah dari "Sedang Disewa" menjadi "Dikembalikan"
     public ResponseEntity<ApiResponse> returnTransaction(ReturnStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Dikembalikan", request.getReferenceNumber());
@@ -414,6 +434,7 @@ public class TransactionService {
         }
     }
 
+//endpoint saat vendor saat menerima barang yang telah dikembalikan. Status berubah menjadi "Dikembalikan" menjadi "Selesai"
     public ResponseEntity<ApiResponse> doneTransaction(DoneStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Selesai", request.getReferenceNumber());
@@ -457,7 +478,7 @@ public class TransactionService {
             shopRepository.save(shop);
 
             WalletReportEntity walletCustomer = new WalletReportEntity();
-            walletCustomer.setDescription("Deposit Return From Transaction ID  : " + transactions.getFirst().getTransactionNumber());
+            walletCustomer.setDescription("Pengembalian dana deposit dari penyedia jasa sewa - " + transactions.getFirst().getTransactionNumber());
             walletCustomer.setAmount(deposit);
             walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
             walletCustomer.setCustomerId(customer.getId());
@@ -466,15 +487,84 @@ public class TransactionService {
             walletReportRepository.save(walletCustomer);
 
             WalletReportEntity walletShop = new WalletReportEntity();
-            walletShop.setDescription("Deposit Return From Transaction ID  : " + transactions.getFirst().getTransactionNumber());
+            walletShop.setDescription("Pengembalian dana deposit penyewa" + transactions.getFirst().getTransactionNumber());
             walletShop.setAmount(deposit);
             walletShop.setType(WalletReportEntity.WalletType.CREDIT);
-            walletShop.setCustomerId(shop.getId());
+            walletShop.setShopId(shop.getId());
             walletShop.setCreateAt(LocalDateTime.now());
             walletShop.setUpdateAt(LocalDateTime.now());
             walletReportRepository.save(walletShop);
 
             log.info("Successfully Return Deposit of Transaction ID {} ", transactions.getFirst().getTransactionNumber());
+
+            transactionRepository.saveAll(transactions);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
+        } catch (Exception ex) {
+            log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(), ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+//endpoint saat vendor ingin membatalkan transaksi, bisa disaat status masih "Diproses"
+    public ResponseEntity<ApiResponse> cancelTransaction(CancelStatusTransactionRequest request) {
+        try {
+            log.info("Update Reference Number status {} into Dibatalkan", request.getReferenceNumber());
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(request.getReferenceNumber());
+
+            if (transactions.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            BigDecimal amount = transactions.getFirst().getTotalAmount();
+
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Dibatalkan");
+                transaction.setDepositReturned(true);
+                transaction.setDepositReturnedAt(LocalDateTime.now());
+                transaction.setLastUpdateAt(LocalDateTime.now());
+            });
+
+            CustomerEntity customer = customerRepository.findById(request.getCustomerId()).orElseThrow(() -> {
+                log.info("Customer not found with ID: {}", request.getCustomerId());
+                return new DataNotFoundException("Customer not found");
+            });
+
+            ShopEntity shop = shopRepository.findById(transactions.getFirst().getShopId()).orElseThrow(() -> {
+                log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
+                return new DataNotFoundException("Shop not found");
+            });
+
+            if (shop.getBalance().compareTo(amount) < 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance amount");
+            }
+
+            customer.setWalletAmount(customer.getWalletAmount().add(amount));
+            customer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(customer);
+
+            shop.setBalance(shop.getBalance().subtract(amount));
+            shop.setLastUpdateAt(LocalDateTime.now());
+            shopRepository.save(shop);
+
+            WalletReportEntity walletCustomer = new WalletReportEntity();
+            walletCustomer.setDescription("Pengembalian Dana Transaksi Dibatalkan dari Penyedia Jasa Sewa - " + transactions.getFirst().getTransactionNumber());
+            walletCustomer.setAmount(amount);
+            walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
+            walletCustomer.setCustomerId(customer.getId());
+            walletCustomer.setCreateAt(LocalDateTime.now());
+            walletCustomer.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletCustomer);
+
+            WalletReportEntity walletShop = new WalletReportEntity();
+            walletShop.setDescription("Pengembalian Dana Transaksi Dibatalkan ke Penyewa" + transactions.getFirst().getTransactionNumber());
+            walletShop.setAmount(amount);
+            walletShop.setType(WalletReportEntity.WalletType.CREDIT);
+            walletShop.setShopId(shop.getId());
+            walletShop.setCreateAt(LocalDateTime.now());
+            walletShop.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletShop);
 
             transactionRepository.saveAll(transactions);
 
