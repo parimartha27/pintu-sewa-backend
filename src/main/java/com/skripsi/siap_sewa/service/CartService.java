@@ -145,7 +145,7 @@ public class CartService {
 
             // 3. Validasi status produk
             if (!"AVAILABLE".equalsIgnoreCase(product.getStatus())) {
-                return commonUtils.setResponse(ErrorMessageEnum.PRODUCT_NOT_FOUND, null);
+                return commonUtils.setResponse(ErrorMessageEnum.PRODUCT_NOT_AVAIABLE, null);
             }
 
             // 4. Validasi stok tersedia
