@@ -81,17 +81,17 @@ public class TransactionController {
     }
 
     @PatchMapping("/transaction-detail/receive-item")
-    public ResponseEntity<ApiResponse> ReceiveTransaction(@RequestBody ReceiveStatusTransactionRequest request){
+    public ResponseEntity<ApiResponse> receiveTransaction(@RequestBody ReceiveStatusTransactionRequest request){
         return transactionService.receiveTransaction(request);
     }
 
     @PatchMapping("/transaction-detail/return-item")
-    public ResponseEntity<ApiResponse> ReturnTransaction(@RequestBody ReturnStatusTransactionRequest request){
+    public ResponseEntity<ApiResponse> returnTransaction(@RequestBody ReturnStatusTransactionRequest request){
         return transactionService.returnTransaction(request);
     }
 
     @PatchMapping("/transaction-detail/done")
-    public ResponseEntity<ApiResponse> DoneTransaction(@RequestBody DoneStatusTransactionRequest request){
+    public ResponseEntity<ApiResponse> doneTransaction(@RequestBody DoneStatusTransactionRequest request){
         return transactionService.doneTransaction(request);
     }
 
@@ -99,4 +99,9 @@ public class TransactionController {
     public ResponseEntity<ApiResponse> getProcessShippingDetail(@PathVariable String referenceNumber) {
         return transactionService.getProcessShippingDetail(referenceNumber);
     }
+    @PatchMapping("/transaction-detail/cancelled")
+    public ResponseEntity<ApiResponse> cancelTransaction(@RequestBody CancelStatusTransactionRequest request){
+        return transactionService.cancelTransaction(request);
+    }
+
 }
