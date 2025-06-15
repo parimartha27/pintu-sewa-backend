@@ -94,4 +94,9 @@ public class TransactionController {
     public ResponseEntity<ApiResponse> DoneTransaction(@RequestBody DoneStatusTransactionRequest request){
         return transactionService.doneTransaction(request);
     }
+
+    @GetMapping("/transaction-detail/shipping/{referenceNumber}")
+    public ResponseEntity<ApiResponse> getProcessShippingDetail(@PathVariable String referenceNumber) {
+        return transactionService.getProcessShippingDetail(referenceNumber);
+    }
 }

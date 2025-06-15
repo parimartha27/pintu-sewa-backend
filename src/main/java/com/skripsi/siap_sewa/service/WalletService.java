@@ -175,6 +175,9 @@ public class WalletService {
                         log.info("Shop not found with ID: {}", shopId);
                         return new DataNotFoundException("Shop not found");
                     });
+            if (amount.compareTo(shop.getBalance()) > 0) {
+                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Saldo Tidak Mencukupi");
+            }
 
             shop.setBalance(shop.getBalance().subtract(amount));
             shop.setLastUpdateAt(LocalDateTime.now());

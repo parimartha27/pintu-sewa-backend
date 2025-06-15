@@ -24,6 +24,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -481,6 +482,60 @@ public class TransactionService {
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "Success");
         } catch (Exception ex) {
             log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(), ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+    public ResponseEntity<ApiResponse> getProcessShippingDetail(String referenceNumber) {
+        try {
+            log.info("Get Shipping Detail From Refference Number : {} ", referenceNumber);
+
+            List<TransactionEntity> transactions = transactionRepository.findByTransactionNumber(referenceNumber);
+            if (transactions.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
+            }
+
+            List<FlowShippingResponse> shippingFlows = new ArrayList<>();
+
+            FlowShippingResponse flow1 = new FlowShippingResponse();
+            flow1.setProcessDate(transactions.getFirst().getStartDate().minusDays(3).toString());
+            flow1.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
+            flow1.setDetail("Barang Diambil Dari Toko");
+            flow1.setStatus("DIKIRIM");
+            shippingFlows.add(flow1);
+
+            FlowShippingResponse flow2 = new FlowShippingResponse();
+            flow2.setProcessDate(transactions.getFirst().getStartDate().minusDays(2).toString());
+            flow2.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
+            flow2.setDetail("Barang Sedang Dalam Pengiriman Ke DC "+ transactions.getFirst().getCustomer().getDistrict());
+            flow2.setStatus("DIKIRIM");
+            shippingFlows.add(flow2);
+
+            FlowShippingResponse flow3 = new FlowShippingResponse();
+            flow3.setProcessDate(transactions.getFirst().getStartDate().minusDays(1).toString());
+            flow3.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
+            flow3.setDetail("Barang Diantarkan Ke alamat Penerima");
+            flow3.setStatus("DIKIRIM");
+            shippingFlows.add(flow3);
+
+            FlowShippingResponse flow4 = new FlowShippingResponse();
+            flow4.setProcessDate(transactions.getFirst().getStartDate().minusDays(1).toString());
+            flow4.setShippingMan("Kurir " + transactions.getFirst().getShippingPartner());
+            flow4.setDetail("Barang Telah sampai pada alamat Penerima");
+            flow4.setStatus("DITERIMA");
+            shippingFlows.add(flow4);
+
+
+            ProcessShippingDetailResponse response = new ProcessShippingDetailResponse();
+            response.setShippingPartner(transactions.getFirst().getShippingPartner());
+            response.setEstimatedTime(transactions.getFirst().getStartDate().toString());
+            response.setShippingCode(transactions.getFirst().getShippingCode());
+            response.setCustomerName(transactions.getFirst().getCustomer().getName());
+            response.setShippingAddress(transactions.getFirst().getShippingAddress());
+            response.setShippingFlow(shippingFlows);
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        } catch (Exception ex) {
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
     }
