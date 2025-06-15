@@ -344,7 +344,7 @@ public class TransactionService {
 
             if(request.getPaymentMethod() == "Pintu_Sewa_Wallet"){
                 WalletReportEntity wallet = new WalletReportEntity();
-                walletCustomer.setDescription("Pembayaran penyewaan barang - " + request.getReferenceNumbers());
+                wallet.setDescription("Pembayaran penyewaan barang - " + request.getReferenceNumbers());
                 wallet.setAmount(request.getAmount());
                 wallet.setType(WalletReportEntity.WalletType.CREDIT);
                 wallet.setCustomerId(customer.getId());
@@ -643,6 +643,7 @@ public class TransactionService {
             log.error("Error fetching transaction ID {} : {}", request.getReferenceNumber(), ex.getMessage(), ex);
             return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
         }
+    }
 
     private String generateRandomDateTime(LocalDate date, int minusDays,int start, int end) {
         LocalDate targetDate = date.minusDays(minusDays);
