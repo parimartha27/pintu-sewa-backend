@@ -105,7 +105,7 @@ public class AuthenticationService {
         try {
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            customer.getUsername(),
+                            customer.getEmail(),
                             request.getPassword()));
             log.info("Authentication successful for customer: {}", customer.getId());
         } catch (AuthenticationException ex) {
