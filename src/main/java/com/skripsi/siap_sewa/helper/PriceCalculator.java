@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit;
 public class PriceCalculator {
 
     public static RentalPrice calculateRentalPrice(ProductEntity product, LocalDate startDate, LocalDate endDate) {
-        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
 
         BigDecimal dailyPrice = product.getDailyPrice();
         BigDecimal weeklyPrice = product.getWeeklyPrice();
@@ -35,9 +35,9 @@ public class PriceCalculator {
 
     private static String formatDuration(long months, long weeks, long days) {
         StringBuilder sb = new StringBuilder();
-        if (months > 0) sb.append(months).append(months == 1 ? " Month " : " Months ");
-        if (weeks > 0) sb.append(weeks).append(weeks == 1 ? " Week " : " Weeks ");
-        if (days > 0) sb.append(days).append(days == 1 ? " Day" : " Days");
+        if (months > 0) sb.append(months).append(months == 1 ? " Bulan " : " Bulan ");
+        if (weeks > 0) sb.append(weeks).append(weeks == 1 ? " Minggu " : " Minggu ");
+        if (days > 0) sb.append(days).append(days == 1 ? " Hari" : " Hari");
         return sb.toString().trim();
     }
 
