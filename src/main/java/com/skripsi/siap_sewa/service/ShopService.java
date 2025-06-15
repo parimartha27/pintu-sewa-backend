@@ -316,7 +316,7 @@ public class ShopService {
                             .customerName(transaction.getCustomer().getName())
                             .startDate(transaction.getStartDate().toString())
                             .endDate(transaction.getEndDate().toString())
-                            .duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate())))
+                            .duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate()) + 1))
                             .status(transaction.getStatus())
                             .depositStatus(transaction.isDepositReturned())
                             .build())
