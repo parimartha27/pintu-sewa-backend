@@ -15,8 +15,6 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
 
     List<CustomerEntity> findByUsername(String username);
 
-    List<CustomerEntity> findByEmailOrPhoneNumber(String email, String phoneNumber);
-
     Optional<CustomerEntity> findByPhoneNumberOrEmail(String phoneNumber, String email);
 
     boolean existsByEmail(String email);
@@ -36,4 +34,6 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
     Optional<CustomerEntity> findByEmail(String email);
 
     Optional<CustomerEntity> findByPhoneNumber(String phoneNumber);
+
+    Optional<CustomerEntity> findByEmailOrPhoneNumberAndStatus(String email, String phoneNumber, String status);
 }

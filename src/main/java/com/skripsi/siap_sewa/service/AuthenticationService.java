@@ -92,15 +92,15 @@ public class AuthenticationService {
 
     public ResponseEntity<ApiResponse> login(LoginRequest request) {
 
-        List<CustomerEntity> customers = customerRepository.findByEmailOrPhoneNumber(
-                request.getEmail(), request.getPhoneNumber());
+        Optional<CustomerEntity> customers = customerRepository.findByEmailOrPhoneNumberAndStatus(
+                request.getEmail(), request.getPhoneNumber(), "ACTIVE");
 
         if (customers.isEmpty()) {
             log.warn("Login failed: Customer not found for identifier: {}", request.getEmail() != null ? request.getEmail() : request.getPhoneNumber());
             throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
         }
 
-        CustomerEntity customer = customers.get(0);
+        CustomerEntity customer = customers.get();
 
         try {
             Authentication authentication = authManager.authenticate(
