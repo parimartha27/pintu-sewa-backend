@@ -128,10 +128,6 @@ public class CheckoutService {
                     shippingPartnerId
             );
 
-            // Hapus cart secara permanen (hard delete)
-            cartRepository.deleteAll(carts);
-            log.info("Deleted {} carts permanently after checkout", carts.size());
-
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS,
                     CheckoutResultResponse.builder().transactionIds(transactionIds).build());
 
