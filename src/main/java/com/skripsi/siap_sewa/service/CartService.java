@@ -100,7 +100,7 @@ public class CartService {
         boolean isAvailable = product.getStock() >= cart.getQuantity();
         LocalDate today = LocalDate.now();
         boolean dateError;
-        if(ChronoUnit.DAYS.between(today, cart.getStartRentDate()) > 5){
+        if(ChronoUnit.DAYS.between(today, cart.getStartRentDate()) >= 5){
             dateError = false;
         }else{
             dateError = true;
