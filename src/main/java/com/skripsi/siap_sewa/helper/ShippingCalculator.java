@@ -13,7 +13,7 @@ import java.util.List;
 
 public class ShippingCalculator {
 
-    private static final List<ShippingPartner> SHIPPING_PARTNERS = List.of(
+    public static final List<ShippingPartner> SHIPPING_PARTNERS = List.of(
             new ShippingPartner("1", "JNE", new BigDecimal("15000"), new BigDecimal("2000")),
             new ShippingPartner("2", "TIKI", new BigDecimal("20000"), new BigDecimal("2500")),
             new ShippingPartner("3", "SiCepat", new BigDecimal("10000"), new BigDecimal("1500")),
