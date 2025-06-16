@@ -345,6 +345,20 @@ public class TransactionService {
                 walletReportRepository.save(wallet);
             }
 
+            // set Seller wallet
+            WalletReportEntity walletSeller = new WalletReportEntity();
+            walletSeller.setDescription("Pembayaran masuk dari penyewa  - " + request.getReferenceNumbers());
+            walletSeller.setAmount(request.getAmount());
+            walletSeller.setType(WalletReportEntity.WalletType.DEBIT);
+            walletSeller.setShopId(shop.getId());
+            walletSeller.setCreateAt(LocalDateTime.now());
+            walletSeller.setUpdateAt(LocalDateTime.now());
+            walletReportRepository.save(walletSeller);
+
+            shop.setBalance(shop.getBalance().add(request.getAmount()));
+            shop.setLastUpdateAt(LocalDateTime.now());
+            shopRepository.save(shop);
+
             log.info("Successfully Payment Customer ID: {}", request.getCustomerId());
 
             for (TransactionEntity transaction : transactions) {
