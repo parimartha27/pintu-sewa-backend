@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit;
 
 public class PriceCalculator {
 
-    public static RentalPrice calculateRentalPrice(ProductEntity product, LocalDate startDate, LocalDate endDate) {
+    public static RentalPrice calculateRentalPrice(ProductEntity product, LocalDate startDate, LocalDate endDate, int quantity) {
         long days = ChronoUnit.DAYS.between(startDate, endDate);
 
         BigDecimal dailyPrice = product.getDailyPrice();
@@ -26,6 +26,7 @@ public class PriceCalculator {
         totalPrice = totalPrice.add(monthlyPrice.multiply(BigDecimal.valueOf(months)));
         totalPrice = totalPrice.add(weeklyPrice.multiply(BigDecimal.valueOf(weeks)));
         totalPrice = totalPrice.add(dailyPrice.multiply(BigDecimal.valueOf(days)));
+        totalPrice = totalPrice.multiply(BigDecimal.valueOf(quantity));
 
         return new RentalPrice(
                 totalPrice.setScale(0, RoundingMode.HALF_UP),
