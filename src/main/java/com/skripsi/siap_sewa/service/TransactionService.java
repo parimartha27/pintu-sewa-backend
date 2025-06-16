@@ -12,6 +12,8 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class TransactionService {
 
+    private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
     private final TransactionRepository transactionRepository;
     private final CartRepository cartRepository;
     private final CustomerRepository customerRepository;
@@ -301,7 +304,6 @@ public class TransactionService {
             log.info("Update Reference Number status {} Into Diproses", request.getReferenceNumbers());
 
             List<TransactionEntity> transactions = transactionRepository.findByTransactionNumberIn(request.getReferenceNumbers());
-
             if (transactions.isEmpty()) {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
@@ -318,7 +320,7 @@ public class TransactionService {
                 return new DataNotFoundException("Customer not found");
             });
 
-            if(request.getPaymentMethod() == "Pintu_Sewa_Wallet"){
+            if("Pintu_Sewa_Wallet".equals(request.getPaymentMethod())) {
                 if (customer.getWalletAmount().compareTo(request.getAmount()) < 0) {
                     return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
                 }
@@ -331,18 +333,8 @@ public class TransactionService {
                 log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
                 return new DataNotFoundException("Shop not found");
             });
-
-            // set Seller wallet
-            WalletReportEntity walletSeller = new WalletReportEntity();
-            walletSeller.setDescription("Pembayaran masuk dari penyewa  - " + request.getReferenceNumbers());
-            walletSeller.setAmount(request.getAmount());
-            walletSeller.setType(WalletReportEntity.WalletType.DEBIT);
-            walletSeller.setCustomerId(shop.getId());
-            walletSeller.setCreateAt(LocalDateTime.now());
-            walletSeller.setUpdateAt(LocalDateTime.now());
-            walletReportRepository.save(walletSeller);
-
-            if(request.getPaymentMethod() == "Pintu_Sewa_Wallet"){
+            
+            if("Pintu_Sewa_Wallet".equals(request.getPaymentMethod())) {
                 WalletReportEntity wallet = new WalletReportEntity();
                 wallet.setDescription("Pembayaran penyewaan barang - " + request.getReferenceNumbers());
                 wallet.setAmount(request.getAmount());
@@ -526,7 +518,7 @@ public class TransactionService {
         }
     }
 
-    public ResponseEntity<ApiResponse> getProcessShippingDetail(String referenceNumber) {
+    public ResponseEntity<ApiResponse> getProcessShippingDetail(String referenceNumber,String Role) {
         try {
             log.info("Get Shipping Detail From Refference Number : {} ", referenceNumber);
 
@@ -566,7 +558,12 @@ public class TransactionService {
             ProcessShippingDetailResponse response = new ProcessShippingDetailResponse();
             response.setShippingPartner(transactions.getFirst().getShippingPartner());
             response.setEstimatedTime(transactions.getFirst().getStartDate().toString());
-            response.setShippingCode(transactions.getFirst().getShippingCode());
+            log.info("ini ROLE {}" , Role);
+            if("Seller".equals(Role)){
+                response.setShippingCode(transactions.getFirst().getReturnCode());
+            }else{
+                response.setShippingCode(transactions.getFirst().getShippingCode());
+            }
             response.setCustomerName(transactions.getFirst().getCustomer().getName());
             response.setShippingAddress(transactions.getFirst().getShippingAddress());
             response.setShippingFlow(shippingFlows);

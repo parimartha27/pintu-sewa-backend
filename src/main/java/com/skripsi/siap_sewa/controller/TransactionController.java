@@ -95,9 +95,9 @@ public class TransactionController {
         return transactionService.doneTransaction(request);
     }
 
-        @GetMapping("/transaction-detail/shipping/{referenceNumber}")
-    public ResponseEntity<ApiResponse> getProcessShippingDetail(@PathVariable String referenceNumber) {
-        return transactionService.getProcessShippingDetail(referenceNumber);
+        @GetMapping("/transaction-detail/shipping/{referenceNumber}/{Role}")
+    public ResponseEntity<ApiResponse> getProcessShippingDetail(@PathVariable String referenceNumber,@PathVariable String Role) {
+        return transactionService.getProcessShippingDetail(referenceNumber,Role);
     }
     @PatchMapping("/transaction-detail/cancelled")
     public ResponseEntity<ApiResponse> cancelTransaction(@RequestBody CancelStatusTransactionRequest request){
