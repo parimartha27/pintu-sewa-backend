@@ -232,7 +232,7 @@ public class CheckoutService {
                 .transactionId(transaction.getId())
                 .productId(product.getId())
                 .productName(product.getName())
-                .price(transaction.getAmount())
+                .price(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
                 .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
                 .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
                 .rentDuration(CommonUtils.calculateRentDuration(
@@ -284,7 +284,7 @@ public class CheckoutService {
     ) {
         // 1. Calculate rental price
         PriceCalculator.RentalPrice rentalPrice = PriceCalculator.calculateRentalPrice(
-                product, startDate, endDate);
+                product, startDate, endDate, quantity);
 
         // 2. Calculate deposit
         BigDecimal deposit = product.getDeposit().multiply(BigDecimal.valueOf(quantity));
