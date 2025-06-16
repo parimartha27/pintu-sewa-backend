@@ -30,8 +30,8 @@ public class EditCartRequest {
     @FutureOrPresent(message = "End rent date harus di masa depan atau saat ini")
     private LocalDate endRentDate;
 
-    @AssertTrue(message = "End rent date harus setelah start rent date")
-    public boolean isValidRentalPeriod() {
-        return startRentDate != null && endRentDate != null && endRentDate.isAfter(startRentDate);
-    }
+//    @AssertTrue(message = "End rent date harus setelah start rent date")
+//    public boolean isValidRentalPeriod() {
+//        return startRentDate != null && endRentDate != null && endRentDate.isAfter(startRentDate);
+//    }
 }
