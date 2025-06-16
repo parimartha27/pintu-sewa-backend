@@ -7,8 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -62,6 +64,5 @@ public class EditProductRequest {
 
     private String status;
 
-    private String image;
-
+    private List<MultipartFile> images;
 }

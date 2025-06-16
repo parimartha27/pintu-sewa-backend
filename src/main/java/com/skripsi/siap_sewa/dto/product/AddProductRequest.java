@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 
@@ -72,11 +73,10 @@ public class AddProductRequest {
     @Min(value = 0, message = "Stok tidak boleh 0, harus lebih dari 0")
     private int stock;
 
-//    @Min(value = 0, message = "Minimal sewa tidak boleh 0, harus lebih dari 0")
     private int minRented;
 
     private String status;
 
-    private String image;
+    private MultipartFile image;
 
 }

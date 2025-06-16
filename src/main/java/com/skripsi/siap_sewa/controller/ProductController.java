@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -106,15 +107,15 @@ public class ProductController {
         return productService.getProductDetail(productId);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<ApiResponse> addProduct(@RequestBody @Valid AddProductRequest request){
+    @PostMapping(value= "/add",  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request){
         return productService.addProduct(request);
     }
 
-    @PutMapping("/edit/{productId}")
+    @PutMapping(value = "/edit/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse> editProduct(
             @PathVariable String productId,
-            @RequestBody @Valid EditProductRequest request){
+            @Valid EditProductRequest request){
         return productService.editProduct(productId, request);
     }
 
