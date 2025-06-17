@@ -1,6 +1,9 @@
 package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.checkout.BuyProductRequest;
+import com.skripsi.siap_sewa.dto.checkout.CheckPaymentAmountRequest;
+import com.skripsi.siap_sewa.dto.checkout.CheckPaymentAmountResponse;
 import com.skripsi.siap_sewa.dto.shop.dashboard.TransactionResponseShopDashboard;
 import com.skripsi.siap_sewa.dto.transaction.*;
 import com.skripsi.siap_sewa.entity.*;
@@ -12,21 +15,15 @@ import com.skripsi.siap_sewa.utils.CommonUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.time.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -43,6 +40,7 @@ public class TransactionService {
     private final ShopRepository shopRepository;
     private final CommonUtils commonUtils;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy");
+    private final ProductRepository productRepository;
 
     @Transactional
     public ResponseEntity<ApiResponse> getCustomerTransactions(TransactionFilterRequest filterRequest) {

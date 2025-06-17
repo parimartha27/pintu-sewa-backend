@@ -1,5 +1,6 @@
 package com.skripsi.siap_sewa.repository;
 
+import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.TransactionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -8,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, String>,
         JpaSpecificationExecutor<TransactionEntity> {
@@ -31,6 +33,10 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
             @Param("shopId") String shopId);
 
     List<TransactionEntity> findByTransactionNumberIn(Collection<String> transactionNumbers);
+
+    @Query("select t from TransactionEntity t where t.id = ?1 and t.customer = ?2 and t.transactionNumber = ?3")
+    Optional<TransactionEntity> findByIdAndCustomerAndTransactionNumber(String id, CustomerEntity customer, String transactionNumber);
+
 
 }
 
