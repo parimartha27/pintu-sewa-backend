@@ -36,4 +36,7 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, String
     Optional<CustomerEntity> findByPhoneNumber(String phoneNumber);
 
     Optional<CustomerEntity> findByEmailOrPhoneNumberAndStatus(String email, String phoneNumber, String status);
+
+    Optional<CustomerEntity> findByEmailAndStatus(String email, String status);
+
 }
