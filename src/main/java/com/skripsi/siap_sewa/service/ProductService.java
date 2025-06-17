@@ -114,7 +114,6 @@ public class ProductService {
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {
         log.info("Adding new product for shop ID: {}", request.getShopId());
 
-        
         validateImageFile(request.getImage());
 
         ShopEntity shop = findShopById(request.getShopId());
@@ -124,7 +123,6 @@ public class ProductService {
         newProduct.setCreatedAt(LocalDateTime.now());
         newProduct.setLastUpdateAt(LocalDateTime.now());
 
-        
         if (request.getImage() != null && !request.getImage().isEmpty()) {
             try {
                 String imageUrl = cloudinaryService.uploadImage(
