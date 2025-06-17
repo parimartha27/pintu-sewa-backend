@@ -311,6 +311,7 @@ public class TransactionService {
             if (!customerRepository.existsById(request.getCustomerId())) {
                 throw new DataNotFoundException("Customer not found");
             }
+
             if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
                 return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Amount Must be greater than zero");
             }
@@ -361,13 +362,15 @@ public class TransactionService {
                     product.setStock(product.getStock() - transaction.getQuantity());
                 }
 
-                shop.setBalance(shop.getBalance().add(transaction.getTotalDeposit()));
+                shop.setBalance(shop.getBalance().add(transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity()))));
                 shop.setLastUpdateAt(LocalDateTime.now());
                 shopRepository.save(shop);
 
                 WalletReportEntity walletSeller = new WalletReportEntity();
                 walletSeller.setDescription("Deposit masuk dari penyewa  - " + transaction.getTransactionNumber());
-                walletSeller.setAmount(transaction.getTotalDeposit());
+                walletSeller.setAmount(
+                        transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity()))
+                );
                 walletSeller.setType(WalletReportEntity.WalletType.DEBIT);
                 walletSeller.setShopId(transaction.getShopId());
                 walletSeller.setCreateAt(LocalDateTime.now());
@@ -471,19 +474,21 @@ public class TransactionService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
 
-            CustomerEntity customer = customerRepository.findById(request.getCustomerId()).orElseThrow(() -> {
-                log.info("Customer not found with ID: {}", request.getCustomerId());
-                return new DataNotFoundException("Customer not found");
-            });
 
+            log.info("Customer found with ID: {}", request.getCustomerId());
             BigDecimal deposit = transactions.getFirst().getTotalDeposit();
             for (TransactionEntity transaction : transactions) {
+                CustomerEntity customer = customerRepository.findById(request.getCustomerId()).orElseThrow(() -> {
+                    log.info("Customer not found with ID: {}", request.getCustomerId());
+                    return new DataNotFoundException("Customer not found");
+                });
+
                 ShopEntity shop = shopRepository.findById(transaction.getShopId()).orElseThrow(() -> {
                     log.info("Shop not found with ID: {}", transaction.getShopId());
                     throw new DataNotFoundException("Shop not found");
                 });
 
-                if (shop.getBalance().compareTo(deposit) < 0) {
+                if (shop.getBalance().compareTo(transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity()))) < 0) {
                     return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance");
                 }
 
@@ -499,7 +504,7 @@ public class TransactionService {
 
                 WalletReportEntity walletSeller = new WalletReportEntity();
                 walletSeller.setDescription("Pembayaran masuk dari penyewa  - " + transaction.getTransactionNumber());
-                walletSeller.setAmount(transaction.getAmount());
+                walletSeller.setAmount(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())));
                 walletSeller.setType(WalletReportEntity.WalletType.DEBIT);
                 walletSeller.setShopId(transaction.getShopId());
                 walletSeller.setCreateAt(LocalDateTime.now());
@@ -508,31 +513,31 @@ public class TransactionService {
 
                 WalletReportEntity walletSeller2 = new WalletReportEntity();
                 walletSeller2.setDescription("Deposit Dikembalikan dari transaksi  - " + transaction.getTransactionNumber());
-                walletSeller2.setAmount(transaction.getTotalDeposit());
+                walletSeller2.setAmount(transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity())));
                 walletSeller2.setType(WalletReportEntity.WalletType.CREDIT);
                 walletSeller2.setShopId(transaction.getShopId());
                 walletSeller2.setCreateAt(LocalDateTime.now());
                 walletSeller2.setUpdateAt(LocalDateTime.now());
                 walletReportRepository.save(walletSeller2);
 
-                shop.setBalance(shop.getBalance().add(transaction.getAmount()));
+                shop.setBalance(shop.getBalance().add(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity()))));
                 shop.setLastUpdateAt(LocalDateTime.now());
                 shopRepository.save(shop);
 
-                shop.setBalance(shop.getBalance().subtract(transaction.getTotalDeposit()));
+                shop.setBalance(shop.getBalance().subtract(transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity()))));
                 shop.setLastUpdateAt(LocalDateTime.now());
                 shopRepository.save(shop);
 
                 WalletReportEntity walletCustomer = new WalletReportEntity();
                 walletCustomer.setDescription("Pengembalian dana deposit dari penyedia jasa sewa - " + transaction.getTransactionNumber());
-                walletCustomer.setAmount(transaction.getTotalDeposit());
+                walletCustomer.setAmount(transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity())));
                 walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
-                walletCustomer.setCustomerId(customer.getId());
+                walletCustomer.setCustomerId(request.getCustomerId());
                 walletCustomer.setCreateAt(LocalDateTime.now());
                 walletCustomer.setUpdateAt(LocalDateTime.now());
                 walletReportRepository.save(walletCustomer);
 
-                customer.setWalletAmount(customer.getWalletAmount().add(transaction.getTotalDeposit()));
+                customer.setWalletAmount(customer.getWalletAmount().add(transaction.getTotalDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity()))));
                 customer.setLastUpdateAt(LocalDateTime.now());
                 customerRepository.save(customer);
             }
