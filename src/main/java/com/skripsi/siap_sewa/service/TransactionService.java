@@ -134,7 +134,7 @@ public class TransactionService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
             }
 
-            List<TransactionResponseShopDashboard> responseList = transactions.stream().map(transaction -> TransactionResponseShopDashboard.builder().referenceNumber(transaction.getTransactionNumber()).createAt(transaction.getCreatedAt().toString()).customerName(transaction.getCustomer().getName()).startDate(transaction.getStartDate().toString()).endDate(transaction.getEndDate().toString()).duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate()))).status(transaction.getStatus()).depositStatus(transaction.isDepositReturned()).build()).collect(Collectors.toList());
+            List<TransactionResponseShopDashboard> responseList = transactions.stream().map(transaction -> TransactionResponseShopDashboard.builder().referenceNumber(transaction.getTransactionNumber()).createAt(transaction.getCreatedAt().toString()).customerName(transaction.getCustomer().getName()).startDate(transaction.getStartDate().toString()).endDate(transaction.getEndDate().toString()).duration(BigDecimal.valueOf(ChronoUnit.DAYS.between(transaction.getStartDate(), transaction.getEndDate())+1)).status(transaction.getStatus()).depositStatus(transaction.isDepositReturned()).build()).collect(Collectors.toList());
 
             log.info("Found {} transaction groups for Shop {}", responseList.size(), filterRequest.getShopId());
             return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, responseList);
@@ -492,6 +492,7 @@ public class TransactionService {
 
                 for (ProductEntity product : transaction.getProducts()) {
                     product.setStock(product.getStock() + transaction.getQuantity());
+                    productRepository.save(product);
                 }
 
                 transaction.setStatus("Selesai");
@@ -617,14 +618,6 @@ public class TransactionService {
             if (transactions.isEmpty()) {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
-            BigDecimal amount = transactions.getFirst().getTotalAmount();
-
-            transactions.forEach(transaction -> {
-                transaction.setStatus("Dibatalkan");
-                transaction.setDepositReturned(true);
-                transaction.setDepositReturnedAt(LocalDateTime.now());
-                transaction.setLastUpdateAt(LocalDateTime.now());
-            });
 
             CustomerEntity customer = customerRepository.findById(transactions.getFirst().getCustomer().getId()).orElseThrow(() -> {
                 return new DataNotFoundException("Customer not found");
@@ -634,36 +627,47 @@ public class TransactionService {
                 log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
                 return new DataNotFoundException("Shop not found");
             });
+            transactions.forEach(transaction -> {
+                transaction.setStatus("Dibatalkan");
+                transaction.setDepositReturned(true);
+                transaction.setDepositReturnedAt(LocalDateTime.now());
+                transaction.setLastUpdateAt(LocalDateTime.now());
 
-            if (shop.getBalance().compareTo(amount) < 0) {
-                return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance amount");
-            }
+                if (shop.getBalance().compareTo(transaction.getTotalAmount()) < 0) {
+                    return commonUtils.setResponse(ErrorMessageEnum.FAILED, "Insufficient balance amount");
+                }
 
-            customer.setWalletAmount(customer.getWalletAmount().add(amount));
-            customer.setLastUpdateAt(LocalDateTime.now());
-            customerRepository.save(customer);
+                shop.setBalance(shop.getBalance().subtract(transaction.getTotalDeposit()));
+                shop.setLastUpdateAt(LocalDateTime.now());
+                shopRepository.save(shop);
 
-            shop.setBalance(shop.getBalance().subtract(amount));
-            shop.setLastUpdateAt(LocalDateTime.now());
-            shopRepository.save(shop);
+                customer.setWalletAmount(customer.getWalletAmount().add(transaction.getTotalAmount));
+                customer.setLastUpdateAt(LocalDateTime.now());
+                customerRepository.save(customer);
 
-            WalletReportEntity walletCustomer = new WalletReportEntity();
-            walletCustomer.setDescription("Pengembalian Dana Transaksi Dibatalkan dari Penyedia Jasa Sewa - " + transactions.getFirst().getTransactionNumber());
-            walletCustomer.setAmount(amount);
-            walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
-            walletCustomer.setCustomerId(customer.getId());
-            walletCustomer.setCreateAt(LocalDateTime.now());
-            walletCustomer.setUpdateAt(LocalDateTime.now());
-            walletReportRepository.save(walletCustomer);
+                WalletReportEntity walletCustomer = new WalletReportEntity();
+                walletCustomer.setDescription("Pengembalian Dana Transaksi Dibatalkan dari Penyedia Jasa Sewa - " + transactions.getFirst().getTransactionNumber());
+                walletCustomer.setAmount(amount);
+                walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
+                walletCustomer.setCustomerId(customer.getId());
+                walletCustomer.setCreateAt(LocalDateTime.now());
+                walletCustomer.setUpdateAt(LocalDateTime.now());
+                walletReportRepository.save(walletCustomer);
 
-            WalletReportEntity walletShop = new WalletReportEntity();
-            walletShop.setDescription("Pengembalian Dana Transaksi Dibatalkan ke Penyewa" + transactions.getFirst().getTransactionNumber());
-            walletShop.setAmount(amount);
-            walletShop.setType(WalletReportEntity.WalletType.CREDIT);
-            walletShop.setShopId(shop.getId());
-            walletShop.setCreateAt(LocalDateTime.now());
-            walletShop.setUpdateAt(LocalDateTime.now());
-            walletReportRepository.save(walletShop);
+                WalletReportEntity walletShop = new WalletReportEntity();
+                walletShop.setDescription("Pengembalian Dana Transaksi Dibatalkan ke Penyewa - " + transactions.getFirst().getTransactionNumber());
+                walletShop.setAmount(transaction.getTotalDeposit());
+                walletShop.setType(WalletReportEntity.WalletType.CREDIT);
+                walletShop.setShopId(shop.getId());
+                walletShop.setCreateAt(LocalDateTime.now());
+                walletShop.setUpdateAt(LocalDateTime.now());
+                walletReportRepository.save(walletShop);
+
+                for (ProductEntity product : transaction.getProducts()) {
+                    product.setStock(product.getStock() + transaction.getQuantity());
+                    productRepository.save(product);
+                }
+            });
 
             transactionRepository.saveAll(transactions);
 
