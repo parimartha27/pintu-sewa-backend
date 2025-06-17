@@ -96,7 +96,7 @@ public class ChatService {
 
     public ResponseEntity<ApiResponse> customerGetRoomChat(String id) {
         try {
-            log.info("Get Room Chat For Customer : {}", id);
+            log.info("Get Room Chat For Customer : {} ", id);
 
             Optional<CustomerEntity> customer = customerRepository.findById(id);
             if (customer.isEmpty()) {
