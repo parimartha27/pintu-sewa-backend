@@ -36,7 +36,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
     private final TransactionRepository transactionRepository;
     private final CartRepository cartRepository;
     private final CustomerRepository customerRepository;
@@ -229,6 +228,7 @@ public class TransactionService {
                 .shippingAddress(transaction.getShippingAddress())
                 .shippingPartner(transaction.getShippingPartner())
                 .shippingCode(transaction.getShippingCode())
+                .returnCode(transaction.getReturnCode())
                 .build();
     }
 
@@ -362,6 +362,7 @@ public class TransactionService {
             log.info("Successfully Payment Customer ID: {}", request.getCustomerId());
 
             for (TransactionEntity transaction : transactions) {
+                transaction.setPaymentMethod("Pintu_Sewa_Wallet");
                 transaction.setStatus("Diproses");
                 transaction.setPaymentMethod(request.getPaymentMethod());
                 transaction.setLastUpdateAt(LocalDateTime.now());
@@ -607,8 +608,7 @@ public class TransactionService {
                 transaction.setLastUpdateAt(LocalDateTime.now());
             });
 
-            CustomerEntity customer = customerRepository.findById(request.getCustomerId()).orElseThrow(() -> {
-                log.info("Customer not found with ID: {}", request.getCustomerId());
+            CustomerEntity customer = customerRepository.findById(transactions.getFirst().getCustomer().getId()).orElseThrow(() -> {
                 return new DataNotFoundException("Customer not found");
             });
 

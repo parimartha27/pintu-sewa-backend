@@ -33,6 +33,7 @@ public class TransactionDetailResponse {
         private String shippingAddress;
         private String shippingPartner;
         private String shippingCode;
+        private String returnCode;
     }
 
     @Data

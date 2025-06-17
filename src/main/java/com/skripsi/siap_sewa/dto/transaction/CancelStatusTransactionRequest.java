@@ -15,5 +15,4 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CancelStatusTransactionRequest {
     private String referenceNumber;
-    private String customerId;
 }

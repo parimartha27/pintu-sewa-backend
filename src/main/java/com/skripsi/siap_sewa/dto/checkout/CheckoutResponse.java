@@ -58,5 +58,6 @@ public class CheckoutResponse {
         private int quantity;
         private boolean availableToRent;
         private String image;
+        private BigDecimal subTotalPrice;
     }
 }

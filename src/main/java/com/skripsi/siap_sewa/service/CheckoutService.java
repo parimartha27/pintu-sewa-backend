@@ -188,13 +188,13 @@ public class CheckoutService {
             List<CheckoutResponse.RentedItem> rentedItems = new ArrayList<>();
             BigDecimal shopTotal = BigDecimal.ZERO;
             BigDecimal shopDeposit = BigDecimal.ZERO;
-            BigDecimal shopShipping = firstTransaction.getShippingPrice(); // Assuming same shipping for shop
+            BigDecimal shopShipping = firstTransaction.getShippingPrice();
 
             for (TransactionEntity transaction : shopTransactions) {
                 ProductEntity product = transaction.getProducts().iterator().next();
 
                 rentedItems.add(createRentedItem(transaction, product));
-                shopTotal = shopTotal.add(transaction.getAmount());
+                shopTotal = shopTotal.add(transaction.getTotalAmount());
                 shopDeposit = shopDeposit.add(transaction.getTotalDeposit());
 
                 totalServiceFee = totalServiceFee.add(transaction.getServiceFee());
@@ -232,7 +232,7 @@ public class CheckoutService {
                 .transactionId(transaction.getId())
                 .productId(product.getId())
                 .productName(product.getName())
-                .price(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                .price(transaction.getAmount())
                 .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
                 .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
                 .rentDuration(CommonUtils.calculateRentDuration(
@@ -241,12 +241,8 @@ public class CheckoutService {
                 .quantity(transaction.getQuantity())
                 .availableToRent(true)
                 .image(product.getImage())
+                .subTotalPrice(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
                 .build();
-    }
-
-    private BigDecimal calculateServiceFee(BigDecimal subtotal) {
-        return subtotal.multiply(BigDecimal.valueOf(0.05))
-                .setScale(0, RoundingMode.HALF_UP);
     }
 
     private void validateCheckoutDates(LocalDate startDate, LocalDate endDate) throws BadRequestException {
@@ -311,7 +307,7 @@ public class CheckoutService {
                 .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
                 .quantity(quantity)
                 .amount(rentalPrice.totalPrice())
-                .totalAmount(rentalPrice.totalPrice().add(deposit).add(serviceFee).add(shippingPrice))
+                .totalAmount(rentalPrice.totalPrice().add(deposit).add(shippingPrice))
                 .paymentMethod("-")
                 .isReturn("N")
                 .createdAt(LocalDateTime.now())
