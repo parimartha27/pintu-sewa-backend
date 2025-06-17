@@ -24,6 +24,9 @@ import com.skripsi.siap_sewa.repository.ChatDetailRepository;
 import com.skripsi.siap_sewa.repository.ChatHeaderRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
 import com.skripsi.siap_sewa.utils.CommonUtils;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -123,6 +126,43 @@ public class ChatService {
         }
     }
 
+    public ResponseEntity<ApiResponse> ReportGetRoomchat(String id) {
+        try {
+            log.info("Get Room Chat For Customer : {}", id);
+
+            Optional<CustomerEntity> customer = customerRepository.findById(id);
+            if (customer.isEmpty()) {
+                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Customer Not Found");
+            }
+
+            Optional<ChatHeaderEntity> listChat = chatHeaderRepository.findByCustomerIdAndIsReport(id,true);
+            if(listChat.isEmpty()) {
+                ChatHeaderEntity newRoomChat = new ChatHeaderEntity();
+                newRoomChat.setCustomerId(id);
+                newRoomChat.setIsReport(true);
+                newRoomChat.setShopId("admin");
+                ChatHeaderEntity savedChat = chatHeaderRepository.save(newRoomChat);
+                String generatedId = savedChat.getId();
+
+                Optional<ChatHeaderEntity> roomchat = chatHeaderRepository.findById(generatedId);
+
+                ChatDetailEntity chatDetailEntity = new ChatDetailEntity();
+                chatDetailEntity.setChatHeader(roomchat.get());
+                chatDetailEntity.setMessage("Hallo , Terima Kasih telah menghubungi Admin Pintu Sewa, Ada yang bisa kami bantu?");
+                chatDetailEntity.setCreatedAt(LocalDateTime.now());
+                chatDetailEntity.setSenderType("shop");
+                chatDetailRepository.save(chatDetailEntity);
+
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, generatedId);
+            }
+
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, listChat.get().getId());
+        }catch (Exception ex) {
+            log.info("Failed Get RoomChat List : {}", ex.getMessage(), ex);
+            return commonUtils.setResponse(ErrorMessageEnum.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
     public ResponseEntity<ApiResponse> deleteRoomChat(String id) {
         try {
             log.info("Delete Room Chat with Id : {}", id);
@@ -175,14 +215,9 @@ public class ChatService {
         }
     }
 
-    public ResponseEntity<ApiResponse> adminGetRoomChat(String customerId) {
+    public ResponseEntity<ApiResponse> adminGetRoomChat() {
         try {
             log.info("Get Room Chat For Admin");
-
-            Optional<CustomerEntity> customer = customerRepository.findById(customerId);
-            if (customer.isEmpty()) {
-                return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Admin Not Found");
-            }
 
             List<ChatHeaderEntity> listChat = chatHeaderRepository.findByIsReport(Boolean.TRUE);
             if (listChat.isEmpty()) {

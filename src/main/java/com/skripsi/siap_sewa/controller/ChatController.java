@@ -66,9 +66,16 @@ public class ChatController {
         return chatService.getRoomChatMessage(roomChatId);
     }
 
+    @GetMapping("/view-report-roomchat/{customerId}")
+    public ResponseEntity<ApiResponse> ReportGetRoomchat(
+            @PathVariable String customerId) {
+        log.info("Get All Message From Roomchat : {} ", customerId);
+        return chatService.ReportGetRoomchat(customerId);
+    }
+
     @GetMapping("/admin/get-roomchat")
-    public ResponseEntity<ApiResponse> AdminGetRoomChat(@RequestParam String id){
+    public ResponseEntity<ApiResponse> AdminGetRoomChat(){
         log.info("Get List Room Chat For Admin");
-        return chatService.adminGetRoomChat(id);
+        return chatService.adminGetRoomChat();
     }
 }

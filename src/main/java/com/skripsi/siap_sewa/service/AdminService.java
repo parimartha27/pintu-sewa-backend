@@ -55,7 +55,7 @@ public class AdminService {
 
         Authentication authentication = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        customerEntity.getFirst().getUsername(), request.getPassword()));
+                        customerEntity.getFirst().getEmail(), request.getPassword()));
 
         if (!authentication.isAuthenticated()) {
             log.warn("Authentication Failed for Admin ");
