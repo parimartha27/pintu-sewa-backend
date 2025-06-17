@@ -22,7 +22,6 @@ import java.util.function.Function;
 @Service
 public class JWTService {
 
-    @Value("${jwt.secret.token}")
     private String secretkey;
 
     public JWTService() {

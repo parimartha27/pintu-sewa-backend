@@ -2,6 +2,7 @@ package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.product.PaginationResponse;
+import com.skripsi.siap_sewa.dto.review.AddReviewRequest;
 import com.skripsi.siap_sewa.dto.review.ReviewRequest;
 import com.skripsi.siap_sewa.dto.review.ProductReviewResponse;
 import com.skripsi.siap_sewa.dto.review.ShopReviewResponse;
@@ -9,6 +10,8 @@ import com.skripsi.siap_sewa.entity.CustomerEntity;
 import com.skripsi.siap_sewa.entity.ProductEntity;
 import com.skripsi.siap_sewa.entity.ReviewEntity;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
+import com.skripsi.siap_sewa.exception.DataNotFoundException;
+import com.skripsi.siap_sewa.repository.CustomerRepository;
 import com.skripsi.siap_sewa.repository.ProductRepository;
 import com.skripsi.siap_sewa.repository.ReviewRepository;
 import com.skripsi.siap_sewa.repository.ShopRepository;
@@ -23,8 +26,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -35,6 +42,8 @@ public class ReviewService {
     private final ProductRepository productRepository;
     private final ShopRepository shopRepository;
     private final CommonUtils commonUtils;
+    private final CustomerRepository customerRepository;
+    private final CloudinaryService cloudinaryService;
 
     public ResponseEntity<ApiResponse> getReviewsByProductId(String productId, ReviewRequest request) {
         try {
@@ -170,5 +179,41 @@ public class ReviewService {
                 .map(String::trim)
                 .filter(StringUtils::hasText)
                 .toList();
+    }
+
+    public ResponseEntity<ApiResponse> addReview(AddReviewRequest request) throws IOException {
+
+        CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                .orElseThrow(() -> new DataNotFoundException("Customer not found"));
+
+        List<ProductEntity> products = productRepository.findAllById(request.getProductIds());
+        if (products.size() != request.getProductIds().size()) {
+            throw new DataNotFoundException("One or more products not found");
+        }
+
+        String imageUrl = null;
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            imageUrl = cloudinaryService.uploadImage(request.getImage());
+        }
+
+        List<ReviewEntity> newReviews = new ArrayList<>();
+        final String finalImageUrl = imageUrl;
+
+        products.forEach(product -> {
+            ReviewEntity newReview = ReviewEntity.builder()
+                    .customer(customer)
+                    .product(product)
+                    .comment(request.getComment())
+                    .image(finalImageUrl)
+                    .rating(request.getRating())
+                    .createdAt(LocalDateTime.now())
+                    .lastUpdateAt(LocalDateTime.now())
+                    .build();
+            newReviews.add(newReview);
+        });
+        
+        reviewRepository.saveAll(newReviews);
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
     }
 }

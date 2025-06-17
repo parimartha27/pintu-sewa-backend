@@ -1,14 +1,17 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
+import com.skripsi.siap_sewa.dto.review.AddReviewRequest;
 import com.skripsi.siap_sewa.dto.review.ReviewRequest;
 import com.skripsi.siap_sewa.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -71,5 +74,10 @@ public class ReviewController {
                 .build();
 
         return reviewService.getReviewsByShopId(shopId, request);
+    }
+
+    @PostMapping(value ="/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse> addReview(AddReviewRequest request) throws IOException {
+        return reviewService.addReview(request);
     }
 }
