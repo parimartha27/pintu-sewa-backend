@@ -103,7 +103,7 @@ public class ChatService {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Customer Not Found");
             }
 
-            List<ChatHeaderEntity> listChat = chatHeaderRepository.findByCustomerId(id);
+            List<ChatHeaderEntity> listChat = chatHeaderRepository.findByIsReportAndCustomerId(false, id);
 
             if (listChat.isEmpty()) {
                 return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, "There is no chat available");

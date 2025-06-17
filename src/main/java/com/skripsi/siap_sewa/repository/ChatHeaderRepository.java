@@ -21,5 +21,8 @@ public interface ChatHeaderRepository extends JpaRepository<ChatHeaderEntity, St
 
     List<ChatHeaderEntity> findByShopId(String shopId);
     List<ChatHeaderEntity> findByIsReport(Boolean isReport);
+
+    List<ChatHeaderEntity> findByIsReportAndCustomerId(Boolean isReport, String customerId);
+
 }
 
