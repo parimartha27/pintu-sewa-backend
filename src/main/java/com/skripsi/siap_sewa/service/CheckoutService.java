@@ -1,11 +1,7 @@
 package com.skripsi.siap_sewa.service;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.checkout.CartCheckoutRequest;
-import com.skripsi.siap_sewa.dto.checkout.CheckoutDetailsRequest;
-import com.skripsi.siap_sewa.dto.checkout.CheckoutResponse;
-import com.skripsi.siap_sewa.dto.checkout.CheckoutResultResponse;
-import com.skripsi.siap_sewa.dto.checkout.ProductCheckoutRequest;
+import com.skripsi.siap_sewa.dto.checkout.*;
 import com.skripsi.siap_sewa.entity.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.exception.*;
@@ -40,6 +36,7 @@ public class CheckoutService {
     private final TransactionRepository transactionRepository;
     private final CommonUtils commonUtils;
     private final ShopRepository shopRepository;
+    private final WalletReportRepository walletReportRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("id-ID"));
@@ -485,5 +482,112 @@ public class CheckoutService {
 
         // 6. Kembalikan struktur response sama seperti GET /details
         return buildCheckoutResponseFromTransactions(transactions);
+    }
+
+    public ResponseEntity<ApiResponse> checkPaymentAmount(CheckPaymentAmountRequest request) {
+        CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                .orElseThrow(()-> new DataNotFoundException("Customer Not Found"));
+
+        ProductEntity product = productRepository.findById(request.getProductId()).
+                orElseThrow(()-> new DataNotFoundException("Product Not Found"));
+
+        TransactionEntity transaction = transactionRepository.findByIdAndCustomerAndTransactionNumber(
+                        request.getTransactionId(),customer, request.getReferenceNumber())
+                .orElseThrow(()-> new DataNotFoundException("Transaction Not Found"));
+
+        BigDecimal paymentAmount = BigDecimal.ZERO;
+
+        if (transaction.getTotalDeposit().compareTo(product.getBuyPrice()) < 0) {
+            paymentAmount = product.getBuyPrice().subtract(transaction.getTotalDeposit());
+        }
+
+        CheckPaymentAmountResponse response = CheckPaymentAmountResponse.builder()
+                .productName(product.getName())
+                .amountToPay(paymentAmount)
+                .build();
+
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+    }
+
+    @Transactional
+    public ResponseEntity<ApiResponse> buyProduct(BuyProductRequest request) {
+        CustomerEntity customer = customerRepository.findById(request.getCustomerId())
+                .orElseThrow(()-> new DataNotFoundException("Customer Not Found"));
+
+        ProductEntity product = productRepository.findById(request.getProductId()).
+                orElseThrow(()-> new DataNotFoundException("Product Not Found"));
+
+        TransactionEntity rentedTransaction = transactionRepository.findByIdAndCustomerAndTransactionNumber(
+                        request.getTransactionId(),customer, request.getReferenceNumber())
+                .orElseThrow(()-> new DataNotFoundException("Transaction Not Found"));
+
+        ShopEntity shop = shopRepository.findById(rentedTransaction.getShopId()).orElseThrow(()-> new DataNotFoundException("Shop Not Found"));
+
+        validateProductStock(product, rentedTransaction);
+        TransactionEntity rnbTransaction = generateBuyedTransaction(rentedTransaction,product, shop, customer, request);
+
+        rentedTransaction.setStatus("Selesai");
+        rentedTransaction.setLastUpdateAt(LocalDateTime.now());
+        transactionRepository.saveAll(List.of(rnbTransaction, rentedTransaction));
+
+        updateWalletReport(customer, shop, rnbTransaction);
+        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, null);
+    }
+
+    private void updateWalletReport(CustomerEntity customer, ShopEntity shop, TransactionEntity transaction) {
+        WalletReportEntity walletCustomer = new WalletReportEntity();
+        walletCustomer.setDescription("Pembelian Barang - " + transaction.getTransactionNumber());
+        walletCustomer.setAmount(transaction.getAmount());
+        walletCustomer.setType(WalletReportEntity.WalletType.CREDIT);
+        walletCustomer.setCustomerId(customer.getId());
+        walletCustomer.setCreateAt(LocalDateTime.now());
+        walletCustomer.setUpdateAt(LocalDateTime.now());
+
+        WalletReportEntity walletShop = new WalletReportEntity();
+        walletShop.setDescription("Uang masuk pembelian barang - " + transaction.getTransactionNumber());
+        walletShop.setAmount(transaction.getAmount());
+        walletShop.setType(WalletReportEntity.WalletType.DEBIT);
+        walletShop.setShopId(shop.getId());
+        walletShop.setCreateAt(LocalDateTime.now());
+        walletShop.setUpdateAt(LocalDateTime.now());
+        walletReportRepository.saveAll(List.of(walletShop, walletCustomer));
+    }
+
+    private TransactionEntity generateBuyedTransaction(TransactionEntity transaction, ProductEntity product,
+                                                       ShopEntity shop, CustomerEntity customer,
+                                                       BuyProductRequest request) {
+        String transactionNumber = generateTransactionNumber();
+        return TransactionEntity.builder()
+                .customer(customer)
+                .products(Set.of(product))
+                .transactionNumber(transactionNumber)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now())
+                .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
+                .quantity(transaction.getQuantity())
+                .amount(request.getAmountPayment())
+                .totalAmount(request.getAmountPayment())
+                .paymentMethod(request.getPaymentMethod())
+                .isReturn("B")
+                .createdAt(LocalDateTime.now())
+                .lastUpdateAt(LocalDateTime.now())
+                .isSelled(true)
+                .shopId(shop.getId())
+                .shopName(shop.getName())
+                .totalDeposit(BigDecimal.ZERO)
+                .isDepositReturned(false)
+                .serviceFee(BigDecimal.ZERO)
+                .shippingPartner("-")
+                .shippingPrice(BigDecimal.ZERO)
+                .build();
+    }
+
+    private void validateProductStock (ProductEntity product, TransactionEntity transaction){
+        if (product.getStock() >= transaction.getQuantity()) {
+            product.setStock(product.getStock() - transaction.getQuantity());
+            productRepository.save(product);
+        } else {
+            throw new InsufficientStockException(product.getStock(), transaction.getQuantity());
+        }
     }
 }

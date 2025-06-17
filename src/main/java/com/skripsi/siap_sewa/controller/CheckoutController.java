@@ -4,6 +4,7 @@ import com.skripsi.siap_sewa.dto.ApiResponse;
 import com.skripsi.siap_sewa.dto.checkout.*;
 import com.skripsi.siap_sewa.enums.ErrorMessageEnum;
 import com.skripsi.siap_sewa.service.CheckoutService;
+import com.skripsi.siap_sewa.service.TransactionService;
 import com.skripsi.siap_sewa.utils.CommonUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,4 +53,16 @@ public class CheckoutController {
 
         return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, updatedCheckout);
     }
+
+    @PostMapping("/check-payment-amount")
+    public ResponseEntity<ApiResponse> checkPaymentAmount(@RequestBody CheckPaymentAmountRequest request){
+        return checkoutService.checkPaymentAmount(request);
+    }
+
+    @PostMapping("/buy-product")
+    public ResponseEntity<ApiResponse> buyProduct(@RequestBody BuyProductRequest request){
+        return checkoutService.buyProduct(request);
+    }
+
+
 }
