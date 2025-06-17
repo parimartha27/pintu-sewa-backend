@@ -71,8 +71,29 @@ public class AuthenticationService {
         if (commonUtils.isNull(request.getEmail())) {
             throw new IllegalArgumentException("Email tidak boleh kosong untuk registrasi OAuth.");
         }
-        if (customerRepository.existsByEmail(request.getEmail())) {
-            throw new EmailExistException("Email " + request.getEmail() + " sudah digunakan");
+
+        Optional<CustomerEntity> customerOauth = customerRepository.findByEmailAndStatus(
+                request.getEmail(),  "ACTIVE");
+
+        if (customerOauth.isPresent()) {
+            try {
+                CustomerEntity customer = customerOauth.get();
+
+                LoginResponse response = LoginResponse.builder()
+                        .customerId(customer.getId())
+                        .username(customer.getUsername())
+                        .email(customer.getEmail())
+                        .phoneNumber(customer.getPhoneNumber())
+                        .status(customer.getStatus())
+                        .image(customer.getImage() == null ? "" : customer.getImage())
+                        .token(jwtService.generateToken(new CustomerPrincipal(customer)))
+                        .duration(1800)
+                        .build();
+
+                return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            } catch (AuthenticationException ex) {
+                throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
+            }
         }
 
         CustomerEntity newCustomer = new CustomerEntity();
