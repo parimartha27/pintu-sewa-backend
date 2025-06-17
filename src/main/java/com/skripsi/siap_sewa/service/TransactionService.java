@@ -246,6 +246,7 @@ public class TransactionService {
                                 .price(transaction.getAmount())
                                 .subTotal(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
                                 .deposit(product.getDeposit().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                                .buyProductPrice(product.getBuyPrice())
                                 .build()
                 )).toList();
     }

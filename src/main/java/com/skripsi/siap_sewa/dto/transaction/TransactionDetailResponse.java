@@ -53,6 +53,7 @@ public class TransactionDetailResponse {
         private BigDecimal subTotal;
         private BigDecimal deposit;
         private ShopInfo shop;
+        private BigDecimal buyProductPrice;
 
         @Data
         @Builder
