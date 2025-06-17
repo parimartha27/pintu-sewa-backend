@@ -108,7 +108,7 @@ public class ProductController {
     }
 
     @PostMapping(value= "/add",  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request){
+    public ResponseEntity<ApiResponse> addProduct(@ModelAttribute @Valid AddProductRequest request){
         return productService.addProduct(request);
     }
 

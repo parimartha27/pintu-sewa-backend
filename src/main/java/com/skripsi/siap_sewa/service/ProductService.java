@@ -119,6 +119,10 @@ public class ProductService {
         ShopEntity shop = findShopById(request.getShopId());
 
         ProductEntity newProduct = modelMapper.map(request, ProductEntity.class);
+
+        boolean isRnb = request.getIsRnb().equalsIgnoreCase("true");
+        newProduct.setRnb(isRnb);
+
         newProduct.setShop(shop);
         newProduct.setCreatedAt(LocalDateTime.now());
         newProduct.setLastUpdateAt(LocalDateTime.now());
