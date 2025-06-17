@@ -1,16 +1,11 @@
 package com.skripsi.siap_sewa.controller;
 
 import com.skripsi.siap_sewa.dto.ApiResponse;
-import com.skripsi.siap_sewa.dto.admin.AdminLoginRequest;
 import com.skripsi.siap_sewa.dto.chat.SendMessageRequest;
-import com.skripsi.siap_sewa.dto.customer.EditCustomerRequest;
-import com.skripsi.siap_sewa.dto.shop.EditShopRequest;
-import com.skripsi.siap_sewa.service.AdminService;
 import com.skripsi.siap_sewa.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +18,6 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 
 public class ChatController {
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final ChatService chatService;
 
     @PostMapping("/create-roomchat")

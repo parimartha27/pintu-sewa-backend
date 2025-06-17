@@ -114,17 +114,19 @@ public class ProductService {
     public ResponseEntity<ApiResponse> addProduct(@Valid AddProductRequest request) {
         log.info("Adding new product for shop ID: {}", request.getShopId());
 
-        
         validateImageFile(request.getImage());
 
         ShopEntity shop = findShopById(request.getShopId());
 
         ProductEntity newProduct = modelMapper.map(request, ProductEntity.class);
+
+        boolean isRnb = request.getIsRnb().equalsIgnoreCase("true");
+        newProduct.setRnb(isRnb);
+
         newProduct.setShop(shop);
         newProduct.setCreatedAt(LocalDateTime.now());
         newProduct.setLastUpdateAt(LocalDateTime.now());
 
-        
         if (request.getImage() != null && !request.getImage().isEmpty()) {
             try {
                 String imageUrl = cloudinaryService.uploadImage(
