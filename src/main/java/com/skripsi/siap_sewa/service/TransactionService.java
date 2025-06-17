@@ -627,7 +627,7 @@ public class TransactionService {
                 log.info("Shop not found with ID: {}", transactions.getFirst().getShopId());
                 return new DataNotFoundException("Shop not found");
             });
-            transactions.forEach(transaction -> {
+            for (TransactionEntity transaction : transactions) {
                 transaction.setStatus("Dibatalkan");
                 transaction.setDepositReturned(true);
                 transaction.setDepositReturnedAt(LocalDateTime.now());
@@ -641,13 +641,13 @@ public class TransactionService {
                 shop.setLastUpdateAt(LocalDateTime.now());
                 shopRepository.save(shop);
 
-                customer.setWalletAmount(customer.getWalletAmount().add(transaction.getTotalAmount));
+                customer.setWalletAmount(customer.getWalletAmount().add(transaction.getTotalAmount()));
                 customer.setLastUpdateAt(LocalDateTime.now());
                 customerRepository.save(customer);
 
                 WalletReportEntity walletCustomer = new WalletReportEntity();
-                walletCustomer.setDescription("Pengembalian Dana Transaksi Dibatalkan dari Penyedia Jasa Sewa - " + transactions.getFirst().getTransactionNumber());
-                walletCustomer.setAmount(amount);
+                walletCustomer.setDescription("Pengembalian Dana Transaksi Dibatalkan dari Penyedia Jasa Sewa - " + transaction.getTransactionNumber());
+                walletCustomer.setAmount(transaction.getTotalAmount()); // <-- Perbaiki juga variabel `amount` yang tidak dideklarasikan
                 walletCustomer.setType(WalletReportEntity.WalletType.DEBIT);
                 walletCustomer.setCustomerId(customer.getId());
                 walletCustomer.setCreateAt(LocalDateTime.now());
@@ -655,7 +655,7 @@ public class TransactionService {
                 walletReportRepository.save(walletCustomer);
 
                 WalletReportEntity walletShop = new WalletReportEntity();
-                walletShop.setDescription("Pengembalian Dana Transaksi Dibatalkan ke Penyewa - " + transactions.getFirst().getTransactionNumber());
+                walletShop.setDescription("Pengembalian Dana Transaksi Dibatalkan ke Penyewa - " + transaction.getTransactionNumber());
                 walletShop.setAmount(transaction.getTotalDeposit());
                 walletShop.setType(WalletReportEntity.WalletType.CREDIT);
                 walletShop.setShopId(shop.getId());
@@ -664,10 +664,10 @@ public class TransactionService {
                 walletReportRepository.save(walletShop);
 
                 for (ProductEntity product : transaction.getProducts()) {
-                    product.setStock(product.getStock() + transaction.getQuantity());
+                    product.setStock(product.getStock() + transaction.getQuantity()); // jika stock dan quantity int
                     productRepository.save(product);
                 }
-            });
+            }
 
             transactionRepository.saveAll(transactions);
 
