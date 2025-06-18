@@ -461,7 +461,7 @@ public class TransactionService {
         }
     }
 
-//endpoint saat vendor saat menerima barang yang telah dikembalikan. Status berubah menjadi "Dikembalikan" menjadi "Selesai"
+    //endpoint saat vendor saat menerima barang yang telah dikembalikan. Status berubah menjadi "Dikembalikan" menjadi "Selesai"
     public ResponseEntity<ApiResponse> doneTransaction(DoneStatusTransactionRequest request) {
         try {
             log.info("Update Reference Number status {} Into Selesai", request.getReferenceNumber());
@@ -471,7 +471,6 @@ public class TransactionService {
             if (transactions.isEmpty()) {
                 return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, "Transaction not exist");
             }
-
 
             log.info("Customer found with ID: {}", request.getCustomerId());
             BigDecimal deposit = transactions.getFirst().getTotalDeposit();
@@ -503,7 +502,7 @@ public class TransactionService {
 
                 WalletReportEntity walletSeller = new WalletReportEntity();
                 walletSeller.setDescription("Pembayaran masuk dari penyewa  - " + transaction.getTransactionNumber());
-                walletSeller.setAmount(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())));
+                walletSeller.setAmount(transaction.getAmount());
                 walletSeller.setType(WalletReportEntity.WalletType.DEBIT);
                 walletSeller.setShopId(transaction.getShopId());
                 walletSeller.setCreateAt(LocalDateTime.now());
@@ -519,7 +518,7 @@ public class TransactionService {
                 walletSeller2.setUpdateAt(LocalDateTime.now());
                 walletReportRepository.save(walletSeller2);
 
-                shop.setBalance(shop.getBalance().add(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity()))));
+                shop.setBalance(shop.getBalance().add(transaction.getAmount()));
                 shop.setLastUpdateAt(LocalDateTime.now());
                 shopRepository.save(shop);
 
