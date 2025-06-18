@@ -304,7 +304,7 @@ public class CheckoutService {
                 .endDate(endDate)
                 .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
                 .quantity(quantity)
-//                .amount(rentalPrice.totalPrice())
+                .amount(rentalPrice.totalPrice())
 //                .totalAmount(rentalPrice.totalPrice().add(deposit).add(shippingPrice))
                 .totalAmount(rentalPrice.totalPrice())
                 .paymentMethod("-")
