@@ -47,7 +47,7 @@ public class AdminService {
 
     public ResponseEntity<ApiResponse> loginAdmin(@Valid AdminLoginRequest request) {
         List<CustomerEntity> customerEntity =
-                customerRepository.findByUsername(request.getUsername());
+                customerRepository.findByUsernameAndStatus(request.getUsername(), "ADMIN");
         if(customerEntity.isEmpty()){
             log.warn("Admin not found : {}", request.getUsername());
             throw new DataNotFoundException("Admin not found");
