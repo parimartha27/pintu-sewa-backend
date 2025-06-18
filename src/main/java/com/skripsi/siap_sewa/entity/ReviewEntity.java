@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -38,9 +40,13 @@ public class ReviewEntity {
 
     private Double rating;
 
+    @CreationTimestamp
+//    @Column(name = "created_at", updatable = false)
     @JsonIgnore
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+//    @Column(name = "last_update_at")
     @JsonIgnore
     private LocalDateTime lastUpdateAt;
 }
