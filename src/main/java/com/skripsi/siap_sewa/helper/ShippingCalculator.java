@@ -34,7 +34,7 @@ public class ShippingCalculator {
         BigDecimal distanceFactor = calculateDistanceFactor(shop, customer);
 
         // Calculate shipping price
-        BigDecimal weightPrice = partner.getPricePerKg().multiply(totalWeight);
+        BigDecimal weightPrice = partner.getPricePerKg().multiply(totalWeight).divide(BigDecimal.valueOf(1000));
         BigDecimal shippingPrice = partner.getBasePrice().add(weightPrice).multiply(distanceFactor);
 
         // Calculate estimated time

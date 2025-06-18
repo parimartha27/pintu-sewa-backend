@@ -95,20 +95,21 @@ public class AuthenticationService {
                 throw new DataNotFoundException("Email/Nomor Telepon atau password salah.");
             }
         }
+        else{
+            CustomerEntity newCustomer = new CustomerEntity();
+            newCustomer.setEmail(request.getEmail());
+            newCustomer.setImage(request.getImage());
+            newCustomer.setStatus("REGISTERED");
+            newCustomer.setCreatedAt(LocalDateTime.now());
+            newCustomer.setLastUpdateAt(LocalDateTime.now());
 
-        CustomerEntity newCustomer = new CustomerEntity();
-        newCustomer.setEmail(request.getEmail());
-        newCustomer.setImage(request.getImage());
-        newCustomer.setStatus("REGISTERED");
-        newCustomer.setCreatedAt(LocalDateTime.now());
-        newCustomer.setLastUpdateAt(LocalDateTime.now());
+            customerRepository.save(newCustomer);
+            log.info("OAuth customer registered successfully with ID: {}", newCustomer.getId());
 
-        customerRepository.save(newCustomer);
-        log.info("OAuth customer registered successfully with ID: {}", newCustomer.getId());
-
-        RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
-        response.setCustomerId(newCustomer.getId());
-        return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+            RegisterResponse response = objectMapper.convertValue(newCustomer, RegisterResponse.class);
+            response.setCustomerId(newCustomer.getId());
+            return commonUtils.setResponse(ErrorMessageEnum.SUCCESS, response);
+        }
     }
 
     public ResponseEntity<ApiResponse> login(LoginRequest request) {
