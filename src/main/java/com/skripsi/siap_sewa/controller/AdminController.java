@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"https://pintu-sewa-admin.up.railway.app", "https://pintu-sewa.up.railway.app"})
+
 public class AdminController {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
     private final AdminService adminService;
