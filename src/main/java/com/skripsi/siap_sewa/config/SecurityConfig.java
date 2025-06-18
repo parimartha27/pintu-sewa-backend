@@ -43,7 +43,8 @@ public class SecurityConfig {
                     config.setAllowedOriginPatterns(List.of(
                             "http://localhost:3000",
                             "https://*.vercel.app",
-                            "https://*.railway.app"
+                            "https://*.railway.app",
+                            "https://pintu-sewa-admin.up.railway.app"
                     ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                     config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
@@ -114,6 +115,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
 
     }
-
-
 }
