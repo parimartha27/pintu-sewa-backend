@@ -238,7 +238,8 @@ public class CheckoutService {
                 .quantity(transaction.getQuantity())
                 .availableToRent(true)
                 .image(product.getImage())
-                .subTotalPrice(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+//                .subTotalPrice(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                .subTotalPrice(transaction.getAmount())
                 .build();
     }
 
@@ -303,7 +304,7 @@ public class CheckoutService {
                 .endDate(endDate)
                 .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
                 .quantity(quantity)
-                .amount(rentalPrice.totalPrice())
+//                .amount(rentalPrice.totalPrice())
                 .totalAmount(rentalPrice.totalPrice().add(deposit).add(shippingPrice))
                 .paymentMethod("-")
                 .isReturn("N")
