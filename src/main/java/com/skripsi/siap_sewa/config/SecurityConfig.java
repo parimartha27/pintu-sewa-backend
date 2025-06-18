@@ -22,7 +22,6 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -47,18 +46,8 @@ public class SecurityConfig {
                             "https://*.railway.app"
                     ));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-//                    config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-//                    config.setExposedHeaders(List.of("Authorization"));
-                    config.setAllowedHeaders(Arrays.asList("*"));
-                    config.setExposedHeaders(Arrays.asList(
-                            "Authorization",
-                            "Content-Type",
-                            "X-Requested-With",
-                            "Accept",
-                            "Origin",
-                            "Access-Control-Request-Method",
-                            "Access-Control-Request-Headers"
-                    ));
+                    config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
+                    config.setExposedHeaders(List.of("Authorization"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
