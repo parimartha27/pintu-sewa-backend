@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -84,16 +85,28 @@ public class ProductService {
         CustomerEntity customer = findCustomerById(customerId);
         String customerRegency = customer.getRegency();
 
-        List<ProductEntity> productsInSameRegency = shopRepository.findByRegency(customerRegency).stream()
-                .flatMap(shop -> shop.getProducts().stream())
-                .toList();
+        List<ProductEntity> productsInSameRegency = new ArrayList<>();
+        try {
+            productsInSameRegency = shopRepository.findByRegencyIgnoreCase(customerRegency).stream()
+                    .flatMap(shop -> {
+                        try {
+                            return shop.getProducts().stream();
+                        } catch (Exception e) {
+                            log.error("Failed to get products from shop {}: {}", shop.getId(), e.getMessage());
+                            return Stream.empty();
+                        }
+                    })
+                    .toList();
+        } catch (Exception e) {
+            log.error("Error while fetching products in regency '{}': {}", customerRegency, e.getMessage(), e);
+        }
 
         if (productsInSameRegency.isEmpty()) {
             log.info("No products found in regency: {}", customerRegency);
             return commonUtils.setResponse(ErrorMessageEnum.DATA_NOT_FOUND, null);
         }
 
-        Collections.shuffle(productsInSameRegency);
+//        Collections.shuffle(productsInSameRegency);
         List<ProductResponse> response = productsInSameRegency.stream()
                 .limit(10)
                 .map(productMapper::toProductResponse)

@@ -8,14 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
 
     boolean existsByName(String name);
-
-    List<ShopEntity> findByRegency(String regency);
 
     @Query("SELECT s FROM ShopEntity s WHERE LOWER(s.name) LIKE LOWER(concat('%', :keyword, '%')) ORDER BY s.name ASC")
     List<ShopEntity> searchShops(@Param("keyword") String keyword);
@@ -27,4 +26,8 @@ public interface ShopRepository  extends JpaRepository<ShopEntity, String> {
 
     @Query("SELECT s FROM ShopEntity s WHERE s.customer.id = :customerId")
         Optional<ShopEntity> findByCustomerId(@Param("customerId") String customerId);
+
+    List<ShopEntity> findByRegencyIgnoreCase(String regency);
+
+
 }
