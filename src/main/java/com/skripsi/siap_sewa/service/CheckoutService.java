@@ -229,7 +229,7 @@ public class CheckoutService {
                 .transactionId(transaction.getId())
                 .productId(product.getId())
                 .productName(product.getName())
-                .price(transaction.getAmount())
+                .price(transaction.getAmount().divide(BigDecimal.valueOf(transaction.getQuantity())))
                 .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
                 .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
                 .rentDuration(CommonUtils.calculateRentDuration(
@@ -304,7 +304,7 @@ public class CheckoutService {
                 .endDate(endDate)
                 .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
                 .quantity(quantity)
-                .amount(rentalPrice.totalPrice())
+                .amount(rentalPrice.totalPrice().multiply(BigDecimal.valueOf(quantity)))
 //                .totalAmount(rentalPrice.totalPrice().add(deposit).add(shippingPrice))
                 .totalAmount(rentalPrice.totalPrice())
                 .paymentMethod("-")
