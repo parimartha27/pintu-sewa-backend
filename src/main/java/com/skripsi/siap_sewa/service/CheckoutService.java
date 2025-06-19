@@ -191,7 +191,7 @@ public class CheckoutService {
                 ProductEntity product = transaction.getProducts().iterator().next();
 
                 rentedItems.add(createRentedItem(transaction, product));
-                shopTotal = shopTotal.add(transaction.getTotalAmount().subtract(transaction.getTotalDeposit().subtract(transaction.getShippingPrice())));
+                shopTotal = shopTotal.add(transaction.getTotalAmount());
                 shopDeposit = shopDeposit.add(transaction.getTotalDeposit());
 
                 totalServiceFee = totalServiceFee.add(transaction.getServiceFee());
@@ -229,7 +229,7 @@ public class CheckoutService {
                 .transactionId(transaction.getId())
                 .productId(product.getId())
                 .productName(product.getName())
-                .price(transaction.getAmount().divide(BigDecimal.valueOf(transaction.getQuantity())))
+                .price(transaction.getAmount())
                 .startRentDate(transaction.getStartDate().format(DATE_FORMATTER))
                 .endRentDate(transaction.getEndDate().format(DATE_FORMATTER))
                 .rentDuration(CommonUtils.calculateRentDuration(
@@ -238,8 +238,8 @@ public class CheckoutService {
                 .quantity(transaction.getQuantity())
                 .availableToRent(true)
                 .image(product.getImage())
-                .subTotalPrice(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
-//                .subTotalPrice(transaction.getAmount())
+//                .subTotalPrice(transaction.getAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())))
+                .subTotalPrice(transaction.getAmount())
                 .build();
     }
 
@@ -304,10 +304,9 @@ public class CheckoutService {
                 .endDate(endDate)
                 .shippingAddress(customer.getStreet() + ", " + customer.getRegency() + ", " + customer.getProvince())
                 .quantity(quantity)
-//                .amount(rentalPrice.totalPrice())
-                .amount(rentalPrice.totalPrice().multiply(BigDecimal.valueOf(quantity)))
-                .totalAmount(rentalPrice.totalPrice().add(deposit).add(shippingPrice))
-//                .totalAmount(rentalPrice.totalPrice())
+                .amount(rentalPrice.totalPrice())
+//                .totalAmount(rentalPrice.totalPrice().add(deposit).add(shippingPrice))
+                .totalAmount(rentalPrice.totalPrice())
                 .paymentMethod("-")
                 .isReturn("N")
                 .createdAt(LocalDateTime.now())
