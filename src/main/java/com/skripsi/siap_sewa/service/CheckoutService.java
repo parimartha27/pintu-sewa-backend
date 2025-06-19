@@ -191,7 +191,7 @@ public class CheckoutService {
                 ProductEntity product = transaction.getProducts().iterator().next();
 
                 rentedItems.add(createRentedItem(transaction, product));
-                shopTotal = shopTotal.add(transaction.getTotalAmount());
+                shopTotal = shopTotal.add(transaction.getTotalAmount().multiply(BigDecimal.valueOf(transaction.getQuantity())));
                 shopDeposit = shopDeposit.add(transaction.getTotalDeposit());
 
                 totalServiceFee = totalServiceFee.add(transaction.getServiceFee());
